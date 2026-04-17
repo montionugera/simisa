@@ -3,7 +3,7 @@ Simisa
 
 A Python module to read and write files used with MSTS and Open Rails.
 
-Copyright (C) 2025 Peter Grønbæk Andersen <peter@grnbk.io>
+Copyright (C) 2026 Peter Grønbæk Andersen <peter@grnbk.io>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
