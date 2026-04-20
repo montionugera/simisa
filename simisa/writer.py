@@ -22,20 +22,11 @@ import logging
 from contextlib import contextmanager
 from typing import Optional, BinaryIO, TextIO, Callable, Any
 
+from .format import ListFormat
 from .token_id import TokenID
 
 logger = logging.getLogger(__name__)
 
-
-@dataclass
-class ListFormat:
-    items_per_line: Optional[int] = 1
-    disable_inner_indent: bool = False
-    count_multiplier: float = 1
-    newline_after_header: bool = True
-    newline_before_closing: bool = True
-    
-    item_writer: Optional[Callable] = None
 
 
 class StructuredBlockWriter:
@@ -54,12 +45,7 @@ class StructuredBlockWriter:
 
     @contextmanager
     def block(self, block_id: TokenID, label: Optional[str] = None):
-        """
-        Context manager for writing blocks safely.
-        """
-
         self.begin_block(block_id, label)
-
         try:
             yield self
         finally:
@@ -84,6 +70,16 @@ class StructuredBlockWriter:
         raise NotImplementedError
 
     def write_comment(self, text: str):
+        raise NotImplementedError
+
+    def write_list(
+        self,
+        block_id: TokenID,
+        values,
+        *,
+        format: ListFormat,
+        item_writer: Optional[Callable[["StructuredBlockWriter", Any], None]] = None,
+    ):
         raise NotImplementedError
 
     def close(self):
@@ -125,20 +121,31 @@ class UnicodeBlockWriter(StructuredBlockWriter):
 
     def write_comment(self, text: str):
         raise NotImplementedError
-    
-    def write_list(self, block_id: TokenID, values, *, format: ListFormat, item_writer=None):
+
+    def _indent(self):
+        if self.stream:
+            self.stream.write("    " * self.block_depth)
+
+    def write_list(
+        self,
+        block_id: TokenID,
+        values,
+        *,
+        format: ListFormat,
+        item_writer: Optional[Callable] = None,
+    ):
         self.begin_block(block_id)
 
         count = int(len(values) * format.count_multiplier)
         self.write_int(count)
 
-        if format.newline_after_header:
+        if format.newline_after_header and self.stream:
             self.stream.write("\n")
 
         self.block_depth += 1
 
         if item_writer is None:
-            item_writer = self.write_int  # default scalar behavior
+            item_writer = self.write_int
 
         items_per_line = format.items_per_line
         line_count = 0
@@ -146,7 +153,8 @@ class UnicodeBlockWriter(StructuredBlockWriter):
         for item in values:
 
             if items_per_line is not None and line_count >= items_per_line:
-                self.stream.write("\n")
+                if self.stream:
+                    self.stream.write("\n")
                 line_count = 0
 
             if not format.disable_inner_indent:
@@ -158,7 +166,7 @@ class UnicodeBlockWriter(StructuredBlockWriter):
 
         self.block_depth -= 1
 
-        if format.newline_before_closing:
+        if format.newline_before_closing and self.stream:
             self.stream.write("\n")
 
         self.end_block()
@@ -207,8 +215,15 @@ class BinaryBlockWriter(StructuredBlockWriter):
 
     def write_string(self, value: str):
         raise NotImplementedError
-    
-    def write_list(self, block_id: TokenID, values, *, format: ListFormat, item_writer=None):
+
+    def write_list(
+        self,
+        block_id: TokenID,
+        values,
+        *,
+        format: ListFormat,
+        item_writer: Optional[Callable] = None,
+    ):
         self.begin_block(block_id)
 
         self.write_int(len(values))
