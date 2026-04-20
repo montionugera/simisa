@@ -18,9 +18,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import io
-from typing import Optional
+import logging
+from contextlib import contextmanager
+from typing import Optional, BinaryIO, TextIO
 
 from .token_id import TokenID
+
+logger = logging.getLogger(__name__)
 
 
 class StructuredBlockWriter:
@@ -28,7 +32,7 @@ class StructuredBlockWriter:
     label: Optional[str] = None
 
     @staticmethod
-    def open(filename: str):
+    def open(filename: str) -> "StructuredBlockWriter":
         raise NotImplementedError
 
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
@@ -36,6 +40,19 @@ class StructuredBlockWriter:
 
     def end_block(self):
         raise NotImplementedError
+
+    @contextmanager
+    def block(self, block_id: TokenID, label: Optional[str] = None):
+        """
+        Context manager for writing blocks safely.
+        """
+
+        self.begin_block(block_id, label)
+
+        try:
+            yield self
+        finally:
+            self.end_block()
 
     def write_flags(self, value: int):
         raise NotImplementedError
@@ -58,22 +75,20 @@ class StructuredBlockWriter:
     def write_comment(self, text: str):
         raise NotImplementedError
 
-    def trace_information(self, message: str):
-        raise NotImplementedError
+    def close(self):
+        pass
 
-    def trace_warning(self, message: str):
-        raise NotImplementedError
+    def __enter__(self):
+        return self
 
-    def throw_exception(self, message: str):
-        raise NotImplementedError
-
-    def dispose(self):
-        raise NotImplementedError
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
 
 
 class UnicodeBlockWriter(StructuredBlockWriter):
+
     def __init__(self):
-        self.stream: Optional[io.TextIOBase] = None
+        self.stream: TextIO | None = None
         self.block_depth = 0
 
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
@@ -100,34 +115,29 @@ class UnicodeBlockWriter(StructuredBlockWriter):
     def write_comment(self, text: str):
         raise NotImplementedError
 
-    def trace_information(self, message: str):
-        raise NotImplementedError
-
-    def trace_warning(self, message: str):
-        raise NotImplementedError
-
-    def throw_exception(self, message: str):
-        raise NotImplementedError
-
 
 class UnicodeFileWriter(UnicodeBlockWriter):
-    def __init__(self, output_stream, filename, encoding="utf-8"):
+
+    def __init__(self, output_stream: TextIO, filename: str, encoding="utf-8"):
         super().__init__()
         self.filename = filename
         self.stream = output_stream
         self.encoding = encoding
         self.is_closed = False
 
-    def dispose(self):
-        raise NotImplementedError
+    def close(self):
+        if not self.is_closed and self.stream:
+            self.stream.close()
+            self.is_closed = True
 
 
 class BinaryBlockWriter(StructuredBlockWriter):
+
     def __init__(self):
         self.filename = ""
-        self.output_stream: Optional[io.BufferedWriter] = None
+        self.stream: BinaryIO | None = None
         self.token_offset = 0
-        self.block_stack = []
+        self.block_stack: list[int] = []
 
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
         raise NotImplementedError
@@ -150,35 +160,40 @@ class BinaryBlockWriter(StructuredBlockWriter):
     def write_string(self, value: str):
         raise NotImplementedError
 
-    def trace_information(self, message: str):
-        raise NotImplementedError
-
-    def trace_warning(self, message: str):
-        raise NotImplementedError
-
-    def throw_exception(self, message: str):
-        raise NotImplementedError
-
 
 class BinaryFileWriter(BinaryBlockWriter):
-    def __init__(self, output_stream, filename, token_offset=0):
+
+    def __init__(self, output_stream: BinaryIO, filename: str, token_offset=0):
         super().__init__()
         self.filename = filename
-        self.output_stream = output_stream
+        self.stream = output_stream
         self.token_offset = token_offset
 
-    def dispose(self):
-        raise NotImplementedError
+    def close(self):
+        if self.stream:
+            self.stream.close()
 
 
 class StructuredBlockWriterException(Exception):
-    @staticmethod
-    def trace_warning(writer, message: str):
-        raise NotImplementedError
 
-    @staticmethod
-    def trace_information(writer, message: str):
-        raise NotImplementedError
-
-    def __init__(self, writer, message: str):
+    def __init__(self, writer: StructuredBlockWriter, message: str):
         super().__init__(message)
+        self.writer = writer
+
+
+"""
+Example usage:
+
+with writer.block(TokenID.vertex):
+
+    writer.write_flags(flags)
+    writer.write_int(ipoint)
+    writer.write_int(inormal)
+    writer.write_flags(color1)
+    writer.write_flags(color2)
+
+    with writer.block(TokenID.vertex_uvs):
+        writer.write_int(len(uvs))
+        for uv in uvs:
+            writer.write_int(uv)
+"""

@@ -18,117 +18,145 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import io
-from typing import Optional
+import logging
+from contextlib import contextmanager
+from typing import Optional, Iterator, BinaryIO, TextIO
 
 from .token_id import TokenID
 
+logger = logging.getLogger(__name__)
+
 
 class StructuredBlockReader:
-    id: TokenID = None
+    id: TokenID | None = None
     label: str | None = None
 
     @staticmethod
-    def open(filename: str):
+    def open(filename: str) -> "StructuredBlockReader":
         raise NotImplementedError
 
-    def read_sub_block(self):
+    def read_sub_block(self) -> "StructuredBlockReader":
         raise NotImplementedError
 
-    def skip(self):
+    def skip(self) -> None:
         raise NotImplementedError
 
-    def verify_end_of_block(self):
+    def end_of_block(self) -> bool:
         raise NotImplementedError
 
-    def read_flags(self):
+    def verify_end_of_block(self) -> None:
         raise NotImplementedError
 
-    def read_int(self):
+    def verify_id(self, desired_id: TokenID) -> None:
         raise NotImplementedError
 
-    def read_uint(self):
+    @contextmanager
+    def block(self, expected_id: TokenID | None = None):
+        """
+        Context manager that verifies ID and end-of-block automatically.
+        """
+        if expected_id is not None:
+            self.verify_id(expected_id)
+
+        try:
+            yield self
+        finally:
+            self.verify_end_of_block()
+
+    @contextmanager
+    def sub_block(self, expected_id: TokenID | None = None):
+        """
+        Read and validate a nested sub-block.
+        """
+        sub = self.read_sub_block()
+
+        if expected_id is not None:
+            sub.verify_id(expected_id)
+
+        try:
+            yield sub
+        finally:
+            sub.verify_end_of_block()
+
+    def __iter__(self) -> Iterator["StructuredBlockReader"]:
+        while not self.end_of_block():
+            yield self.read_sub_block()
+
+    def read_flags(self) -> int:
         raise NotImplementedError
 
-    def read_float(self):
+    def read_int(self) -> int:
         raise NotImplementedError
 
-    def read_string(self):
+    def read_uint(self) -> int:
         raise NotImplementedError
 
-    def end_of_block(self):
+    def read_float(self) -> float:
+        raise NotImplementedError
+
+    def read_string(self) -> str:
         raise NotImplementedError
 
     def read_vector3(self):
         raise NotImplementedError
 
-    def verify_id(self, desired_id: TokenID):
-        raise NotImplementedError
-
     def expect_comment(self):
         raise NotImplementedError
 
-    def trace_information(self, message):
-        raise NotImplementedError
+    def close(self):
+        pass
 
-    def trace_warning(self, message):
-        raise NotImplementedError
+    def __enter__(self):
+        return self
 
-    def throw_exception(self, message):
-        raise NotImplementedError
-
-    def dispose(self):
-        raise NotImplementedError
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
 
 
 class UnicodeBlockReader(StructuredBlockReader):
-    def __init__(self):
-        self.f = None
-        self.at_end_of_block = False
-        self.id = None
-        self.label = None
 
-    def read_sub_block(self):
+    def __init__(self):
+        self.stream: TextIO | None = None
+        self.at_end_of_block = False
+        self.id: TokenID | None = None
+        self.label: str | None = None
+
+    def read_sub_block(self) -> StructuredBlockReader:
         raise NotImplementedError
 
     def skip(self):
         raise NotImplementedError
 
-    def end_of_block(self):
+    def end_of_block(self) -> bool:
         raise NotImplementedError
 
     def verify_end_of_block(self):
         raise NotImplementedError
 
-    def read_flags(self):
+    def read_flags(self) -> int:
         raise NotImplementedError
 
-    def read_int(self):
+    def read_int(self) -> int:
         raise NotImplementedError
 
-    def read_uint(self):
+    def read_uint(self) -> int:
         raise NotImplementedError
 
-    def read_float(self):
+    def read_float(self) -> float:
         raise NotImplementedError
 
-    def read_string(self):
-        raise NotImplementedError
-
-    def trace_information(self, message):
-        raise NotImplementedError
-
-    def trace_warning(self, message):
-        raise NotImplementedError
-
-    def throw_exception(self, message):
+    def read_string(self) -> str:
         raise NotImplementedError
 
 
 class UnicodeFileReader(UnicodeBlockReader):
-    def __init__(self, input_stream, filename, encoding):
+
+    def __init__(self, input_stream: TextIO, filename: str, encoding: str):
         super().__init__()
+        self.filename = filename
+        self.stream = input_stream
+        self.encoding = encoding
         self.is_closed = False
-        self.f = None
 
     def skip(self):
         raise NotImplementedError
@@ -136,84 +164,80 @@ class UnicodeFileReader(UnicodeBlockReader):
     def verify_end_of_block(self):
         raise NotImplementedError
 
-    def end_of_block(self):
+    def end_of_block(self) -> bool:
         raise NotImplementedError
+
+    def close(self):
+        if not self.is_closed and self.stream:
+            self.stream.close()
+            self.is_closed = True
 
 
 class BinaryBlockReader(StructuredBlockReader):
+
     def __init__(self):
-        self.filename = ""
-        self.input_stream: io.BufferedReader | None = None
+        self.filename: str = ""
+        self.stream: BinaryIO | None = None
         self.token_offset = 0
         self.remaining_bytes = 0
         self.flags = 0
 
-    def read_sub_block(self):
+    def read_sub_block(self) -> StructuredBlockReader:
         raise NotImplementedError
 
     def skip(self):
         raise NotImplementedError
 
-    def end_of_block(self):
+    def end_of_block(self) -> bool:
         raise NotImplementedError
 
     def verify_end_of_block(self):
         raise NotImplementedError
 
-    def read_flags(self):
+    def read_flags(self) -> int:
         raise NotImplementedError
 
-    def read_int(self):
+    def read_int(self) -> int:
         raise NotImplementedError
 
-    def read_uint(self):
+    def read_uint(self) -> int:
         raise NotImplementedError
 
-    def read_float(self):
+    def read_float(self) -> float:
         raise NotImplementedError
 
-    def read_string(self):
-        raise NotImplementedError
-
-    def trace_information(self, message):
-        raise NotImplementedError
-
-    def trace_warning(self, message):
-        raise NotImplementedError
-
-    def throw_exception(self, message):
+    def read_string(self) -> str:
         raise NotImplementedError
 
 
 class BinaryFileReader(BinaryBlockReader):
-    def __init__(self, input_stream, filename, token_offset):
+
+    def __init__(self, input_stream: BinaryIO, filename: str, token_offset: int):
         super().__init__()
         self.filename = filename
-        self.input_stream = None
+        self.stream = input_stream
         self.token_offset = token_offset
         self._size = 0
 
     def skip(self):
         raise NotImplementedError
 
-    def end_of_block(self):
+    def end_of_block(self) -> bool:
         raise NotImplementedError
 
     def verify_end_of_block(self):
         raise NotImplementedError
 
+    def close(self):
+        if self.stream:
+            self.stream.close()
+
 
 class StructuredBlockReaderException(Exception):
-    @staticmethod
-    def trace_warning(reader, message):
-        raise NotImplementedError
 
-    @staticmethod
-    def trace_information(reader, message):
-        raise NotImplementedError
-
-    def __init__(self, reader, message):
+    def __init__(self, reader: StructuredBlockReader, message: str):
         super().__init__(message)
+        self.reader = reader
 
 
 class STFReader:
@@ -222,14 +246,17 @@ class STFReader:
     def __init__(self, filename=None, use_tree=False, input_stream=None, encoding="utf-8"):
         self.block_depth = 0
         self.tree = [] if use_tree else None
+        self.encoding = encoding
+        self.filename = filename
+        self.stream = input_stream
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        self.close()
 
-    def dispose(self, disposing=True):
+    def close(self):
         pass
 
     def read_item(self):
@@ -262,12 +289,36 @@ class STFReader:
     def read_uint(self, default_value=None):
         raise NotImplementedError
 
-    def read_float(self, valid_units, default_value=None):
+    def read_float(self, valid_units=None, default_value=None):
         raise NotImplementedError
 
     def read_double(self, default_value=None):
         raise NotImplementedError
 
+"""
+Example usage:
+
+with reader.block(TokenID.vertex):
+
+    flags = reader.read_flags()
+    ipoint = reader.read_int()
+    inormal = reader.read_int()
+    color1 = reader.read_flags()
+    color2 = reader.read_flags()
+
+    with reader.sub_block(TokenID.vertex_uvs) as sub:
+        count = sub.read_int()
+        uvs = [sub.read_int() for _ in range(count)]
 
 
 
+Example of iteration over blocks:
+
+for block in reader:
+    if block.id == TokenID.vertex:
+        ...
+    else:
+        block.skip()
+
+
+"""
