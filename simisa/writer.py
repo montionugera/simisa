@@ -20,11 +20,22 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import io
 import logging
 from contextlib import contextmanager
-from typing import Optional, BinaryIO, TextIO
+from typing import Optional, BinaryIO, TextIO, Callable, Any
 
 from .token_id import TokenID
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ListFormat:
+    items_per_line: Optional[int] = 1
+    disable_inner_indent: bool = False
+    count_multiplier: float = 1
+    newline_after_header: bool = True
+    newline_before_closing: bool = True
+    
+    item_writer: Optional[Callable] = None
 
 
 class StructuredBlockWriter:
@@ -114,6 +125,43 @@ class UnicodeBlockWriter(StructuredBlockWriter):
 
     def write_comment(self, text: str):
         raise NotImplementedError
+    
+    def write_list(self, block_id: TokenID, values, *, format: ListFormat, item_writer=None):
+        self.begin_block(block_id)
+
+        count = int(len(values) * format.count_multiplier)
+        self.write_int(count)
+
+        if format.newline_after_header:
+            self.stream.write("\n")
+
+        self.block_depth += 1
+
+        if item_writer is None:
+            item_writer = self.write_int  # default scalar behavior
+
+        items_per_line = format.items_per_line
+        line_count = 0
+
+        for item in values:
+
+            if items_per_line is not None and line_count >= items_per_line:
+                self.stream.write("\n")
+                line_count = 0
+
+            if not format.disable_inner_indent:
+                self._indent()
+
+            item_writer(self, item)
+
+            line_count += 1
+
+        self.block_depth -= 1
+
+        if format.newline_before_closing:
+            self.stream.write("\n")
+
+        self.end_block()
 
 
 class UnicodeFileWriter(UnicodeBlockWriter):
@@ -159,6 +207,20 @@ class BinaryBlockWriter(StructuredBlockWriter):
 
     def write_string(self, value: str):
         raise NotImplementedError
+    
+    def write_list(self, block_id: TokenID, values, *, format: ListFormat, item_writer=None):
+        self.begin_block(block_id)
+
+        self.write_int(len(values))
+
+        if item_writer is None:
+            for v in values:
+                self.write_int(v)
+        else:
+            for v in values:
+                item_writer(self, v)
+
+        self.end_block()
 
 
 class BinaryFileWriter(BinaryBlockWriter):
@@ -196,4 +258,24 @@ with writer.block(TokenID.vertex):
         writer.write_int(len(uvs))
         for uv in uvs:
             writer.write_int(uv)
+
+writer.write_list(
+    TokenID.vertex_uvs,
+    uvs,
+    format=UV_LIST
+)
+
+writer.write_list(
+    TokenID.vertices,
+    vertices,
+    format=VERTEX_LIST,
+    item_writer=lambda w, v: (
+        w.begin_block(TokenID.vertex),
+        w.write_int(v.point),
+        w.write_int(v.normal),
+        w.write_flags(v.color),
+        w.end_block()
+    )
+)
+
 """
