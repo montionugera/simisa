@@ -18,3 +18,40 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import pytest
+import simisa
+
+
+def test_is_compressed_uncompressed_shape(global_storage):
+    shape_path = global_storage["shape_path"]
+    is_compressed = simisa.is_compressed(shape_path)
+    assert not is_compressed
+
+
+def test_is_compressed_compressed_shape(global_storage):
+    shape_compressed_path = global_storage["shape_compressed_path"]
+    is_compressed = simisa.is_compressed(shape_compressed_path)
+    assert is_compressed
+
+
+def test_is_compressed_uncompressed_worldfile(global_storage):
+    worldfile_path = global_storage["worldfile_path"]
+    is_compressed = simisa.is_compressed(worldfile_path)
+    assert not is_compressed
+
+
+def test_is_compressed_compressed_worldfile(global_storage):
+    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
+    is_compressed = simisa.is_compressed(worldfile_compressed_path)
+    assert is_compressed
+
+
+def test_is_compressed_emptyfile(global_storage):
+    emptyfile_path = global_storage["emptyfile_path"]
+    is_compressed = simisa.is_compressed(emptyfile_path)
+    assert is_compressed is None
+
+
+def test_is_compressed_garbagefile(global_storage):
+    garbagefile_path = global_storage["garbagefile_path"]
+    is_compressed = simisa.is_compressed(garbagefile_path)
+    assert is_compressed is None

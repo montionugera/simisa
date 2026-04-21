@@ -63,4 +63,4 @@ class Units(IntFlag):
 # Patch the "None" enum value into Units since None is a reserved keyword in Python.
 # We can't define None directly in the Units enum structure.
 # When using this value access it with 'Units["None"]'. Using 'Units.None' will also result in an error.
-Units = Enum("Units", {**{m.name: m.value for m in Units}, "None": 0})
+Units = IntFlag("Units", {**{m.name: m.value for m in Units}, "None": 0})

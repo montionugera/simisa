@@ -27,12 +27,13 @@ def load_shape(filepath: str) -> str:
 
 @pytest.fixture(scope="session")
 def global_storage():
-    # data = {
-    #     "shape_path": "./tests/data/DK10f_A1tPnt5dLft.s",
-    #     "shape_compressed_path": "./tests/data/DK10f_A1tPnt5dLft_compressed.s",
-    #     "notashape_path": "./tests/data/w-005655+015119.w",
-    #     "notashape_compressed_path": "./tests/data/w-005655+015119_compressed.w",
-    #     "empty_path": "./tests/data/empty.txt"
-    # }
-    # data["shape"] = load_shape(data["shape_path"])
+    data = {
+        "shape_path": "./tests/data/DK10f_A1tPnt5dLft.s",
+        "shape_compressed_path": "./tests/data/DK10f_A1tPnt5dLft_compressed.s",
+        "worldfile_path": "./tests/data/w-005655+015119.w",
+        "worldfile_compressed_path": "./tests/data/w-005655+015119_compressed.w",
+        "emptyfile_path": "./tests/data/empty.txt",
+        "garbagefile_path": "./tests/data/garbage.txt"
+    }
+    data["shape"] = load_shape(data["shape_path"])
     return data

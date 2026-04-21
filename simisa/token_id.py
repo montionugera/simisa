@@ -1477,5 +1477,5 @@ class TokenID(IntEnum):
 # Patch the "None" enum value into TokenID since None is a reserved keyword in Python.
 # We can't define None directly in the TokenID enum structure.
 # When using this value access it with 'TokenID["None"]'. Using 'TokenID.None' will also result in an error.
-TokenID = Enum("TokenID", {**{m.name: m.value for m in TokenID}, "None": 590})
+TokenID = IntEnum("TokenID", {**{m.name: m.value for m in TokenID}, "None": 590})
 
