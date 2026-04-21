@@ -42,7 +42,7 @@ class InvalidSimisaSubheaderError(Exception):
 
 
 class StructuredBlockReader(ABC):
-    
+
     @staticmethod
     def open(filepath: str) -> "StructuredBlockReader":
         compressed = is_compressed(filepath)
@@ -50,50 +50,48 @@ class StructuredBlockReader(ABC):
         if compressed is None:
             raise InvalidSimisaHeaderError()
 
-        with open(filepath, "rb") as f:
-            bom = f.read(2)
-            is_unicode = (bom == codecs.BOM_UTF16_LE)
+        f = open(filepath, "rb")
+        bom = f.read(2)
+        is_unicode = (bom == codecs.BOM_UTF16_LE)
 
-            if is_unicode:
-                header_bytes = f.read(32)
-                header = header_bytes[:16].decode("utf-16-le")
-            else:
-                header_bytes = bom + f.read(14)
-                header = header_bytes[:8].decode("ascii", errors="ignore")
+        if is_unicode:
+            header_bytes = f.read(32)
+            header = header_bytes[:16].decode("utf-16-le")
+        else:
+            header_bytes = bom + f.read(14)
+            header = header_bytes[:8].decode("ascii", errors="ignore")
 
-            if compressed:
-                f.read(2)
-                decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
-                stream = io.BytesIO(decompressor.decompress(f.read()))
-            else:
-                if header.startswith("\r\n"):
-                    f.read(4 if is_unicode else 2)
-                stream = f
+        if compressed:
+            f.read(2)
+            decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+            stream = io.BytesIO(decompressor.decompress(f.read()))
+        else:
+            if header.startswith("\r\n"):
+                f.read(4 if is_unicode else 2)
+            stream = f
 
-            sub_bytes = stream.read(32 if is_unicode else 16)
+        sub_bytes = stream.read(32 if is_unicode else 16)
 
-            subheader = sub_bytes[:16 if is_unicode else 8].decode(
-                "utf-16-le" if is_unicode else "ascii",
-                errors="ignore"
-            )
+        subheader = sub_bytes[:16 if is_unicode else 8].decode(
+            "utf-16-le" if is_unicode else "ascii",
+            errors="ignore"
+        )
 
-            if len(subheader) < 5:
-                raise InvalidSimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")
+        if len(subheader) < 5:
+            raise InvalidSimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")
 
-            filetype = subheader[7]
-            encoding = "utf-16-le" if is_unicode else "ascii"
+        filetype = subheader[7]
+        encoding = "utf-16-le" if is_unicode else "ascii"
 
-            if filetype == "t":
-                return UnicodeFileReader(stream, filepath, encoding)
+        if filetype == "t":
+            return UnicodeFileReader(stream, filepath, encoding)
 
-            if filetype != "b":
-                raise InvalidSimisaSubheaderError(f'Unrecognized subheader "{subheader}" in {filepath}')
+        if filetype != "b":
+            raise InvalidSimisaSubheaderError(f'Unrecognized subheader "{subheader}" in {filepath}')
 
-            return BinaryFileReader(
-                stream,
-                filepath,
-                300 if subheader[5] == "w" else 0
-            )
+        token_offset = 300 if subheader[5] == "w" else 0
+        
+        return BinaryFileReader(stream, filepath, token_offset)
 
     def read_sub_block(self) -> "StructuredBlockReader":
         raise NotImplementedError

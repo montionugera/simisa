@@ -23,22 +23,18 @@ from simisa import StructuredBlockReader
 def test_is_compressed_uncompressed_shape(global_storage):
     shape_path = global_storage["shape_path"]
     obj = StructuredBlockReader.open(shape_path)
-    print(obj)
-    with open(shape_path, "rb") as f:
-        data = f.read(40)
-
-    print(data)
-    print(data.hex(" "))
+    raw = obj.stream.read(100)
+    #text = raw.decode("utf-16-le")
+    #first_x_chars = text[:x]
+    print(raw)
     assert False
 
 
 def test_is_compressed_compressed_shape(global_storage):
     shape_compressed_path = global_storage["shape_compressed_path"]
     obj = StructuredBlockReader.open(shape_compressed_path)
-    print(obj)
-    with open(shape_compressed_path, "rb") as f:
-        data = f.read(40)
-
-    print(data)
-    print(data.hex(" "))
+    raw = obj.stream.read(100)
+    #text = raw.decode("utf-16-le")
+    #first_x_chars = text[:x]
+    print(raw)
     assert False

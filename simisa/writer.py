@@ -80,11 +80,9 @@ class StructuredBlockWriter(ABC):
         if not is_binary:
             return UnicodeFileWriter(stream, filepath, encoding)
 
-        return BinaryFileWriter(
-            stream,
-            filepath,
-            300 if filetype == "w" else 0
-        )
+        token_offset = 300 if filetype == "w" else 0
+        
+        return BinaryFileWriter(stream, filepath, token_offset)
 
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
         raise NotImplementedError
