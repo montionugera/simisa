@@ -17,20 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from .models import *
+from .reader import load, loads
+from .writer import dump, dumps
+from .models import Vector, Point, UVPoint
 
-def load():
-    pass
-
-
-def loads():
-    pass
-
-
-def dump():
-    pass
-
-
-def dumps():
-    pass
+__all__ = [
+    "load",
+    "loads",
+    "dump",
+    "dumps",
+    "Vector",
+    "Point",
+    "UVPoint",
+]
 
