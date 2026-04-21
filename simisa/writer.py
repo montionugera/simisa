@@ -19,6 +19,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import io
 import logging
+from abc import ABC
 from contextlib import contextmanager
 from typing import Optional, BinaryIO, TextIO, Callable, Any
 
@@ -44,7 +45,8 @@ class CompressedWriteStream:
             self.file.write(chunk)
 
 
-class StructuredBlockWriter:
+class StructuredBlockWriter(ABC):
+
     @staticmethod
     def open(filepath: str,
             *,
@@ -55,13 +57,8 @@ class StructuredBlockWriter:
             is_compressed: bool = False
         ):
 
-        subheader = (
-            "JINX0",
-            filetype,
-            filetype_version,
-            f"{'b' if is_binary else 't'}",
-            "______"
-        )
+        file_binary = 'b' if is_binary else 't'
+        subheader = f"JINX0{filetype}{filetype_version}{file_binary}______"
 
         f = open(filepath, "wb")
         encoding = "utf-16-le" if is_unicode else "ascii"
@@ -80,13 +77,13 @@ class StructuredBlockWriter:
 
         stream.write(subheader.encode(encoding))
 
-        if subheader[7] == "t":
+        if not is_binary:
             return UnicodeFileWriter(stream, filepath, encoding)
 
         return BinaryFileWriter(
             stream,
             filepath,
-            300 if subheader[5] == "w" else 0
+            300 if filetype == "w" else 0
         )
 
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):

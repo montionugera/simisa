@@ -21,6 +21,7 @@ import io
 import zlib
 import codecs
 import logging
+from abc import ABC
 from contextlib import contextmanager
 from typing import Optional, Iterator, BinaryIO, TextIO
 
@@ -40,7 +41,8 @@ class InvalidSimisaSubheaderError(Exception):
     pass
 
 
-class StructuredBlockReader:
+class StructuredBlockReader(ABC):
+    
     @staticmethod
     def open(filepath: str) -> "StructuredBlockReader":
         compressed = is_compressed(filepath)
