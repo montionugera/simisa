@@ -79,27 +79,3 @@ def test_is_compressed_garbagefile(global_storage):
     garbagefile_path = global_storage["garbagefile_path"]
     is_compressed = simisa.is_compressed(garbagefile_path)
     assert is_compressed is None
-
-
-def test_read_subheader_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    subheader = simisa.read_subheader(shape_path)
-    assert subheader == "JINX0s1t"
-
-
-def test_read_subheader_compressed_shape(global_storage):
-    shape_compressed_path = global_storage["shape_compressed_path"]
-    subheader = simisa.read_subheader(shape_compressed_path)
-    assert subheader == "JINX0s1b"
-
-
-def test_read_subheader_uncompressed_worldfile(global_storage):
-    worldfile_path = global_storage["worldfile_path"]
-    subheader = simisa.read_subheader(worldfile_path)
-    assert subheader == "JINX0w0t"
-
-
-def test_read_subheader_compressed_worldfile(global_storage):
-    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
-    subheader = simisa.read_subheader(worldfile_compressed_path)
-    assert subheader == "JINX0w0b"

@@ -23,14 +23,24 @@ import codecs
 from typing import Optional
 
 
-class InvalidSimisaHeaderError(Exception):
-    """Raised when a simisa header is invalid."""
-    pass
+def is_unicode(filepath: str) -> Optional[bool]:
+    """
+    Checks whether a file is encoded in UTF-16 LE based on its BOM.
 
+    The function reads the first two bytes of the file and determines
+    whether they match the UTF-16 LE byte order mark.
 
-class InvalidSimisaSubheaderError(Exception):
-    """Raised when a simisa subheader is invalid."""
-    pass
+    Args:
+        filepath: Path to the file to inspect.
+
+    Returns:
+        True if the file is UTF-16 LE encoded, otherwise False.
+    """
+    with open(filepath, "rb") as f:
+        bom = f.read(2)
+        is_unicode = (bom == codecs.BOM_UTF16_LE)
+
+        return is_unicode
 
 
 def peek_header(filepath: str) -> Optional[str]:
@@ -98,63 +108,3 @@ def is_compressed(filepath: str) -> Optional[bool]:
 
     return None
 
-
-def read_subheader(filepath: str) -> str:
-    """
-    Reads the SIMISA subheader from a file, handling compression and encoding.
-
-    The function first determines whether the file is compressed and then
-    reads the appropriate header structure depending on encoding (ASCII or
-    UTF-16 LE). If compressed, the file content is decompressed before
-    reading the subheader.
-
-    Args:
-        filepath: Path to the SIMISA file.
-
-    Returns:
-        The decoded subheader string.
-
-    Raises:
-        InvalidSimisaHeaderError: If the file header is missing or invalid.
-        InvalidSimisaSubheaderError: If the extracted subheader is invalid.
-    """
-    compressed = is_compressed(filepath)
-
-    if compressed is None:
-        raise InvalidSimisaHeaderError()
-
-    with open(filepath, "rb") as f:
-        bom = f.read(2)
-        is_unicode = (bom == codecs.BOM_UTF16_LE)
-
-        if is_unicode:
-            header_bytes = f.read(32)
-            header = header_bytes[:16].decode("utf-16-le")
-        else:
-            header_bytes = bom + f.read(14)
-            header = header_bytes[:8].decode("ascii", errors="ignore")
-
-        if compressed:
-            f.read(2)
-            decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
-            file_stream = io.BytesIO(decompressor.decompress(f.read()))
-        elif header.startswith("\r\n"):
-            if is_unicode:
-                f.read(4)
-            else:
-                f.read(2)
-            file_stream = f
-        else:
-            file_stream = f
-
-        if is_unicode:
-            subheader_bytes = file_stream.read(32)
-            subheader = subheader_bytes[:16].decode("utf-16-le")
-        else:
-            subheader_bytes = file_stream.read(16)
-            subheader = subheader_bytes[:8].decode("ascii", errors="ignore")
-
-        if len(subheader) < 5:
-            raise InvalidSimisaSubheaderError()
-        
-        return subheader

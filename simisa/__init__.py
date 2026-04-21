@@ -21,7 +21,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 __version__ = '0.0.1b0'
 __all__ = [
-    'peek_header', 'is_compressed', 'read_subheader',
+    'is_unicode', 'peek_header', 'is_compressed', 'read_subheader',
     'InvalidSimisaHeaderError', 'InvalidSimisaSubheaderError',
     'ListFormat', 'TokenID', 'Units'
     'StructuredBlockReader', 'StructuredBlockWriter',
@@ -30,7 +30,7 @@ __all__ = [
 
 __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
 
-from .header import peek_header, is_compressed, read_subheader
+from .header import is_unicode, peek_header, is_compressed, read_subheader
 from .header import InvalidSimisaHeaderError, InvalidSimisaSubheaderError
 from .format import ListFormat
 from .token_id import TokenID
