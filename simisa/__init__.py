@@ -35,4 +35,4 @@ from .token_id import TokenID
 from .units import Units
 from .reader import StructuredBlockReader
 from .writer import StructuredBlockWriter
-import shape
+from . import shape
