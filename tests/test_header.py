@@ -21,6 +21,30 @@ import pytest
 import simisa
 
 
+def test_peek_header_uncompressed_shape(global_storage):
+    shape_path = global_storage["shape_path"]
+    header = simisa.peek_header(shape_path)
+    assert header.startswith("SIMISA@@")
+
+
+def test_peek_header_compressed_shape(global_storage):
+    shape_compressed_path = global_storage["shape_compressed_path"]
+    header = simisa.peek_header(shape_compressed_path)
+    assert header.startswith("SIMISA@F")
+
+
+def test_peek_header_emptyfile(global_storage):
+    emptyfile_path = global_storage["emptyfile_path"]
+    header = simisa.peek_header(emptyfile_path)
+    assert header is None
+
+
+def test_peek_header_garbagefile(global_storage):
+    garbagefile_path = global_storage["garbagefile_path"]
+    header = simisa.peek_header(garbagefile_path)
+    assert header is None
+
+
 def test_is_compressed_uncompressed_shape(global_storage):
     shape_path = global_storage["shape_path"]
     is_compressed = simisa.is_compressed(shape_path)
@@ -55,3 +79,27 @@ def test_is_compressed_garbagefile(global_storage):
     garbagefile_path = global_storage["garbagefile_path"]
     is_compressed = simisa.is_compressed(garbagefile_path)
     assert is_compressed is None
+
+
+def test_read_subheader_uncompressed_shape(global_storage):
+    shape_path = global_storage["shape_path"]
+    subheader = simisa.read_subheader(shape_path)
+    assert subheader == "JINX0s1t"
+
+
+def test_read_subheader_compressed_shape(global_storage):
+    shape_compressed_path = global_storage["shape_compressed_path"]
+    subheader = simisa.read_subheader(shape_compressed_path)
+    assert subheader == "JINX0s1b"
+
+
+def test_read_subheader_uncompressed_worldfile(global_storage):
+    worldfile_path = global_storage["worldfile_path"]
+    subheader = simisa.read_subheader(worldfile_path)
+    assert subheader == "JINX0w0t"
+
+
+def test_read_subheader_compressed_worldfile(global_storage):
+    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
+    subheader = simisa.read_subheader(worldfile_compressed_path)
+    assert subheader == "JINX0w0b"

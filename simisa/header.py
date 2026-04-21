@@ -23,7 +23,16 @@ import codecs
 from typing import Optional
 
 
-def read_header(filepath: str) -> str:
+class InvalidSimisaHeaderError(Exception):
+    """Raised when a simisa header is invalid."""
+    pass
+
+class InvalidSimisaSubheaderError(Exception):
+    """Raised when a simisa subheader is invalid."""
+    pass
+
+
+def peek_header(filepath: str) -> str:
     with open(filepath, "rb") as f:
         bom = f.read(2)
         is_unicode = (bom == codecs.BOM_UTF16_LE)
@@ -35,15 +44,27 @@ def read_header(filepath: str) -> str:
             buffer = bom + f.read(14)
             header = buffer.decode("ascii", errors="ignore")
 
+        header = header.lstrip("\r\n")
+
+        valid_headers = [
+            "SIMISA@@",
+            "SIMISA@F",
+        ]
+
+        if not any(header.startswith(h) for h in valid_headers):
+            return None
+        
         return header
 
 
 def is_compressed(filepath: str) -> Optional[bool]:
-    header = read_header(filepath)
+    header = peek_header(filepath)
 
-    if header.startswith("SIMISA@F") or header.startswith("\r\nSIMISA@F"):
+    if header is None:
+        return None
+    if header.startswith("SIMISA@F"):
         return True
-    elif header.startswith("SIMISA@@") or header.startswith("\r\nSIMISA@@"):
+    elif header.startswith("SIMISA@@"):
         return False
 
     return None
@@ -53,8 +74,7 @@ def read_subheader(filepath: str) -> str:
     compressed = is_compressed(filepath)
 
     if compressed is None:
-        # TODO throw error, did not contain a proper header
-        pass
+        raise InvalidSimisaHeaderError()
 
     with open(filepath, "rb") as f:
         bom = f.read(2)
@@ -88,7 +108,6 @@ def read_subheader(filepath: str) -> str:
             subheader = subheader_bytes[:8].decode("ascii", errors="ignore")
 
         if len(subheader) < 5:
-            # TODO throw error, did not contain a proper subheader
-            pass
+            raise InvalidSimisaSubheaderError()
         
         return subheader
