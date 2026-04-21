@@ -17,9 +17,10 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import models
-from .. import header, reader
 from .. import TokenID, Units
+from ..header import read_header, is_compressed, read_subheader
+from ..reader import StructuredBlockReader
+from .models import *
 
 def load():
     pass

@@ -19,7 +19,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from .reader import load, loads
 from .writer import dump, dumps
-from .models import Vector, Point, UVPoint
+from .models import *
 
 __all__ = [
     "load",
@@ -29,5 +29,46 @@ __all__ = [
     "Vector",
     "Point",
     "UVPoint",
+    "Colour",
+    "Matrix",
+    "VertexIdx",
+    "NormalIdx",
+    "IndexedTrilist",
+    "KeyPosition",
+    "Controller",
+    "TCBRot",
+    "SlerpRot",
+    "LinearPos",
+    "LinearKey",
+    "TCBPos",
+    "TCBKey",
+    "AnimationNode",
+    "Animation",
+    "ShapeHeader",
+    "VolumeSphere",
+    "Texture",
+    "LightMaterial",
+    "UVOp",
+    "UVOpCopy",
+    "UVOpReflectMapFull",
+    "UVOpReflectMap",
+    "UVOpUniformScale",
+    "UVOpNonUniformScale",
+    "LightModelCfg",
+    "VtxState",
+    "PrimState",
+    "DistanceLevelsHeader",
+    "CullablePrims",
+    "GeometryNode",
+    "GeometryInfo",
+    "SubObjectHeader",
+    "Vertex",
+    "VertexSet",
+    "Primitive",
+    "SubObject",
+    "DistanceLevelHeader",
+    "DistanceLevel",
+    "LodControl",
+    "Shape",
 ]
 
