@@ -80,18 +80,20 @@ class StructuredBlockReader(ABC):
         if len(subheader) < 5:
             raise InvalidSimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")
 
-        filetype = subheader[7]
+        filetype = subheader[5]
+        fileversion = int(subheader[6])
+        fileformat = subheader[7]
         encoding = "utf-16-le" if is_unicode else "ascii"
 
-        if filetype == "t":
-            return UnicodeFileReader(stream, filepath, encoding)
+        if fileformat == "t":
+            return UnicodeFileReader(stream, filepath, filetype, fileversion, encoding)
 
-        if filetype != "b":
+        if fileformat != "b":
             raise InvalidSimisaSubheaderError(f'Unrecognized subheader "{subheader}" in {filepath}')
 
-        token_offset = 300 if subheader[5] == "w" else 0
+        token_offset = 300 if filetype == "w" else 0
         
-        return BinaryFileReader(stream, filepath, token_offset)
+        return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
 
     def read_sub_block(self) -> "StructuredBlockReader":
         raise NotImplementedError
@@ -209,10 +211,12 @@ class UnicodeBlockReader(StructuredBlockReader):
 
 class UnicodeFileReader(UnicodeBlockReader):
 
-    def __init__(self, input_stream: TextIO, filename: str, encoding: str):
+    def __init__(self, input_stream: TextIO, filepath: str, filetype: str, fileversion: int, encoding: str):
         super().__init__()
-        self.filename = filename
+        self.filepath = filepath
         self.stream = input_stream
+        self.filetype = filetype
+        self.fileversion = fileversion
         self.encoding = encoding
         self.is_closed = False
 
@@ -234,7 +238,7 @@ class UnicodeFileReader(UnicodeBlockReader):
 class BinaryBlockReader(StructuredBlockReader):
 
     def __init__(self):
-        self.filename: str = ""
+        self.filepath: str = ""
         self.stream: BinaryIO | None = None
         self.token_offset = 0
         self.remaining_bytes = 0
@@ -270,10 +274,12 @@ class BinaryBlockReader(StructuredBlockReader):
 
 class BinaryFileReader(BinaryBlockReader):
 
-    def __init__(self, input_stream: BinaryIO, filename: str, token_offset: int):
+    def __init__(self, input_stream: BinaryIO, filepath: str, filetype: str, fileversion: int, token_offset: int):
         super().__init__()
-        self.filename = filename
+        self.filepath = filepath
         self.stream = input_stream
+        self.filetype = filetype
+        self.fileversion = fileversion
         self.token_offset = token_offset
         self._size = 0
 

@@ -48,17 +48,17 @@ class CompressedWriteStream:
 class StructuredBlockWriter(ABC):
 
     @staticmethod
-    def open(filepath: str,
-            *,
-            filetype: str,
-            filetype_version: str,
-            is_binary: bool = False,
-            is_unicode: bool = True,
-            is_compressed: bool = False
-        ):
-
-        file_binary = 'b' if is_binary else 't'
-        subheader = f"JINX0{filetype}{filetype_version}{file_binary}______"
+    def open(
+        filepath: str,
+        *,
+        filetype: str,
+        fileversion: str,
+        is_binary: bool = False,
+        is_unicode: bool = True,
+        is_compressed: bool = False
+    ):
+        fileformat = 'b' if is_binary else 't'
+        subheader = f"JINX0{filetype}{fileversion}{fileformat}______"
 
         f = open(filepath, "wb")
         encoding = "utf-16-le" if is_unicode else "ascii"
@@ -81,7 +81,7 @@ class StructuredBlockWriter(ABC):
             return UnicodeFileWriter(stream, filepath, encoding)
 
         token_offset = 300 if filetype == "w" else 0
-        
+
         return BinaryFileWriter(stream, filepath, token_offset)
 
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):

@@ -45,7 +45,7 @@ def is_unicode(filepath: str) -> Optional[bool]:
 
 def peek_header(filepath: str) -> Optional[str]:
     """
-    Reads the beginning of a file and extracts a SIMISA header if present.
+    Reads the beginning of a file and extracts the SIMISA header if present.
 
     The function detects whether the file is UTF-16 LE encoded via BOM,
     decodes an initial portion of the file accordingly, and checks whether
