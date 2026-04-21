@@ -18,7 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .. import TokenID, Units
-from ..header import peek_header, is_compressed, read_subheader
+from ..header import peek_header, is_compressed
 from ..reader import StructuredBlockReader
 from .models import *
 

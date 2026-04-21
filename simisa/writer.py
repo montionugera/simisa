@@ -28,14 +28,66 @@ from .token_id import TokenID
 logger = logging.getLogger(__name__)
 
 
+class CompressedWriteStream:
+    def __init__(self, file, compressor):
+        self.file = file
+        self.compressor = compressor
+
+    def write(self, data: bytes):
+        chunk = self.compressor.compress(data)
+        if chunk:
+            self.file.write(chunk)
+
+    def flush(self):
+        chunk = self.compressor.flush()
+        if chunk:
+            self.file.write(chunk)
+
 
 class StructuredBlockWriter:
-    id: Optional[TokenID] = None
-    label: Optional[str] = None
-
     @staticmethod
-    def open(filename: str) -> "StructuredBlockWriter":
-        raise NotImplementedError
+    def open(filepath: str,
+            *,
+            filetype: str,
+            filetype_version: str,
+            is_binary: bool = False,
+            is_unicode: bool = True,
+            is_compressed: bool = False
+        ):
+
+        subheader = (
+            "JINX0",
+            filetype,
+            filetype_version,
+            f"{'b' if is_binary else 't'}",
+            "______"
+        )
+
+        f = open(filepath, "wb")
+        encoding = "utf-16-le" if is_unicode else "ascii"
+
+        if is_compressed:
+            f.write(b"SIMISA@F")
+            f.write(b"\x97\x86\r\x00")
+            f.write(b"@@@@")
+            compressor = zlib.compressobj(wbits=-zlib.MAX_WBITS)
+            stream = CompressedWriteStream(f, compressor)
+        else:
+            if is_unicode:
+                f.write(codecs.BOM_UTF16_LE)
+            f.write(("SIMISA@@@@@@@@@@").encode(encoding))
+            stream = f
+
+        stream.write(subheader.encode(encoding))
+
+        if subheader[7] == "t":
+            return UnicodeFileWriter(stream, filepath, encoding)
+
+        return BinaryFileWriter(
+            stream,
+            filepath,
+            300 if subheader[5] == "w" else 0
+        )
 
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
         raise NotImplementedError
