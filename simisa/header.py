@@ -27,12 +27,27 @@ class InvalidSimisaHeaderError(Exception):
     """Raised when a simisa header is invalid."""
     pass
 
+
 class InvalidSimisaSubheaderError(Exception):
     """Raised when a simisa subheader is invalid."""
     pass
 
 
-def peek_header(filepath: str) -> str:
+def peek_header(filepath: str) -> Optional[str]:
+    """
+    Reads the beginning of a file and extracts a SIMISA header if present.
+
+    The function detects whether the file is UTF-16 LE encoded via BOM,
+    decodes an initial portion of the file accordingly, and checks whether
+    the resulting text starts with a known valid SIMISA header.
+
+    Args:
+        filepath: Path to the file to inspect.
+
+    Returns:
+        The detected header string if it starts with a valid SIMISA header,
+        otherwise None.
+    """
     with open(filepath, "rb") as f:
         bom = f.read(2)
         is_unicode = (bom == codecs.BOM_UTF16_LE)
@@ -58,11 +73,25 @@ def peek_header(filepath: str) -> str:
 
 
 def is_compressed(filepath: str) -> Optional[bool]:
+    """
+    Determines whether a file is compressed based on its SIMISA header.
+
+    This function reads the file header using `peek_header` and infers
+    compression from known SIMISA header markers.
+
+    Args:
+        filepath: Path to the file to inspect.
+
+    Returns:
+        True if the file is compressed,
+        False if it is uncompressed,
+        None if the header is missing or unrecognized.
+    """
     header = peek_header(filepath)
 
     if header is None:
         return None
-    if header.startswith("SIMISA@F"):
+    elif header.startswith("SIMISA@F"):
         return True
     elif header.startswith("SIMISA@@"):
         return False
@@ -71,6 +100,24 @@ def is_compressed(filepath: str) -> Optional[bool]:
 
 
 def read_subheader(filepath: str) -> str:
+    """
+    Reads the SIMISA subheader from a file, handling compression and encoding.
+
+    The function first determines whether the file is compressed and then
+    reads the appropriate header structure depending on encoding (ASCII or
+    UTF-16 LE). If compressed, the file content is decompressed before
+    reading the subheader.
+
+    Args:
+        filepath: Path to the SIMISA file.
+
+    Returns:
+        The decoded subheader string.
+
+    Raises:
+        InvalidSimisaHeaderError: If the file header is missing or invalid.
+        InvalidSimisaSubheaderError: If the extracted subheader is invalid.
+    """
     compressed = is_compressed(filepath)
 
     if compressed is None:
