@@ -135,25 +135,15 @@ class BlockReader(ABC):
 
         return TextFileReader(stream, "<string>", filetype, fileversion, "utf-8")
 
-    @abstractmethod
-    def read_sub_block(self) -> "BlockReader":
-        pass
+    def __iter__(self) -> Iterator["BlockReader"]:
+        while not self.end_of_block():
+            yield self.read_sub_block()
+    
+    def __enter__(self):
+        return self
 
-    @abstractmethod
-    def skip(self) -> None:
-        pass
-
-    @abstractmethod
-    def end_of_block(self) -> bool:
-        pass
-
-    @abstractmethod
-    def verify_end_of_block(self) -> None:
-        pass
-
-    def verify_id(self, desired_id: TokenID) -> None:
-        if self.id != desired_id:
-            logger.info(f"Expected block {desired_id}; got {self.id}")
+    def __exit__(self, exc_type, exc, tb):
+        self.close()
 
     @contextmanager
     def sub_block(self, expected_id: TokenID | None = None):
@@ -170,9 +160,32 @@ class BlockReader(ABC):
         finally:
             sub_block.verify_end_of_block()
 
-    def __iter__(self) -> Iterator["BlockReader"]:
-        while not self.end_of_block():
-            yield self.read_sub_block()
+    def verify_id(self, desired_id: TokenID) -> None:
+        if self.id != desired_id:
+            logger.info(f"Expected block {desired_id}; got {self.id}")
+    
+    def expect_comment(self) -> None:
+        if self.id == TokenID.comment:
+            self.skip()
+        else:
+            logger.info(f"Expected block comment; got {self.id}")
+            self.skip()
+
+    @abstractmethod
+    def read_sub_block(self) -> "BlockReader":
+        pass
+
+    @abstractmethod
+    def skip(self) -> None:
+        pass
+
+    @abstractmethod
+    def end_of_block(self) -> bool:
+        pass
+
+    @abstractmethod
+    def verify_end_of_block(self) -> None:
+        pass
 
     @abstractmethod
     def read_flags(self) -> int:
@@ -194,22 +207,9 @@ class BlockReader(ABC):
     def read_string(self) -> str:
         pass
 
-    def expect_comment(self) -> None:
-        if self.id == TokenID.comment:
-            self.skip()
-        else:
-            logger.info(f"Expected block comment; got {self.id}")
-            self.skip()
-
     @abstractmethod
     def close(self):
         pass
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc, tb):
-        self.close()
 
 
 class TextBlockReader(BlockReader):
