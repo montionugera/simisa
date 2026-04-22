@@ -95,20 +95,25 @@ class StructuredBlockReader(ABC):
         
         return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
 
+    @abstractmethod
     def read_sub_block(self) -> "StructuredBlockReader":
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def skip(self) -> None:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def end_of_block(self) -> bool:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def verify_end_of_block(self) -> None:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def verify_id(self, desired_id: TokenID) -> None:
-        raise NotImplementedError
+        pass
 
     @contextmanager
     def block(self, expected_id: TokenID | None = None):
@@ -142,27 +147,35 @@ class StructuredBlockReader(ABC):
         while not self.end_of_block():
             yield self.read_sub_block()
 
+    @abstractmethod
     def read_flags(self) -> int:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def read_int(self) -> int:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def read_uint(self) -> int:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def read_float(self) -> float:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def read_string(self) -> str:
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def read_vector3(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def expect_comment(self):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def close(self):
         pass
 

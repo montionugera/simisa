@@ -84,11 +84,13 @@ class StructuredBlockWriter(ABC):
 
         return BinaryFileWriter(stream, filepath, token_offset)
 
+    @abstractmethod
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def end_block(self):
-        raise NotImplementedError
+        pass
 
     @contextmanager
     def block(self, block_id: TokenID, label: Optional[str] = None):
@@ -98,27 +100,35 @@ class StructuredBlockWriter(ABC):
         finally:
             self.end_block()
 
+    @abstractmethod
     def write_flags(self, value: int):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def write_int(self, value: int):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def write_uint(self, value: int):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def write_float(self, value: float):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def write_string(self, value: str):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def write_vector3(self, x: float, y: float, z: float):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def write_comment(self, text: str):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def write_list(
         self,
         block_id: TokenID,
@@ -127,8 +137,9 @@ class StructuredBlockWriter(ABC):
         format: ListFormat,
         item_writer: Optional[Callable[["StructuredBlockWriter", Any], None]] = None,
     ):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def close(self):
         pass
 
