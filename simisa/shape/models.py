@@ -23,7 +23,8 @@ from typing import List, Optional
 
 
 class Vector:
-    def __init__(self,
+    def __init__(
+        self,
         x: float,
         y: float,
         z: float
@@ -45,7 +46,8 @@ class Vector:
         return cls(array[0], array[1], array[2])
 
 class Point:
-    def __init__(self,
+    def __init__(
+        self,
         x: float,
         y: float,
         z: float
@@ -67,7 +69,8 @@ class Point:
         return cls(array[0], array[1], array[2])
 
 class UVPoint:
-    def __init__(self,
+    def __init__(
+        self,
         u: float,
         v: float
     ):
@@ -87,7 +90,8 @@ class UVPoint:
         return cls(array[0], array[1])
 
 class Colour:
-    def __init__(self,
+    def __init__(
+        self,
         a: float,
         r: float,
         g: float,
@@ -102,7 +106,8 @@ class Colour:
         return f"Colour(a={self.a}, r={self.r}, g={self.g}, b={self.b})"
 
 class Matrix:
-    def __init__(self,
+    def __init__(
+        self,
         name: str,
         ax: float, ay: float, az: float,
         bx: float, by: float, bz: float,
@@ -157,7 +162,8 @@ class Matrix:
         )
 
 class VertexIdx:
-    def __init__(self,
+    def __init__(
+        self,
         vertex1_index: int,
         vertex2_index: int,
         vertex3_index: int
@@ -175,7 +181,8 @@ class VertexIdx:
         )
 
 class NormalIdx:
-    def __init__(self,
+    def __init__(
+        self,
         index: int,
         unknown2: int
     ):
@@ -190,7 +197,8 @@ class NormalIdx:
         )
 
 class IndexedTrilist:
-    def __init__(self,
+    def __init__(
+        self,
         vertex_idxs: List[VertexIdx],
         normal_idxs: List[NormalIdx],
         flags: List[str]
@@ -208,7 +216,8 @@ class IndexedTrilist:
         )
 
 class KeyPosition(ABC):
-    def __init__(self,
+    def __init__(
+        self,
         frame: int,
     ):
         self.frame = frame
@@ -220,7 +229,8 @@ class KeyPosition(ABC):
         return f"KeyPosition({self._base_repr()})"
 
 class Controller(ABC):
-    def __init__(self,
+    def __init__(
+        self,
         keyframes: List[KeyPosition]
     ):
         self.keyframes = keyframes
@@ -232,7 +242,8 @@ class Controller(ABC):
         return f"Controller({self._base_repr()})"
 
 class TCBRot(Controller):
-    def __init__(self,
+    def __init__(
+        self,
         keyframes: List[KeyPosition]
     ):
         super().__init__(keyframes)
@@ -241,7 +252,8 @@ class TCBRot(Controller):
         return f"TCBRot({self._base_repr()})"
 
 class SlerpRot(KeyPosition):
-    def __init__(self,
+    def __init__(
+        self,
         frame: int,
         x: float,
         y: float,
@@ -261,7 +273,8 @@ class SlerpRot(KeyPosition):
         )
 
 class LinearPos(Controller):
-    def __init__(self,
+    def __init__(
+        self,
         keyframes: List[KeyPosition]
     ):
         super().__init__(keyframes)
@@ -270,7 +283,8 @@ class LinearPos(Controller):
         return f"LinearPos({self._base_repr()})"
 
 class LinearKey(KeyPosition):
-    def __init__(self,
+    def __init__(
+        self,
         frame: int,
         x: float,
         y: float,
@@ -288,7 +302,8 @@ class LinearKey(KeyPosition):
         )
 
 class TCBPos(Controller):
-    def __init__(self,
+    def __init__(
+        self,
         keyframes: List[KeyPosition]
     ):
         super().__init__(keyframes)
@@ -297,7 +312,8 @@ class TCBPos(Controller):
         return f"TCBPos({self._base_repr()})"
 
 class TCBKey(KeyPosition):
-    def __init__(self,
+    def __init__(
+        self,
         frame: int,
         x: float,
         y: float,
@@ -329,7 +345,8 @@ class TCBKey(KeyPosition):
         )
 
 class AnimationNode:
-    def __init__(self,
+    def __init__(
+        self,
         name: str,
         controllers: List[Controller]
     ):
@@ -343,7 +360,8 @@ class AnimationNode:
         )
 
 class Animation:
-    def __init__(self,
+    def __init__(
+        self,
         frame_count: int,
         frame_rate: int,
         animation_nodes: List[AnimationNode]
@@ -360,7 +378,8 @@ class Animation:
         )
 
 class ShapeHeader:
-    def __init__(self,
+    def __init__(
+        self,
         flags1: str,
         flags2: str
     ):
@@ -371,7 +390,8 @@ class ShapeHeader:
         return f"ShapeHeader(flags1={self.flags1}, flags2={self.flags2})"
 
 class VolumeSphere:
-    def __init__(self,
+    def __init__(
+        self,
         vector: Vector,
         radius: float
     ):
@@ -382,7 +402,8 @@ class VolumeSphere:
         return f"VolumeSphere(vector={self.vector}, radius={self.radius})"
 
 class Texture:
-    def __init__(self,
+    def __init__(
+        self,
         image_index: int,
         filter_mode: int,
         mipmap_lod_bias: float,
@@ -400,7 +421,8 @@ class Texture:
         )
 
 class LightMaterial:
-    def __init__(self,
+    def __init__(
+        self,
         flags: str,
         diff_colour_index: int,
         amb_colour_index: int,
@@ -424,7 +446,8 @@ class LightMaterial:
         )
 
 class UVOp(ABC):
-    def __init__(self,
+    def __init__(
+        self,
         texture_address_mode: int
     ):
         self.texture_address_mode = texture_address_mode
@@ -436,7 +459,8 @@ class UVOp(ABC):
         return f"UVOp({self._base_repr()})"
 
 class UVOpCopy(UVOp):
-    def __init__(self,
+    def __init__(
+        self,
         texture_address_mode: int,
         source_uv_index: int
     ):
@@ -447,7 +471,8 @@ class UVOpCopy(UVOp):
         return f"UVOpCopy({self._base_repr()}, source_uv_index={self.source_uv_index})"
 
 class UVOpReflectMapFull(UVOp):
-    def __init__(self,
+    def __init__(
+        self,
         texture_address_mode: int
     ):
         super().__init__(texture_address_mode)
@@ -456,7 +481,8 @@ class UVOpReflectMapFull(UVOp):
         return f"UVOpReflectMapFull({self._base_repr()})"
 
 class UVOpReflectMap(UVOp):
-    def __init__(self,
+    def __init__(
+        self,
         texture_address_mode: int
     ):
         super().__init__(texture_address_mode)
@@ -465,7 +491,8 @@ class UVOpReflectMap(UVOp):
         return f"UVOpReflectMap({self._base_repr()})"
 
 class UVOpUniformScale(UVOp):
-    def __init__(self,
+    def __init__(
+        self,
         texture_address_mode: int,
         source_uv_index: int,
         unknown3: int,
@@ -483,7 +510,8 @@ class UVOpUniformScale(UVOp):
         )
 
 class UVOpNonUniformScale(UVOp):
-    def __init__(self,
+    def __init__(
+        self,
         texture_address_mode: int,
         source_uv_index: int,
         unknown3: int,
@@ -501,7 +529,8 @@ class UVOpNonUniformScale(UVOp):
         )
 
 class LightModelCfg:
-    def __init__(self,
+    def __init__(
+        self,
         flags: str,
         uv_ops: List[UVOp]
     ):
@@ -512,7 +541,8 @@ class LightModelCfg:
         return f"LightModelCfg(flags={self.flags}, uv_ops (len={len(self.uv_ops)}))"
 
 class VtxState:
-    def __init__(self,
+    def __init__(
+        self,
         flags: str,
         matrix_index: int,
         light_material_index: int,
@@ -536,7 +566,8 @@ class VtxState:
         )
 
 class PrimState:
-    def __init__(self,
+    def __init__(
+        self,
         name: str,
         flags: str,
         shader_index: int,
@@ -566,7 +597,8 @@ class PrimState:
         )
 
 class DistanceLevelsHeader:
-    def __init__(self,
+    def __init__(
+        self,
         dlevel_bias: int
     ):
         self.dlevel_bias = dlevel_bias
@@ -575,7 +607,8 @@ class DistanceLevelsHeader:
         return f"DistanceLevelsHeader(dlevel_bias={self.dlevel_bias})"
 
 class CullablePrims:
-    def __init__(self,
+    def __init__(
+        self,
         num_prims: int,
         num_flat_sections: int,
         num_prim_indices: int
@@ -592,7 +625,8 @@ class CullablePrims:
         )
 
 class GeometryNode:
-    def __init__(self,
+    def __init__(
+        self,
         tx_light_cmds: int,
         node_x_tx_light_cmds: int,
         trilists: int,
@@ -616,7 +650,8 @@ class GeometryNode:
         )
 
 class GeometryInfo:
-    def __init__(self,
+    def __init__(
+        self,
         face_normals: int,
         tx_light_cmds: int,
         node_x_tx_light_cmds: int,
@@ -654,7 +689,8 @@ class GeometryInfo:
         )
 
 class SubObjectHeader:
-    def __init__(self,
+    def __init__(
+        self,
         flags: str,
         sort_vector_index: int,
         volume_index: int,
@@ -686,7 +722,8 @@ class SubObjectHeader:
         )
 
 class Vertex:
-    def __init__(self,
+    def __init__(
+        self,
         flags: str,
         point_index: int,
         normal_index: int,
@@ -708,7 +745,8 @@ class Vertex:
         )
 
 class VertexSet:
-    def __init__(self,
+    def __init__(
+        self,
         vtx_state: int,
         vtx_start_index: int,
         vtx_count: int
@@ -723,7 +761,8 @@ class VertexSet:
         )
 
 class Primitive:
-    def __init__(self,
+    def __init__(
+        self,
         prim_state_index: int,
         indexed_trilist: IndexedTrilist
     ):
@@ -737,7 +776,8 @@ class Primitive:
         )
 
 class SubObject:
-    def __init__(self,
+    def __init__(
+        self,
         sub_object_header: SubObjectHeader,
         vertices: List[Vertex],
         vertex_sets: List[VertexSet],
@@ -757,7 +797,8 @@ class SubObject:
         )
 
 class DistanceLevelHeader:
-    def __init__(self,
+    def __init__(
+        self,
         dlevel_selection: int,
         hierarchy: List[int]
     ):
@@ -771,7 +812,8 @@ class DistanceLevelHeader:
         )
 
 class DistanceLevel:
-    def __init__(self,
+    def __init__(
+        self,
         distance_level_header: DistanceLevelHeader,
         sub_objects: List[SubObject]
     ):
@@ -785,7 +827,8 @@ class DistanceLevel:
         )
 
 class LodControl:
-    def __init__(self,
+    def __init__(
+        self,
         distance_levels_header: DistanceLevelsHeader,
         distance_levels: List[DistanceLevel]
     ):
@@ -799,7 +842,8 @@ class LodControl:
         )
 
 class Shape:
-    def __init__(self,
+    def __init__(
+        self,
         shape_header: ShapeHeader,
         volumes: List[VolumeSphere],
         shader_names: List[str],

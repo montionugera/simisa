@@ -36,7 +36,7 @@ def loads(shape_string: str) -> Shape:
 
 def read_shape(reader: BlockReader) -> Shape:
 
-    with reader.block(TokenID.shape):
+    with reader.sub_block(TokenID.shape):
 
         shape_header = read_shape_header(reader)
 
@@ -59,7 +59,7 @@ def read_shape(reader: BlockReader) -> Shape:
         animations: List[Animation] = []
 
         handlers = {
-            TokenID.volume_sphere: lambda b: volumes.append(read_volume_sphere(b)),
+            #TokenID.volume_sphere: lambda b: volumes.append(read_volume_sphere(b)),
             #TokenID.shader_name: lambda b: shader_names.append(b.read_string()),
             #TokenID.texture_filter_name: lambda b: texture_filter_names.append(b.read_string()),
             #TokenID.matrix: lambda b: matrices.append(read_matrix(b)),

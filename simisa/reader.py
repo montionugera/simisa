@@ -1,6 +1,10 @@
 """
 This file is part of Simisa.
 
+This code is loosely based on `SBR.cs` and `STFReader.cs` from
+the `Orts.Parsers.Msts` namespace within the Open Rails codebase.
+
+Copyright (C) 2013, 2014, 2015 by the Open Rails project
 Copyright (C) 2026 Peter Grønbæk Andersen <peter@grnbk.io>
 
 This program is free software: you can redistribute it and/or modify
@@ -84,6 +88,7 @@ class BlockReader(ABC):
 
         if fileformat == "b":
             token_offset = 300 if filetype == "w" else 0
+            print("POS BEFORE READ:", stream.tell())
             return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
 
         if fileformat != "t":
@@ -146,54 +151,24 @@ class BlockReader(ABC):
     def verify_end_of_block(self) -> None:
         pass
 
-    #@abstractmethod
-    #def verify_id(self, desired_id: TokenID) -> None:
-    #    pass
-
-    @contextmanager
-    def block(self, expected_id: TokenID | None = None):
-        """
-        Context manager that verifies ID and end-of-block automatically.
-        """
-        if expected_id is not None:
-            self.verify_id(expected_id)
-
-        try:
-            yield self
-        finally:
-            self.verify_end_of_block()
+    def verify_id(self, desired_id: TokenID) -> None:
+        if self.id != desired_id:
+            logger.info(f"Expected block {desired_id}; got {self.id}")
 
     @contextmanager
     def sub_block(self, expected_id: TokenID | None = None):
         """
         Read and validate a nested sub-block.
         """
-        sub = self.read_sub_block()
+        sub_block = self.read_sub_block()
 
         if expected_id is not None:
-            sub.verify_id(expected_id)
+            sub_block.verify_id(expected_id)
 
         try:
-            yield sub
+            yield sub_block
         finally:
-            sub.verify_end_of_block()
-
-    @contextmanager
-    def sub_list_block(self, expected_id: TokenID | None = None):
-        """
-        Read and validate a nested sub-block.
-        """
-        sub = self.read_sub_block()
-
-        if expected_id is not None:
-            sub.verify_id(expected_id)
-
-        # TODO read and verify count
-
-        try:
-            yield sub
-        finally:
-            sub.verify_end_of_block()
+            sub_block.verify_end_of_block()
 
     def __iter__(self) -> Iterator["BlockReader"]:
         while not self.end_of_block():
@@ -219,9 +194,12 @@ class BlockReader(ABC):
     def read_string(self) -> str:
         pass
 
-    #@abstractmethod
-    #def expect_comment(self):
-    #    pass
+    def expect_comment(self) -> None:
+        if self.id == TokenID.comment:
+            self.skip()
+        else:
+            logger.info(f"Expected block comment; got {self.id}")
+            self.skip()
 
     @abstractmethod
     def close(self):
@@ -235,64 +213,195 @@ class BlockReader(ABC):
 
 
 class TextBlockReader(BlockReader):
+    _token_table: dict[str, TokenID] | None = None
 
     def __init__(self):
-        self.stream: TextIO | None = None
-        self.at_end_of_block = False
+        self.f: STFReader | None = None
+        self.at_end_of_block: bool = False
         self.id: TokenID | None = None
         self.label: str | None = None
+    
+    @classmethod
+    def _init_token_table(cls):
+        if cls._token_table is not None:
+            return
+
+        cls._token_table = {
+            name.lower(): token
+            for name, token in TokenID.__members__.items()
+        }
+    
+    def _get_token_id(self, token: str) -> TokenID:
+        if self._token_table is None:
+            self._init_token_table()
+
+        t = token.lower()
+
+        token_id = self._token_table.get(t)
+        if token_id is not None:
+            return token_id
+
+        if token.lower() == "skip":
+            return TokenID.comment
+        if token.lower() == "comment":
+            return TokenID.comment
+        if token.startswith("#"):
+            return TokenID.comment
+
+        logger.warning(f"Skipped unknown token {token}")
+        return TokenID.comment
 
     def read_sub_block(self) -> BlockReader:
-        raise NotImplementedError
+        block = TextBlockReader()
+        block.f = self.f
+
+        token = self.f.read_item()
+
+        if token == "(":
+            block.id = TokenID.comment
+            return block
+
+        block.id = self._get_token_id(token)
+
+        if token == ")":
+            logger.warning("Ignored extra close bracket")
+            return block
+
+        token = self.f.read_item()
+
+        if token != "(":
+            block.label = token
+            self.f.verify_start_of_block()
+
+        return block
 
     def skip(self):
-        raise NotImplementedError
+        if self.at_end_of_block:
+            return
+
+        depth = 1
+
+        while depth > 0:
+            token = self.f.read_item()
+
+            if token == "":
+                logger.warning("Unexpected end of file")
+                self.at_end_of_block = True
+                return
+
+            if token == "(":
+                depth += 1
+            elif token == ")":
+                depth -= 1
+
+        self.at_end_of_block = True
 
     def end_of_block(self) -> bool:
-        raise NotImplementedError
+        return (
+            self.at_end_of_block
+            or self.f.peek_past_whitespace() == ")"
+            or self.f.eof()
+        )
 
     def verify_end_of_block(self):
-        raise NotImplementedError
+        if self.at_end_of_block:
+            return
+
+        s = self.f.read_item()
+
+        if s.startswith("#") or s.lower() == "comment":
+            self.skip()
+            return
+
+        if s != ")":
+            logger.warning(f"Expected end of block; got '{s}'")
+
+        self.at_end_of_block = True
 
     def read_flags(self) -> int:
-        raise NotImplementedError
+        return self.f.read_hex(None)
 
     def read_int(self) -> int:
-        raise NotImplementedError
+        return self.f.read_int(None)
 
     def read_uint(self) -> int:
-        raise NotImplementedError
+        return self.f.read_uint(None)
 
     def read_float(self) -> float:
-        raise NotImplementedError
+        return self.f.read_float(None)
 
     def read_string(self) -> str:
-        raise NotImplementedError
+        return self.f.read_item()
 
 
 class TextFileReader(TextBlockReader):
 
-    def __init__(self, input_stream: TextIO, filepath: str, filetype: str, fileversion: int, encoding: str):
+    def __init__(
+        self,
+        input_stream: TextIO,
+        filepath: str,
+        filetype: str,
+        fileversion: int,
+        encoding: str
+    ):
         super().__init__()
+
         self.filepath = filepath
-        self.stream = input_stream
         self.filetype = filetype
         self.fileversion = fileversion
         self.encoding = encoding
+        self.stream = input_stream
+
         self.is_closed = False
+        self.at_end_of_block = False
+
+        self.f = STFReader(
+            input_stream=input_stream,
+            filename=filepath,
+            encoding=encoding
+        )
 
     def skip(self):
-        raise NotImplementedError
+        if self.is_closed:
+            return
+
+        self.f.close() if hasattr(self.f, "close") else None
+        self.is_closed = True
+        self.at_end_of_block = True
 
     def verify_end_of_block(self):
-        raise NotImplementedError
+        if self.is_closed:
+            return
+
+        s = self.f.read_item()
+        extra_data = s
+
+        if s != "":
+            while s != "":
+                if s != ")":
+                    logger.warning(
+                        f"Expected end of file; got '{s}' in {self.filepath}"
+                    )
+                    return
+
+                s = self.f.read_item()
 
     def end_of_block(self) -> bool:
-        raise NotImplementedError
+        if self.is_closed or self.at_end_of_block:
+            return True
+
+        if hasattr(self.f, "peek_past_whitespace"):
+            return self.f.peek_past_whitespace() == -1
+
+        if hasattr(self.f, "eof"):
+            return self.f.eof()
+
+        return False
 
     def close(self):
-        if not self.is_closed and self.stream:
-            self.stream.close()
+        if not self.is_closed:
+            if self.f:
+                self.f.close()
             self.is_closed = True
 
 
@@ -304,54 +413,152 @@ class BinaryBlockReader(BlockReader):
         self.token_offset = 0
         self.remaining_bytes = 0
         self.flags = 0
+        self.id: TokenID | None = None
+        self.label: str | None = None
 
-    def read_sub_block(self) -> BlockReader:
-        raise NotImplementedError
+    @classmethod
+    def from_parent(cls, parent: "BinaryBlockReader", size: int) -> "BinaryBlockReader":
+        sub = cls()
 
-    def skip(self):
-        raise NotImplementedError
+        sub.stream = parent.stream
+        sub.filepath = parent.filepath
+        sub.token_offset = parent.token_offset
 
-    def end_of_block(self) -> bool:
-        raise NotImplementedError
+        sub.remaining_bytes = size
+        sub.flags = 0
+        sub.id = None
+        sub.label = None
 
-    def verify_end_of_block(self):
-        raise NotImplementedError
+        return sub
+
+    def _read(self, n: int) -> bytes:
+        if self.stream is None:
+            raise RuntimeError("Stream is not initialized")
+
+        data = self.stream.read(n)
+        if len(data) != n:
+            raise SimisaSubheaderError("Unexpected EOF in block")
+
+        self.remaining_bytes -= n
+        return data
+
+    def read_sub_block(self) -> "BlockReader":
+        if self.stream is None:
+            raise RuntimeError("Stream is not initialized")
+
+        if self.remaining_bytes < 8:
+            raise SimisaSubheaderError("Not enough bytes for sub-block header")
+
+        raw_id = int.from_bytes(self._read(2), "little")
+        raw_flags = int.from_bytes(self._read(2), "little")
+        size = int.from_bytes(self._read(4), "little")
+
+        sub = BinaryFileReader.__new__(BinaryFileReader)
+
+        sub.stream = self.stream
+        sub.filepath = self.filepath
+
+        sub.token_offset = self.token_offset
+        sub.filetype = getattr(self, "filetype", "")
+        sub.fileversion = getattr(self, "fileversion", 0)
+
+        sub.id = TokenID(raw_id + self.token_offset)
+        sub.flags = raw_flags
+        sub.remaining_bytes = size
+
+        if sub.remaining_bytes > 0:
+            label_len = int.from_bytes(self._read(1), "little")
+
+            if label_len > 0:
+                raw = self._read(label_len * 2)
+                sub.label = raw.decode("utf-16-le")
+
+        return sub
 
     def read_flags(self) -> int:
-        raise NotImplementedError
+        return int.from_bytes(self._read(4), "little")
 
     def read_int(self) -> int:
-        raise NotImplementedError
+        return int.from_bytes(self._read(4), "little", signed=True)
 
     def read_uint(self) -> int:
-        raise NotImplementedError
+        return int.from_bytes(self._read(4), "little", signed=False)
 
     def read_float(self) -> float:
-        raise NotImplementedError
+        import struct
+        return struct.unpack("<f", self._read(4))[0]
 
     def read_string(self) -> str:
-        raise NotImplementedError
+        length = int.from_bytes(self._read(2), "little")
+        if length == 0:
+            return ""
+
+        raw = self._read(length * 2)
+        return raw.decode("utf-16-le")
+    
+    def skip(self):
+        if self.remaining_bytes <= 0:
+            return
+
+        if self.stream is None:
+            return
+
+        self.stream.read(self.remaining_bytes)
+        self.remaining_bytes = 0
+
+    def end_of_block(self) -> bool:
+        return self.remaining_bytes == 0
+
+    def verify_end_of_block(self):
+        if not self.end_of_block():
+            logger.warning(f"Expected end of block {self.id}; got extra data")
+            self.skip()
+
+    def close(self):
+        if self.stream:
+            self.stream.close()
+            self.stream = None
 
 
 class BinaryFileReader(BinaryBlockReader):
 
-    def __init__(self, input_stream: BinaryIO, filepath: str, filetype: str, fileversion: int, token_offset: int):
+    def __init__(self, input_stream: BinaryIO, filepath: str,
+                 filetype: str, fileversion: int, token_offset: int):
         super().__init__()
         self.filepath = filepath
         self.stream = input_stream
         self.filetype = filetype
         self.fileversion = fileversion
         self.token_offset = token_offset
-        self._size = 0
+        self.remaining_bytes = float("inf")
 
     def skip(self):
-        raise NotImplementedError
+        if self.stream is None:
+            return
 
+        while self.stream.read(1):
+            pass
+        print("POS BEFORE READ skip:", self.stream.tell())
+
+        self.remaining_bytes = 0
+    
     def end_of_block(self) -> bool:
-        raise NotImplementedError
+        if self.stream is None:
+            return True
 
+        pos = self.stream.tell()
+        byte = self.stream.read(1)
+        self.stream.seek(pos)
+
+        print("POS BEFORE READ end_of_block:", self.stream.tell())
+
+        return byte == b""
+    
     def verify_end_of_block(self):
-        raise NotImplementedError
+        if not self.end_of_block():
+            logger.warning(
+                f"Expected end of file; got extra data in {self.filepath}"
+            )
 
     def close(self):
         if self.stream:
