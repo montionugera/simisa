@@ -17,8 +17,9 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import List
+
 from .. import TokenID, Units
-from ..header import peek_header, is_compressed
 from ..reader import BlockReader
 from .models import *
 
@@ -29,7 +30,8 @@ def load(filepath: str) -> Shape:
 
 
 def loads(shape_string: str) -> Shape:
-    return BlockReader.from_string(shape_string)
+    reader = BlockReader.from_string(shape_string)
+    return read_shape(reader)
 
 
 def read_shape(reader: BlockReader) -> Shape:
@@ -38,23 +40,23 @@ def read_shape(reader: BlockReader) -> Shape:
 
         shape_header = read_shape_header(reader)
 
-        volumes: list[VolumeSphere] = []
-        shader_names: list[str] = []
-        texture_filter_names: list[str] = []
-        points: list[Point] = []
-        uv_points: list[UVPoint] = []
-        normals: list[Vector] = []
-        sort_vectors: list[Vector] = []
-        colours: list[Colour] = []
-        matrices: list[Matrix] = []
-        images: list[str] = []
-        textures: list[Texture] = []
-        light_materials: list[LightMaterial] = []
-        light_model_cfgs: list[LightModelCfg] = []
-        vtx_states: list[VtxState] = []
-        prim_states: list[PrimState] = []
-        lod_controls: list[LodControl] = []
-        animations: list[Animation] = []
+        volumes: List[VolumeSphere] = []
+        shader_names: List[str] = []
+        texture_filter_names: List[str] = []
+        points: List[Point] = []
+        uv_points: List[UVPoint] = []
+        normals: List[Vector] = []
+        sort_vectors: List[Vector] = []
+        colours: List[Colour] = []
+        matrices: List[Matrix] = []
+        images: List[str] = []
+        textures: List[Texture] = []
+        light_materials: List[LightMaterial] = []
+        light_model_cfgs: List[LightModelCfg] = []
+        vtx_states: List[VtxState] = []
+        prim_states: List[PrimState] = []
+        lod_controls: List[LodControl] = []
+        animations: List[Animation] = []
 
         handlers = {
             TokenID.volume_sphere: lambda b: volumes.append(read_volume_sphere(b)),
@@ -109,9 +111,18 @@ def read_volume_sphere(reader: BlockReader) -> VolumeSphere:
     with reader.block(TokenID.volume_sphere):
 
         radius = reader.read_float()
+        vector = read_vector()
+
+        return VolumeSphere(radius, vector)
+
+
+def read_vector(reader: BlockReader) -> Vector:
+
+    with reader.block(TokenID.vector):
+
         x = reader.read_float()
         y = reader.read_float()
         z = reader.read_float()
 
-        return VolumeSphere(radius, x, y, z)
+        return Vector(x, y, z)
 

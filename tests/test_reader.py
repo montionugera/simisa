@@ -19,22 +19,38 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import pytest
 from simisa import BlockReader
+from simisa import shape
 
-def test_is_compressed_uncompressed_shape(global_storage):
+def test_shape_load(global_storage):
     shape_path = global_storage["shape_path"]
-    obj = BlockReader.open(shape_path)
-    raw = obj.stream.read(100)
-    #text = raw.decode("utf-16-le")
-    #first_x_chars = text[:x]
-    print(raw)
+    s = shape.load(shape_path)
+    print(s)
     assert False
 
 
-def test_is_compressed_compressed_shape(global_storage):
-    shape_compressed_path = global_storage["shape_compressed_path"]
-    obj = BlockReader.open(shape_compressed_path)
-    raw = obj.stream.read(100)
-    #text = raw.decode("utf-16-le")
-    #first_x_chars = text[:x]
-    print(raw)
+def test_shape_load(global_storage):
+    shape_path = global_storage["shape_path"]
+    with open(shape_path, 'r', encoding='utf-16-le') as f:
+        shape_string = f.read()
+        s = shape.loads(shape_string)
+        print(s)
     assert False
+
+# def test_is_compressed_uncompressed_shape(global_storage):
+#     shape_path = global_storage["shape_path"]
+#     obj = BlockReader.open(shape_path)
+#     raw = obj.stream.read(100)
+#     #text = raw.decode("utf-16-le")
+#     #first_x_chars = text[:x]
+#     print(raw)
+#     assert False
+
+
+# def test_is_compressed_compressed_shape(global_storage):
+#     shape_compressed_path = global_storage["shape_compressed_path"]
+#     obj = BlockReader.open(shape_compressed_path)
+#     raw = obj.stream.read(100)
+#     #text = raw.decode("utf-16-le")
+#     #first_x_chars = text[:x]
+#     print(raw)
+#     assert False

@@ -91,34 +91,26 @@ class BlockReader(ABC):
         
         return TextFileReader(stream, filepath, filetype, fileversion, encoding)
 
-    # TODO test this properly
     @staticmethod
     def from_string(data: str) -> "BlockReader":
+        data = data.lstrip("\ufeff")
+
         stream = io.StringIO(data)
 
-        is_unicode = True
-        encoding = "utf-8"
-
-        header_bytes = stream.read(32)
-        header = header_bytes[:16]
-
+        header = stream.read(16)
         header = header.lstrip("\r\n")
 
         valid_headers = [
             "SIMISA@@",
-            "SIMISA@F",
         ]
 
+        if header.startswith("SIMISA@F"):
+            raise SimisaHeaderError("Compressed data is not supported with 'from_string'")
+        
         if not any(header.startswith(h) for h in valid_headers):
-            raise SimisaHeaderError()
+            raise SimisaHeaderError(f"Unrecognized header '{header}' in string input")
 
-        compressed = header.startswith("SIMISA@F")
-
-        if compressed:
-            stream = io.StringIO(stream.read())
-
-        subheader_bytes = stream.read(32)
-        subheader = subheader_bytes[:16]
+        subheader = stream.read(16)
 
         if len(subheader) < 5:
             raise SimisaSubheaderError("Subheader too short in string input")
@@ -128,13 +120,12 @@ class BlockReader(ABC):
         fileformat = subheader[7]
 
         if fileformat == "b":
-            token_offset = 300 if filetype == "w" else 0
-            return BinaryFileReader(stream, "<string>", filetype, fileversion, token_offset)
+            raise SimisaSubheaderError("Binary data is not supported with 'from_string'")
 
         if fileformat != "t":
             raise SimisaSubheaderError(f"Unrecognized subheader '{subheader}' in string input")
 
-        return TextFileReader(stream, "<string>", filetype, fileversion, encoding)
+        return TextFileReader(stream, "<string>", filetype, fileversion, "utf-8")
 
     @abstractmethod
     def read_sub_block(self) -> "BlockReader":
