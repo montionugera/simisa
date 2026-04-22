@@ -77,12 +77,11 @@ class StructuredBlockWriter(ABC):
 
         stream.write(subheader.encode(encoding))
 
-        if not is_binary:
-            return UnicodeFileWriter(stream, filepath, encoding)
-
-        token_offset = 300 if filetype == "w" else 0
-        
-        return BinaryFileWriter(stream, filepath, token_offset)
+        if is_binary:
+            token_offset = 300 if filetype == "w" else 0
+            return BinaryFileWriter(stream, filepath, token_offset)
+            
+        return TextFileWriter(stream, filepath, encoding)
 
     @abstractmethod
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
@@ -99,6 +98,22 @@ class StructuredBlockWriter(ABC):
             yield self
         finally:
             self.end_block()
+
+    @abstractmethod
+    def begin_list_block(self, block_id: TokenID, list_format: ListBlockFormat, label: Optional[str] = None):
+        pass
+
+    @abstractmethod
+    def end_list_block(self):
+        pass
+
+    @contextmanager
+    def list_block(self, block_id: TokenID, list_format: ListBlockFormat, label: Optional[str] = None):
+        self.begin_list_block(block_id, list_format, label)
+        try:
+            yield self
+        finally:
+            self.end_list_block()
 
     @abstractmethod
     def write_flags(self, value: int):
@@ -151,10 +166,11 @@ class StructuredBlockWriter(ABC):
         return self
 
     def __exit__(self, exc_type, exc, tb):
+        self.flush()
         self.close()
 
 
-class UnicodeBlockWriter(StructuredBlockWriter):
+class TextBlockWriter(StructuredBlockWriter):
 
     def __init__(self):
         self.stream: TextIO | None = None
@@ -234,7 +250,7 @@ class UnicodeBlockWriter(StructuredBlockWriter):
         self.end_block()
 
 
-class UnicodeFileWriter(UnicodeBlockWriter):
+class TextFileWriter(TextBlockWriter):
 
     def __init__(self, output_stream: TextIO, filename: str, encoding="utf-8"):
         super().__init__()

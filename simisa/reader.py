@@ -82,15 +82,14 @@ class StructuredBlockReader(ABC):
         fileversion = int(subheader[6])
         fileformat = subheader[7]
 
-        if fileformat == "t":
-            return UnicodeFileReader(stream, filepath, filetype, fileversion, encoding)
+        if fileformat == "b":
+            token_offset = 300 if filetype == "w" else 0
+            return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
 
-        if fileformat != "b":
+        if fileformat != "t":
             raise InvalidSimisaSubheaderError(f"Unrecognized subheader '{subheader}' in {filepath}")
         
-        token_offset = 300 if filetype == "w" else 0
-
-        return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
+        return TextFileReader(stream, filepath, filetype, fileversion, encoding)
 
     @abstractmethod
     def read_sub_block(self) -> "StructuredBlockReader":
@@ -140,6 +139,8 @@ class StructuredBlockReader(ABC):
         finally:
             sub.verify_end_of_block()
 
+    # TODO list block that verifies count?
+
     def __iter__(self) -> Iterator["StructuredBlockReader"]:
         while not self.end_of_block():
             yield self.read_sub_block()
@@ -183,7 +184,7 @@ class StructuredBlockReader(ABC):
         self.close()
 
 
-class UnicodeBlockReader(StructuredBlockReader):
+class TextBlockReader(StructuredBlockReader):
 
     def __init__(self):
         self.stream: TextIO | None = None
@@ -219,7 +220,7 @@ class UnicodeBlockReader(StructuredBlockReader):
         raise NotImplementedError
 
 
-class UnicodeFileReader(UnicodeBlockReader):
+class TextFileReader(TextBlockReader):
 
     def __init__(self, input_stream: TextIO, filepath: str, filetype: str, fileversion: int, encoding: str):
         super().__init__()
