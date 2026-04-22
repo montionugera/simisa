@@ -59,10 +59,9 @@ class StructuredBlockWriter(ABC):
     ):
         fileformat = 'b' if is_binary else 't'
         subheader = f"JINX0{filetype}{fileversion}{fileformat}______"
+        encoding = "utf-16-le" if is_unicode else "ascii"
 
         f = open(filepath, "wb")
-        encoding = "utf-16-le" if is_unicode else "ascii"
-        token_offset = 300 if filetype == "w" else 0
 
         if is_compressed:
             f.write(b"SIMISA@F")
@@ -81,6 +80,8 @@ class StructuredBlockWriter(ABC):
         if not is_binary:
             return UnicodeFileWriter(stream, filepath, encoding)
 
+        token_offset = 300 if filetype == "w" else 0
+        
         return BinaryFileWriter(stream, filepath, token_offset)
 
     @abstractmethod

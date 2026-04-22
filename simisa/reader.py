@@ -51,15 +51,17 @@ class StructuredBlockReader(ABC):
             raise InvalidSimisaHeaderError()
 
         f = open(filepath, "rb")
+
         bom = f.read(2)
         is_unicode = (bom == codecs.BOM_UTF16_LE)
+        encoding = "utf-16-le" if is_unicode else "ascii"
 
         if is_unicode:
             header_bytes = f.read(32)
-            header = header_bytes[:16].decode("utf-16-le")
+            header = header_bytes[:16].decode(encoding)
         else:
             header_bytes = bom + f.read(14)
-            header = header_bytes[:8].decode("ascii", errors="ignore")
+            header = header_bytes[:8].decode(encoding, errors="ignore")
 
         if compressed:
             f.read(2)
@@ -70,12 +72,8 @@ class StructuredBlockReader(ABC):
                 f.read(4 if is_unicode else 2)
             stream = f
 
-        sub_bytes = stream.read(32 if is_unicode else 16)
-
-        subheader = sub_bytes[:16 if is_unicode else 8].decode(
-            "utf-16-le" if is_unicode else "ascii",
-            errors="ignore"
-        )
+        subheader_bytes = stream.read(32 if is_unicode else 16)
+        subheader = subheader_bytes[:16 if is_unicode else 8].decode(encoding, errors="ignore")
 
         if len(subheader) < 5:
             raise InvalidSimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")
@@ -83,15 +81,15 @@ class StructuredBlockReader(ABC):
         filetype = subheader[5]
         fileversion = int(subheader[6])
         fileformat = subheader[7]
-        encoding = "utf-16-le" if is_unicode else "ascii"
-        token_offset = 300 if filetype == "w" else 0
 
         if fileformat == "t":
             return UnicodeFileReader(stream, filepath, filetype, fileversion, encoding)
 
         if fileformat != "b":
-            raise InvalidSimisaSubheaderError(f'Unrecognized subheader "{subheader}" in {filepath}')
+            raise InvalidSimisaSubheaderError(f"Unrecognized subheader '{subheader}' in {filepath}")
         
+        token_offset = 300 if filetype == "w" else 0
+
         return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
 
     @abstractmethod
