@@ -18,11 +18,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import pytest
+from simisa import BlockReader
 
 
-def load_shape(filepath: str) -> str:
+def load_file(filepath: str) -> str:
     with open(filepath, 'r', encoding='utf-16-le') as f:
         return f.read()
+
+
+@pytest.fixture(scope="session")
+def reader_from_body(body: str) -> BlockReader:
+    return BlockReader.from_string(
+        "SIMISA@@@@@@@@@@"
+        "JINX0s0t______\n"
+        + body
+    )
 
 
 @pytest.fixture(scope="session")
@@ -35,5 +45,5 @@ def global_storage():
         "emptyfile_path": "./tests/data/empty.txt",
         "garbagefile_path": "./tests/data/garbage.txt"
     }
-    data["shape"] = load_shape(data["shape_path"])
+    data["shape"] = load_file(data["shape_path"])
     return data

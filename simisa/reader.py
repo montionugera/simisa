@@ -48,7 +48,7 @@ class BlockReader(ABC):
         compressed = is_compressed(filepath)
 
         if compressed is None:
-            raise SimisaHeaderError()
+            raise SimisaHeaderError(f"Unrecognized header in {filepath}")
 
         f = open(filepath, "rb")
 
@@ -93,6 +93,9 @@ class BlockReader(ABC):
 
     @staticmethod
     def from_string(data: str) -> "BlockReader":
+        if not isinstance(data, str):
+            raise TypeError(f"Parameter 'data' must be str, but got {type(data).__name__}")
+
         data = data.lstrip("\ufeff")
 
         stream = io.StringIO(data)

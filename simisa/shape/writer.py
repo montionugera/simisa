@@ -18,7 +18,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from .. import TokenID, Units
-from ..header import peek_header, is_compressed
 from ..writer import BlockWriter
 from ..format import ListBlockFormat
 from .models import *
@@ -30,9 +29,7 @@ def dump(
     compressed: bool = False
 ) -> None:
     if not isinstance(shape, Shape):
-        raise TypeError(
-            f"Parameter 'shape' must be Shape, but got {type(shape).__name__}"
-        )
+        raise TypeError(f"Parameter 'shape' must be Shape, but got {type(shape).__name__}")
 
     with BlockWriter.open(
         filepath,
@@ -49,9 +46,7 @@ def dumps(
     shape: Shape
 ) -> str:
     if not isinstance(shape, Shape):
-        raise TypeError(
-            f"Parameter 'shape' must be Shape, but got {type(shape).__name__}"
-        )
+        raise TypeError(f"Parameter 'shape' must be Shape, but got {type(shape).__name__}")
 
     lambda writer: write_shape(writer, shape)
 
@@ -64,5 +59,5 @@ def dumps(
 
 
 
-def write_shape(reader: BlockReader, shape: Shape):
+def write_shape(reader: BlockWriter, shape: Shape) -> None:
     pass

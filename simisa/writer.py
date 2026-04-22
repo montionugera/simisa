@@ -85,7 +85,7 @@ class BlockWriter(ABC):
     
     @staticmethod
     def to_string(
-        write_fn: Callable[[BlockWriter], Any],
+        write_fn: Callable[["BlockWriter"], Any],
         *,
         filetype: str,
         fileversion: str
