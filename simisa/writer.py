@@ -19,11 +19,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import io
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Optional, BinaryIO, TextIO, Callable, Any
 
-from .format import ListFormat
+from .format import ListBlockFormat
 from .token_id import TokenID
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ class CompressedWriteStream:
             self.file.write(chunk)
 
 
-class StructuredBlockWriter(ABC):
+class BlockWriter(ABC):
 
     @staticmethod
     def open(
@@ -58,7 +58,7 @@ class StructuredBlockWriter(ABC):
         is_compressed: bool = False
     ):
         fileformat = 'b' if is_binary else 't'
-        subheader = f"JINX0{filetype}{fileversion}{fileformat}______"
+        subheader = f"JINX0{filetype}{fileversion}{fileformat}______\r\n"
         encoding = "utf-16-le" if is_unicode else "ascii"
 
         f = open(filepath, "wb")
@@ -80,7 +80,7 @@ class StructuredBlockWriter(ABC):
         if is_binary:
             token_offset = 300 if filetype == "w" else 0
             return BinaryFileWriter(stream, filepath, token_offset)
-            
+
         return TextFileWriter(stream, filepath, encoding)
 
     @abstractmethod
@@ -136,10 +136,6 @@ class StructuredBlockWriter(ABC):
         pass
 
     @abstractmethod
-    def write_vector3(self, x: float, y: float, z: float):
-        pass
-
-    @abstractmethod
     def write_comment(self, text: str):
         pass
 
@@ -149,8 +145,8 @@ class StructuredBlockWriter(ABC):
         block_id: TokenID,
         values,
         *,
-        format: ListFormat,
-        item_writer: Optional[Callable[["StructuredBlockWriter", Any], None]] = None,
+        format: ListBlockFormat,
+        item_writer: Optional[Callable[["BlockWriter", Any], None]] = None,
     ):
         pass
 
@@ -170,7 +166,7 @@ class StructuredBlockWriter(ABC):
         self.close()
 
 
-class TextBlockWriter(StructuredBlockWriter):
+class TextBlockWriter(BlockWriter):
 
     def __init__(self):
         self.stream: TextIO | None = None
@@ -209,7 +205,7 @@ class TextBlockWriter(StructuredBlockWriter):
         block_id: TokenID,
         values,
         *,
-        format: ListFormat,
+        format: ListBlockFormat,
         item_writer: Optional[Callable] = None,
     ):
         self.begin_block(block_id)
@@ -269,7 +265,7 @@ class TextFileWriter(TextBlockWriter):
             self.is_closed = True
 
 
-class BinaryBlockWriter(StructuredBlockWriter):
+class BinaryBlockWriter(BlockWriter):
 
     def __init__(self):
         self.filename = ""
@@ -303,7 +299,7 @@ class BinaryBlockWriter(StructuredBlockWriter):
         block_id: TokenID,
         values,
         *,
-        format: ListFormat,
+        format: ListBlockFormat,
         item_writer: Optional[Callable] = None,
     ):
         self.begin_block(block_id)
@@ -339,9 +335,9 @@ class BinaryFileWriter(BinaryBlockWriter):
             self.is_closed = True
 
 
-class StructuredBlockWriterException(Exception):
+class BlockWriterException(Exception):
 
-    def __init__(self, writer: StructuredBlockWriter, message: str):
+    def __init__(self, writer: BlockWriter, message: str):
         super().__init__(message)
         self.writer = writer
 

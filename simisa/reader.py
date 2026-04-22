@@ -21,7 +21,7 @@ import io
 import zlib
 import codecs
 import logging
-from abc import ABC
+from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Optional, Iterator, BinaryIO, TextIO
 
@@ -31,24 +31,24 @@ from .token_id import TokenID
 logger = logging.getLogger(__name__)
 
 
-class InvalidSimisaHeaderError(Exception):
-    """Raised when a simisa header is invalid."""
+class SimisaHeaderError(Exception):
+    """Raised when a simisa header is missing or invalid."""
     pass
 
 
-class InvalidSimisaSubheaderError(Exception):
-    """Raised when a simisa subheader is invalid."""
+class SimisaSubheaderError(Exception):
+    """Raised when a simisa subheader is missing or invalid."""
     pass
 
 
-class StructuredBlockReader(ABC):
+class BlockReader(ABC):
 
     @staticmethod
-    def open(filepath: str) -> "StructuredBlockReader":
+    def open(filepath: str) -> "BlockReader":
         compressed = is_compressed(filepath)
 
         if compressed is None:
-            raise InvalidSimisaHeaderError()
+            raise SimisaHeaderError()
 
         f = open(filepath, "rb")
 
@@ -65,7 +65,7 @@ class StructuredBlockReader(ABC):
 
         if compressed:
             f.read(2)
-            decompressor = zlib.decompressobj(-zlib.MAX_WBITS)
+            decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
             stream = io.BytesIO(decompressor.decompress(f.read()))
         else:
             if header.startswith("\r\n"):
@@ -76,7 +76,7 @@ class StructuredBlockReader(ABC):
         subheader = subheader_bytes[:16 if is_unicode else 8].decode(encoding, errors="ignore")
 
         if len(subheader) < 5:
-            raise InvalidSimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")
+            raise SimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")
 
         filetype = subheader[5]
         fileversion = int(subheader[6])
@@ -87,12 +87,57 @@ class StructuredBlockReader(ABC):
             return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
 
         if fileformat != "t":
-            raise InvalidSimisaSubheaderError(f"Unrecognized subheader '{subheader}' in {filepath}")
+            raise SimisaSubheaderError(f"Unrecognized subheader '{subheader}' in {filepath}")
         
         return TextFileReader(stream, filepath, filetype, fileversion, encoding)
 
+    # TODO test this properly
+    @staticmethod
+    def from_string(data: str) -> "BlockReader":
+        stream = io.StringIO(data)
+
+        is_unicode = True
+        encoding = "utf-8"
+
+        header_bytes = stream.read(32)
+        header = header_bytes[:16]
+
+        header = header.lstrip("\r\n")
+
+        valid_headers = [
+            "SIMISA@@",
+            "SIMISA@F",
+        ]
+
+        if not any(header.startswith(h) for h in valid_headers):
+            raise SimisaHeaderError()
+
+        compressed = header.startswith("SIMISA@F")
+
+        if compressed:
+            stream = io.StringIO(stream.read())
+
+        subheader_bytes = stream.read(32)
+        subheader = subheader_bytes[:16]
+
+        if len(subheader) < 5:
+            raise SimisaSubheaderError("Subheader too short in string input")
+
+        filetype = subheader[5]
+        fileversion = int(subheader[6])
+        fileformat = subheader[7]
+
+        if fileformat == "b":
+            token_offset = 300 if filetype == "w" else 0
+            return BinaryFileReader(stream, "<string>", filetype, fileversion, token_offset)
+
+        if fileformat != "t":
+            raise SimisaSubheaderError(f"Unrecognized subheader '{subheader}' in string input")
+
+        return TextFileReader(stream, "<string>", filetype, fileversion, encoding)
+
     @abstractmethod
-    def read_sub_block(self) -> "StructuredBlockReader":
+    def read_sub_block(self) -> "BlockReader":
         pass
 
     @abstractmethod
@@ -107,9 +152,9 @@ class StructuredBlockReader(ABC):
     def verify_end_of_block(self) -> None:
         pass
 
-    @abstractmethod
-    def verify_id(self, desired_id: TokenID) -> None:
-        pass
+    #@abstractmethod
+    #def verify_id(self, desired_id: TokenID) -> None:
+    #    pass
 
     @contextmanager
     def block(self, expected_id: TokenID | None = None):
@@ -139,9 +184,24 @@ class StructuredBlockReader(ABC):
         finally:
             sub.verify_end_of_block()
 
-    # TODO list block that verifies count?
+    @contextmanager
+    def sub_list_block(self, expected_id: TokenID | None = None):
+        """
+        Read and validate a nested sub-block.
+        """
+        sub = self.read_sub_block()
 
-    def __iter__(self) -> Iterator["StructuredBlockReader"]:
+        if expected_id is not None:
+            sub.verify_id(expected_id)
+
+        # TODO read and verify count
+
+        try:
+            yield sub
+        finally:
+            sub.verify_end_of_block()
+
+    def __iter__(self) -> Iterator["BlockReader"]:
         while not self.end_of_block():
             yield self.read_sub_block()
 
@@ -165,13 +225,9 @@ class StructuredBlockReader(ABC):
     def read_string(self) -> str:
         pass
 
-    @abstractmethod
-    def read_vector3(self):
-        pass
-
-    @abstractmethod
-    def expect_comment(self):
-        pass
+    #@abstractmethod
+    #def expect_comment(self):
+    #    pass
 
     @abstractmethod
     def close(self):
@@ -184,7 +240,7 @@ class StructuredBlockReader(ABC):
         self.close()
 
 
-class TextBlockReader(StructuredBlockReader):
+class TextBlockReader(BlockReader):
 
     def __init__(self):
         self.stream: TextIO | None = None
@@ -192,7 +248,7 @@ class TextBlockReader(StructuredBlockReader):
         self.id: TokenID | None = None
         self.label: str | None = None
 
-    def read_sub_block(self) -> StructuredBlockReader:
+    def read_sub_block(self) -> BlockReader:
         raise NotImplementedError
 
     def skip(self):
@@ -246,7 +302,7 @@ class TextFileReader(TextBlockReader):
             self.is_closed = True
 
 
-class BinaryBlockReader(StructuredBlockReader):
+class BinaryBlockReader(BlockReader):
 
     def __init__(self):
         self.filepath: str = ""
@@ -255,7 +311,7 @@ class BinaryBlockReader(StructuredBlockReader):
         self.remaining_bytes = 0
         self.flags = 0
 
-    def read_sub_block(self) -> StructuredBlockReader:
+    def read_sub_block(self) -> BlockReader:
         raise NotImplementedError
 
     def skip(self):
@@ -308,9 +364,9 @@ class BinaryFileReader(BinaryBlockReader):
             self.stream.close()
 
 
-class StructuredBlockReaderException(Exception):
+class BlockReaderException(Exception):
 
-    def __init__(self, reader: StructuredBlockReader, message: str):
+    def __init__(self, reader: BlockReader, message: str):
         super().__init__(message)
         self.reader = reader
 

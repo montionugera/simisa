@@ -21,7 +21,7 @@ from typing import Optional
 from dataclasses import dataclass
 
 @dataclass
-class ListFormat:
+class ListBlockFormat:
     items_per_line: Optional[int] = None
     disable_inner_indent: bool = False
     count_multiplier: float = 1.0

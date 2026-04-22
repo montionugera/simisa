@@ -22,19 +22,19 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 __version__ = '0.0.1b0'
 __all__ = [
     'is_unicode', 'peek_header', 'is_compressed',
-    'InvalidSimisaHeaderError', 'InvalidSimisaSubheaderError',
-    'ListFormat', 'TokenID', 'Units'
-    'StructuredBlockReader', 'StructuredBlockWriter',
+    'SimisaHeaderError', 'SimisaSubheaderError',
+    'ListBlockFormat', 'TokenID', 'Units'
+    'BlockReader', 'BlockWriter',
     'shape'
 ]
 
 __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
 
 from .header import is_unicode, peek_header, is_compressed
-from .format import ListFormat
+from .format import ListBlockFormat
 from .token_id import TokenID
 from .units import Units
-from .reader import InvalidSimisaHeaderError, InvalidSimisaSubheaderError
-from .reader import StructuredBlockReader
-from .writer import StructuredBlockWriter
+from .reader import SimisaHeaderError, SimisaSubheaderError
+from .reader import BlockReader
+from .writer import BlockWriter
 from . import shape

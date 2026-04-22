@@ -18,11 +18,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import pytest
-from simisa import StructuredBlockReader
+from simisa import BlockReader
 
 def test_is_compressed_uncompressed_shape(global_storage):
     shape_path = global_storage["shape_path"]
-    obj = StructuredBlockReader.open(shape_path)
+    obj = BlockReader.open(shape_path)
     raw = obj.stream.read(100)
     #text = raw.decode("utf-16-le")
     #first_x_chars = text[:x]
@@ -32,7 +32,7 @@ def test_is_compressed_uncompressed_shape(global_storage):
 
 def test_is_compressed_compressed_shape(global_storage):
     shape_compressed_path = global_storage["shape_compressed_path"]
-    obj = StructuredBlockReader.open(shape_compressed_path)
+    obj = BlockReader.open(shape_compressed_path)
     raw = obj.stream.read(100)
     #text = raw.decode("utf-16-le")
     #first_x_chars = text[:x]

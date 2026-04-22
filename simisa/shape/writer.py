@@ -19,8 +19,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from .. import TokenID, Units
 from ..header import peek_header, is_compressed
-from ..writer import StructuredBlockWriter
-from ..format import ListFormat
+from ..writer import BlockWriter
+from ..format import ListBlockFormat
 from .models import *
 
 def dump():
