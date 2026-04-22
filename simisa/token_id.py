@@ -1,10 +1,10 @@
 """
 This file is part of Simisa.
 
-This code was ported from C# to Python. The original code is from
-the `Orts.Parsers.Msts` namespace within the Open Rails codebase.
-
-Copyright (C) 2013, 2014, 2015 by the Open Rails project
+This code was ported from C++ to Python. The original code is
+from the `TS.h` header file within the TSRE5 codebase.
+ 
+Copyright (C) 2016 Piotr Gadecki <pgadecki@gmail.com>
 Copyright (C) 2026 Peter Grønbæk Andersen <peter@grnbk.io>
 
 This program is free software: you can redistribute it and/or modify
