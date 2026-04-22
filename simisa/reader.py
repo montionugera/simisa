@@ -84,14 +84,13 @@ class StructuredBlockReader(ABC):
         fileversion = int(subheader[6])
         fileformat = subheader[7]
         encoding = "utf-16-le" if is_unicode else "ascii"
+        token_offset = 300 if filetype == "w" else 0
 
         if fileformat == "t":
             return UnicodeFileReader(stream, filepath, filetype, fileversion, encoding)
 
         if fileformat != "b":
             raise InvalidSimisaSubheaderError(f'Unrecognized subheader "{subheader}" in {filepath}')
-
-        token_offset = 300 if filetype == "w" else 0
         
         return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
 

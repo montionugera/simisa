@@ -62,6 +62,7 @@ class StructuredBlockWriter(ABC):
 
         f = open(filepath, "wb")
         encoding = "utf-16-le" if is_unicode else "ascii"
+        token_offset = 300 if filetype == "w" else 0
 
         if is_compressed:
             f.write(b"SIMISA@F")
@@ -79,8 +80,6 @@ class StructuredBlockWriter(ABC):
 
         if not is_binary:
             return UnicodeFileWriter(stream, filepath, encoding)
-
-        token_offset = 300 if filetype == "w" else 0
 
         return BinaryFileWriter(stream, filepath, token_offset)
 
@@ -141,6 +140,10 @@ class StructuredBlockWriter(ABC):
 
     @abstractmethod
     def close(self):
+        pass
+
+    @abstractmethod
+    def flush(self):
         pass
 
     def __enter__(self):
@@ -239,6 +242,10 @@ class UnicodeFileWriter(UnicodeBlockWriter):
         self.encoding = encoding
         self.is_closed = False
 
+    def flush(self):
+        if not self.is_closed and self.stream:
+            self.stream.flush()
+    
     def close(self):
         if not self.is_closed and self.stream:
             self.stream.close()
@@ -303,10 +310,16 @@ class BinaryFileWriter(BinaryBlockWriter):
         self.filename = filename
         self.stream = output_stream
         self.token_offset = token_offset
+        self.is_closed = False
 
+    def flush(self):
+        if not self.is_closed and self.stream:
+            self.stream.flush()
+    
     def close(self):
-        if self.stream:
+        if not self.is_closed and self.stream:
             self.stream.close()
+            self.is_closed = True
 
 
 class StructuredBlockWriterException(Exception):
