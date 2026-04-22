@@ -23,9 +23,46 @@ from ..writer import BlockWriter
 from ..format import ListBlockFormat
 from .models import *
 
-def dump():
-    pass
+
+def dump(
+    shape: Shape,
+    filepath: str,
+    compressed: bool = False
+) -> None:
+    if not isinstance(shape, Shape):
+        raise TypeError(
+            f"Parameter 'shape' must be Shape, but got {type(shape).__name__}"
+        )
+
+    with BlockWriter.open(
+        filepath,
+        filetype="s",
+        fileversion="0",
+        is_binary=compressed,
+        is_unicode=not compressed,
+        is_compressed=compressed,
+    ) as writer:
+        write_shape(writer, shape)
 
 
-def dumps():
+def dumps(
+    shape: Shape
+) -> str:
+    if not isinstance(shape, Shape):
+        raise TypeError(
+            f"Parameter 'shape' must be Shape, but got {type(shape).__name__}"
+        )
+
+    lambda writer: write_shape(writer, shape)
+
+    shape_text = BlockWriter.to_string(
+        writer,
+        filetype="s",
+        fileversion="0"
+    )
+    return shape_text
+
+
+
+def write_shape(reader: BlockReader, shape: Shape):
     pass

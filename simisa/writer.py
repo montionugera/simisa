@@ -82,6 +82,28 @@ class BlockWriter(ABC):
             return BinaryFileWriter(stream, filepath, token_offset)
 
         return TextFileWriter(stream, filepath, encoding)
+    
+    @staticmethod
+    def to_string(
+        write_fn: Callable[[BlockWriter], Any],
+        *,
+        filetype: str,
+        fileversion: str
+    ) -> str:
+
+        stream = io.StringIO()
+
+        writer = TextFileWriter(stream, filepath="<string>", encoding="utf-8")
+
+        header = "SIMISA@@@@@@@@@@"
+        subheader = f"JINX0{filetype}{fileversion}t______\r\n"
+
+        stream.write(header)
+        stream.write(subheader)
+        write_fn(writer)
+
+        writer.close()
+        return stream.getvalue()
 
     @abstractmethod
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
