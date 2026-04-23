@@ -221,7 +221,7 @@ class TextBlockReader(BlockReader):
     _token_table: dict[str, TokenID] | None = None
 
     def __init__(self):
-        self.stfreader: STFReader | None = None
+        self.stf_reader: STFReader | None = None
         self.at_end_of_block: bool = False
         self.id: TokenID | None = None
         self.label: str | None = None
@@ -258,9 +258,9 @@ class TextBlockReader(BlockReader):
 
     def read_sub_block(self) -> BlockReader:
         block = TextBlockReader()
-        block.f = self.stfreader
+        block.f = self.stf_reader
 
-        token = self.stfreader.read_item()
+        token = self.stf_reader.read_item()
 
         if token == "(":
             block.id = TokenID.comment
@@ -272,11 +272,11 @@ class TextBlockReader(BlockReader):
             logger.warning("Ignored extra close bracket")
             return block
 
-        token = self.stfreader.read_item()
+        token = self.stf_reader.read_item()
 
         if token != "(":
             block.label = token
-            self.stfreader.verify_start_of_block()
+            self.stf_reader.verify_start_of_block()
 
         return block
 
@@ -287,7 +287,7 @@ class TextBlockReader(BlockReader):
         depth = 1
 
         while depth > 0:
-            token = self.stfreader.read_item()
+            token = self.stf_reader.read_item()
 
             if token == "":
                 logger.warning("Unexpected end of file")
@@ -304,15 +304,15 @@ class TextBlockReader(BlockReader):
     def end_of_block(self) -> bool:
         return (
             self.at_end_of_block
-            or self.stfreader.peek_past_whitespace() == ")"
-            or self.stfreader.eof()
+            or self.stf_reader.peek_past_whitespace() == ")"
+            or self.stf_reader.eof()
         )
 
     def verify_end_of_block(self):
         if self.at_end_of_block:
             return
 
-        s = self.stfreader.read_item()
+        s = self.stf_reader.read_item()
 
         if s.startswith("#") or s.lower() == "comment":
             self.skip()
@@ -324,19 +324,19 @@ class TextBlockReader(BlockReader):
         self.at_end_of_block = True
 
     def read_flags(self) -> int:
-        return self.stfreader.read_hex(None)
+        return self.stf_reader.read_hex(None)
 
     def read_int(self) -> int:
-        return self.stfreader.read_int(None)
+        return self.stf_reader.read_int(None)
 
     def read_uint(self) -> int:
-        return self.stfreader.read_uint(None)
+        return self.stf_reader.read_uint(None)
 
     def read_float(self) -> float:
-        return self.stfreader.read_float(None)
+        return self.stf_reader.read_float(None)
 
     def read_string(self) -> str:
-        return self.stfreader.read_item()
+        return self.stf_reader.read_item()
 
 
 class TextFileReader(TextBlockReader):
@@ -360,7 +360,7 @@ class TextFileReader(TextBlockReader):
         self.is_closed = False
         self.at_end_of_block = False
 
-        self.stfreader = STFReader(
+        self.stf_reader = STFReader(
             input_stream=input_stream,
             filename=filepath,
             encoding=encoding
@@ -370,7 +370,7 @@ class TextFileReader(TextBlockReader):
         if self.is_closed:
             return
 
-        self.stfreader.close() if hasattr(self.stfreader, "close") else None
+        self.stf_reader.close() if hasattr(self.stf_reader, "close") else None
         self.is_closed = True
         self.at_end_of_block = True
 
@@ -378,7 +378,7 @@ class TextFileReader(TextBlockReader):
         if self.is_closed:
             return
 
-        s = self.stfreader.read_item()
+        s = self.stf_reader.read_item()
         extra_data = s
 
         if s != "":
@@ -389,24 +389,24 @@ class TextFileReader(TextBlockReader):
                     )
                     return
 
-                s = self.stfreader.read_item()
+                s = self.stf_reader.read_item()
 
     def end_of_block(self) -> bool:
         if self.is_closed or self.at_end_of_block:
             return True
 
-        if hasattr(self.stfreader, "peek_past_whitespace"):
-            return self.stfreader.peek_past_whitespace() == -1
+        if hasattr(self.stf_reader, "peek_past_whitespace"):
+            return self.stf_reader.peek_past_whitespace() == -1
 
-        if hasattr(self.stfreader, "eof"):
-            return self.stfreader.eof()
+        if hasattr(self.stf_reader, "eof"):
+            return self.stf_reader.eof()
 
         return False
 
     def close(self):
         if not self.is_closed:
-            if self.stfreader:
-                self.stfreader.close()
+            if self.stf_reader:
+                self.stf_reader.close()
             self.is_closed = True
 
 

@@ -17,4 +17,23 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import pytest
+from typing import List
+
+from .. import TokenID, Units
+from ..reader import BlockReader
+from .models import *
+
+
+# def load(filepath: str) -> Shape:
+#     with BlockReader.open(filepath) as reader:
+#         return read_shape(reader)
+
+
+# def loads(shape_string: str) -> Shape:
+#     reader = BlockReader.from_string(shape_string)
+#     return read_shape(reader)
+
+
+# def read_rit(reader: BlockReader) -> Shape:
+#     # TODO
+#     raise NotImplementedError()

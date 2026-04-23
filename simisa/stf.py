@@ -32,7 +32,6 @@ from typing import Optional, Callable, List, Dict, Tuple, Iterator
 from .units import Units
 
 
-
 class STFError(Exception):
     """Raised when an STF reader encounters an error or malformed data."""
     pass
