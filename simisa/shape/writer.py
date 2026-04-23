@@ -19,7 +19,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from .. import TokenID, Units
 from ..writer import BlockWriter
-from ..format import ListBlockFormat
+from ..format import BlockFormat
 from .models import *
 
 

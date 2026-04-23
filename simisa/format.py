@@ -21,9 +21,9 @@ from typing import Optional
 from dataclasses import dataclass
 
 @dataclass
-class ListBlockFormat:
+class BlockFormat:
     items_per_line: Optional[int] = None
     disable_inner_indent: bool = False
-    count_multiplier: float = 1.0
-    newline_after_header: bool = True
+    newline_after_first_item: bool = True
+    newline_after_start: bool = False
     newline_before_closing: bool = True

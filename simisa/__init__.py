@@ -23,18 +23,18 @@ __version__ = '0.0.1b0'
 __all__ = [
     'is_unicode', 'peek_header', 'is_compressed',
     'SimisaHeaderError', 'SimisaSubheaderError',
-    'ListBlockFormat', 'TokenID', 'Units'
-    'BlockReader', 'BlockWriter',
+    'TokenID', 'Units'
+    'BlockReader', 'BlockWriter', 'BlockFormat',
     'shape'
 ]
 
 __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
 
 from .header import is_unicode, peek_header, is_compressed
-from .format import ListBlockFormat
 from .token_id import TokenID
 from .units import Units
 from .reader import SimisaHeaderError, SimisaSubheaderError
 from .reader import BlockReader
 from .writer import BlockWriter
+from .format import BlockFormat
 from . import shape

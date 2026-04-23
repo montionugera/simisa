@@ -23,7 +23,7 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Optional, BinaryIO, TextIO, Callable, Any
 
-from .format import ListBlockFormat
+from .format import BlockFormat
 from .token_id import TokenID
 
 logger = logging.getLogger(__name__)
@@ -122,7 +122,7 @@ class BlockWriter(ABC):
             self.end_block()
 
     @abstractmethod
-    def begin_list_block(self, block_id: TokenID, list_format: ListBlockFormat, label: Optional[str] = None):
+    def begin_list_block(self, block_id: TokenID, list_format: BlockFormat, label: Optional[str] = None):
         pass
 
     @abstractmethod
@@ -130,7 +130,7 @@ class BlockWriter(ABC):
         pass
 
     @contextmanager
-    def list_block(self, block_id: TokenID, list_format: ListBlockFormat, label: Optional[str] = None):
+    def list_block(self, block_id: TokenID, list_format: BlockFormat, label: Optional[str] = None):
         self.begin_list_block(block_id, list_format, label)
         try:
             yield self
@@ -167,7 +167,7 @@ class BlockWriter(ABC):
         block_id: TokenID,
         values,
         *,
-        format: ListBlockFormat,
+        format: BlockFormat,
         item_writer: Optional[Callable[["BlockWriter", Any], None]] = None,
     ):
         pass
@@ -227,7 +227,7 @@ class TextBlockWriter(BlockWriter):
         block_id: TokenID,
         values,
         *,
-        format: ListBlockFormat,
+        format: BlockFormat,
         item_writer: Optional[Callable] = None,
     ):
         self.begin_block(block_id)
@@ -321,7 +321,7 @@ class BinaryBlockWriter(BlockWriter):
         block_id: TokenID,
         values,
         *,
-        format: ListBlockFormat,
+        format: BlockFormat,
         item_writer: Optional[Callable] = None,
     ):
         self.begin_block(block_id)

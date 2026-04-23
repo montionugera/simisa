@@ -43,7 +43,7 @@ ReadBlockFn = Callable[[any], any]
 
 
 @dataclass(frozen=True)
-class StfToken:
+class STFToken:
     contents: str
     source_name: str
     source_line_number: int
@@ -58,11 +58,11 @@ class StfToken:
         return self.contents == ")"
 
     @staticmethod
-    def eof(source_name: str, line_number: int) -> "StfToken":
-        return StfToken("", source_name, line_number, True)
+    def eof(source_name: str, line_number: int) -> "STFToken":
+        return STFToken("", source_name, line_number, True)
 
 
-class IStreamReaderFactory(ABC):
+class StreamReaderFactory(ABC):
     @abstractmethod
     def get_stream_reader(self, name: str) -> tuple[io.TextIOBase, Optional[str]]:
         """
@@ -72,9 +72,9 @@ class IStreamReaderFactory(ABC):
         pass
 
 
-class IStfTokenStream(ABC):
+class STFTokenStream(ABC):
     @abstractmethod
-    def next_token(self) -> StfToken:
+    def next_token(self) -> STFToken:
         pass
 
     @abstractmethod
@@ -82,7 +82,7 @@ class IStfTokenStream(ABC):
         pass
 
 
-class StfTokenizer(IStfTokenStream):
+class STFTokenizer(STFTokenStream):
     def __init__(self, input_reader: io.TextIOBase, stream_name: str, line: int = 1):
         self.source_stream = input_reader
         self.stream_name = stream_name
@@ -91,13 +91,11 @@ class StfTokenizer(IStfTokenStream):
         self._builder: list[str] = []
         self._skip_whitespace()
 
-    def next_token(self) -> StfToken:
+    def next_token(self) -> STFToken:
         raise NotImplementedError
 
     def close(self) -> None:
         self.source_stream.close()
-
-    # ---- internal helpers (structure only) ----
 
     def _read_char(self) -> str:
         raise NotImplementedError
@@ -108,25 +106,25 @@ class StfTokenizer(IStfTokenStream):
     def _skip_whitespace(self) -> None:
         pass
 
-    def _create_token(self) -> StfToken:
-        return StfToken(
+    def _create_token(self) -> STFToken:
+        return STFToken(
             "".join(self._builder),
             self.stream_name,
             self.line_number
         )
 
 
-class StfTokenStreamBuffer(IStfTokenStream):
-    def __init__(self, source: IStfTokenStream):
+class STFTokenStreamBuffer(STFTokenStream):
+    def __init__(self, source: STFTokenStream):
         self.source = source
 
-        self.current_token: Optional[StfToken] = None
-        self.upcoming_token: Optional[StfToken] = None
-        self._buffered_token: Optional[StfToken] = None
+        self.current_token: Optional[STFToken] = None
+        self.upcoming_token: Optional[STFToken] = None
+        self._buffered_token: Optional[STFToken] = None
 
         self._did_step_back = False
 
-    def next_token(self) -> StfToken:
+    def next_token(self) -> STFToken:
         raise NotImplementedError
 
     def move_next(self) -> None:
@@ -139,7 +137,7 @@ class StfTokenStreamBuffer(IStfTokenStream):
         self.source.close()
 
 
-class StfTokenStreamBlockProcessor(StfTokenStreamBuffer):
+class STFTokenStreamBlockProcessor(STFTokenStreamBuffer):
     def skip_rest_of_block(self) -> None:
         pass
 
@@ -150,24 +148,24 @@ class StfTokenStreamBlockProcessor(StfTokenStreamBuffer):
         pass
 
 
-class StfTokenStreamPreprocessor(StfTokenStreamBlockProcessor):
+class STFTokenStreamPreprocessor(STFTokenStreamBlockProcessor):
     def __init__(
         self,
-        source: IStfTokenStream,
+        source: STFTokenStream,
         file_name: str,
-        factory: IStreamReaderFactory
+        factory: StreamReaderFactory
     ):
         super().__init__(source)
         self.factory = factory
         self.file_name = file_name
 
-        self._include_stream: Optional[IStfTokenStream] = None
-        self._include_raw: Optional[IStfTokenStream] = None
+        self._include_stream: Optional[STFTokenStream] = None
+        self._include_raw: Optional[STFTokenStream] = None
 
         self._in_skip_mode = False
         self.directory_name: str = ""
 
-    def next_token(self) -> StfToken:
+    def next_token(self) -> STFToken:
         raise NotImplementedError
 
     def _handle_include(self) -> None:
@@ -189,7 +187,7 @@ class TokenProcessor:
     processor: Callable[[], None]
 
 
-class STFReader(StfTokenStreamBlockProcessor):
+class STFReader(STFTokenStreamBlockProcessor):
     def __init__(self, file_name: str, use_tree: bool = False):
         super().__init__(source=None)
         self.file_name = file_name
