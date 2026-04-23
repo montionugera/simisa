@@ -1,8 +1,8 @@
 """
 This file is part of Simisa.
 
-This code is loosely based on `SBR.cs` and `STFReader.cs` from
-the `Orts.Parsers.Msts` namespace within the Open Rails codebase.
+This code is loosely based on `SBR.cs` from the `Orts.Parsers.Msts`
+namespace within the Open Rails codebase.
 
 Copyright (C) 2013, 2014, 2015 by the Open Rails project
 Copyright (C) 2026 Peter Grønbæk Andersen <peter@grnbk.io>
@@ -31,6 +31,7 @@ from typing import Optional, Iterator, BinaryIO, TextIO
 
 from .header import is_compressed
 from .token_id import TokenID
+from .stf import STFReader
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,11 @@ class SimisaHeaderError(Exception):
 
 class SimisaSubheaderError(Exception):
     """Raised when a simisa subheader is missing or invalid."""
+    pass
+
+
+class BlockReaderError(Exception):
+    """Raised when a block reader encounters an error or malformed data."""
     pass
 
 
@@ -88,7 +94,6 @@ class BlockReader(ABC):
 
         if fileformat == "b":
             token_offset = 300 if filetype == "w" else 0
-            print("POS BEFORE READ:", stream.tell())
             return BinaryFileReader(stream, filepath, filetype, fileversion, token_offset)
 
         if fileformat != "t":
@@ -538,7 +543,6 @@ class BinaryFileReader(BinaryBlockReader):
 
         while self.stream.read(1):
             pass
-        print("POS BEFORE READ skip:", self.stream.tell())
 
         self.remaining_bytes = 0
     
@@ -549,8 +553,6 @@ class BinaryFileReader(BinaryBlockReader):
         pos = self.stream.tell()
         byte = self.stream.read(1)
         self.stream.seek(pos)
-
-        print("POS BEFORE READ end_of_block:", self.stream.tell())
 
         return byte == b""
     
@@ -565,72 +567,11 @@ class BinaryFileReader(BinaryBlockReader):
             self.stream.close()
 
 
-class BlockReaderException(Exception):
-
-    def __init__(self, reader: BlockReader, message: str):
-        super().__init__(message)
-        self.reader = reader
-
-
-class STFReader:
-    end_block_comment_sentinel = "#\u00b6"
-
-    def __init__(self, filename=None, use_tree=False, input_stream=None, encoding="utf-8"):
-        self.block_depth = 0
-        self.tree = [] if use_tree else None
-        self.encoding = encoding
-        self.filename = filename
-        self.stream = input_stream
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
-
-    def close(self):
-        pass
-
-    def read_item(self):
-        raise NotImplementedError
-
-    def step_back_one_item(self):
-        raise NotImplementedError
-
-    def must_match(self, target):
-        raise NotImplementedError
-
-    def end_of_block(self):
-        raise NotImplementedError
-
-    def skip_block(self):
-        raise NotImplementedError
-
-    def skip_rest_of_block(self):
-        raise NotImplementedError
-
-    def read_string(self):
-        raise NotImplementedError
-
-    def read_hex(self, default_value=None):
-        raise NotImplementedError
-
-    def read_int(self, default_value=None):
-        raise NotImplementedError
-
-    def read_uint(self, default_value=None):
-        raise NotImplementedError
-
-    def read_float(self, valid_units=None, default_value=None):
-        raise NotImplementedError
-
-    def read_double(self, default_value=None):
-        raise NotImplementedError
 
 """
 Example usage:
 
-with reader.block(TokenID.vertex):
+with reader.sub_block(TokenID.vertex):
 
     flags = reader.read_flags()
     ipoint = reader.read_int()

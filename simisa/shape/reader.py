@@ -98,7 +98,7 @@ def read_shape(reader: BlockReader) -> Shape:
 
 def read_shape_header(reader: BlockReader) -> ShapeHeader:
 
-    with reader.block(TokenID.shape_header):
+    with reader.sub_block(TokenID.shape_header):
 
         flags1 = reader.read_flags()
         flags2 = reader.read_flags()
@@ -108,7 +108,7 @@ def read_shape_header(reader: BlockReader) -> ShapeHeader:
 
 def read_volume_sphere(reader: BlockReader) -> VolumeSphere:
 
-    with reader.block(TokenID.volume_sphere):
+    with reader.sub_block(TokenID.volume_sphere):
 
         radius = reader.read_float()
         vector = read_vector()
@@ -118,7 +118,7 @@ def read_volume_sphere(reader: BlockReader) -> VolumeSphere:
 
 def read_vector(reader: BlockReader) -> Vector:
 
-    with reader.block(TokenID.vector):
+    with reader.sub_block(TokenID.vector):
 
         x = reader.read_float()
         y = reader.read_float()
