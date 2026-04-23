@@ -25,7 +25,8 @@ __all__ = [
     'SimisaHeaderError', 'SimisaSubheaderError',
     'TokenID', 'Units'
     'BlockReader', 'BlockWriter', 'BlockFormat',
-    'shape'
+    'rdb', 'rit', 'shape', 'tdb',
+    'terrain', 'tit', 'tsection', 'world'
 ]
 
 __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
@@ -37,4 +38,11 @@ from .reader import SimisaHeaderError, SimisaSubheaderError
 from .reader import BlockReader
 from .writer import BlockWriter
 from .format import BlockFormat
+from . import rdb
+from . import rit
 from . import shape
+from . import tdb
+from . import terrain
+from . import tit
+from . import tsection
+from . import world
