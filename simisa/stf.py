@@ -21,9 +21,70 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from dataclasses import dataclass
+from abc import ABC, abstractmethod
+from typing import Optional, TextIO, Tuple
+
 from .units import Units
 
 
-class STFError(Exception):
-    """Raised when an STF reader encounters an error or malformed data."""
+class StfError(Exception):
+    """Raised when an stf reader encounters an error or malformed data."""
     pass
+
+
+class StfTokenStream(ABC):
+
+    def __enter__(self) -> "StfTokenStream":
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.close()
+
+    @abstractmethod
+    def next_token(self) -> "StfToken":
+        raise NotImplementedError
+
+    @abstractmethod
+    def close(self) -> None:
+        raise NotImplementedError
+
+
+class StreamReaderFactory(ABC):
+
+    @abstractmethod
+    def get_stream_reader(self, name: str) -> Tuple[TextIO, Optional[str]]:
+        raise NotImplementedError
+
+
+@dataclass(frozen=True)
+class StfToken:
+    contents: str
+    source_name: str
+    source_line_number: int
+    is_eof: bool = False
+
+    @property
+    def is_block_start(self) -> bool:
+        return self.contents == "("
+
+    @property
+    def is_block_end(self) -> bool:
+        return self.contents == ")"
+
+    @classmethod
+    def eof_token(cls, source_name: str, line_number: int) -> "StfToken":
+        return cls(
+            contents="",
+            source_name=source_name,
+            source_line_number=line_number,
+            is_eof=True,
+        )
+
+    def __str__(self) -> str:
+        return f"token: {self.contents}"
+
+
+
+
+
