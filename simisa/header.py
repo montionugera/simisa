@@ -173,6 +173,7 @@ def peek_subheader(filepath: str) -> Optional[str]:
                 return None
 
             return subheader
+            
         finally:
             if stream is not f:
                 stream.close()

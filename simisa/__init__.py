@@ -22,11 +22,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 __version__ = '0.0.1b0'
 __all__ = [
     'is_unicode', 'peek_header', 'peek_subheader',
-    'is_compressed', 'is_binary', 'is_text', 'read_filetype',
-    'read_fileversion', 'TokenID', 'Units'
+    'is_compressed', 'is_binary', 'is_text',
+    'read_filetype', 'read_fileversion',
+    'TokenID', 'Units', 'StfReader',
     'BlockReader', 'BlockWriter', 'BlockFormat',
     'SimisaHeaderError', 'SimisaSubheaderError',
-    'BlockReaderError', 'StfError',
+    'BlockReaderError', 'StfReaderError',
     'rdb', 'rit', 'shape', 'tdb', 'terrain',
     'tit', 'tsection', 'world', 'worldsound'
 ]
@@ -34,13 +35,13 @@ __all__ = [
 __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
 
 from .header import is_unicode, peek_header, peek_subheader
-from .header import is_compressed, is_binary, is_text, read_filetype
-from .header import read_fileversion
+from .header import is_compressed, is_binary, is_text
+from .header import read_filetype, read_fileversion
 from .token_id import TokenID
 from .units import Units
+from .stf import StfReader, StfReaderError
 from .reader import SimisaHeaderError, SimisaSubheaderError
 from .reader import BlockReader, BlockReaderError
-from .stf import StfError
 from .writer import BlockWriter
 from .format import BlockFormat
 from . import rdb

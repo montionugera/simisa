@@ -31,7 +31,7 @@ from typing import Optional, Iterator, BinaryIO, TextIO
 
 from .header import is_compressed
 from .token_id import TokenID
-from .stf import STFReader
+from .stf import StfReader
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +221,7 @@ class TextBlockReader(BlockReader):
     _token_table: dict[str, TokenID] | None = None
 
     def __init__(self):
-        self.stf_reader: STFReader | None = None
+        self.stf_reader: StfReader | None = None
         self.at_end_of_block: bool = False
         self.id: TokenID | None = None
         self.label: str | None = None
@@ -360,7 +360,7 @@ class TextFileReader(TextBlockReader):
         self.is_closed = False
         self.at_end_of_block = False
 
-        self.stf_reader = STFReader(
+        self.stf_reader = StfReader(
             input_stream=input_stream,
             filename=filepath,
             encoding=encoding
