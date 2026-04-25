@@ -25,12 +25,14 @@ from .models import *
 
 
 def load(filepath: str) -> Shape:
+    
     with BlockReader.open(filepath) as reader:
         return read_shape(reader)
 
 
-def loads(shape_string: str) -> Shape:
-    reader = BlockReader.from_string(shape_string)
+def loads(shape_text: str) -> Shape:
+    reader = BlockReader.from_string(shape_text)
+
     return read_shape(reader)
 
 

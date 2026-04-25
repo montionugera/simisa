@@ -23,11 +23,7 @@ from ..format import BlockFormat
 from .models import *
 
 
-def dump(
-    shape: Shape,
-    filepath: str,
-    compressed: bool = False
-) -> None:
+def dump(shape: Shape, filepath: str, compressed: bool = False) -> None:
     if not isinstance(shape, Shape):
         raise TypeError(f"Parameter 'shape' must be Shape, but got {type(shape).__name__}")
 
@@ -42,9 +38,7 @@ def dump(
         write_shape(writer, shape)
 
 
-def dumps(
-    shape: Shape
-) -> str:
+def dumps(shape: Shape) -> str:
     if not isinstance(shape, Shape):
         raise TypeError(f"Parameter 'shape' must be Shape, but got {type(shape).__name__}")
 
@@ -55,6 +49,7 @@ def dumps(
         filetype="s",
         fileversion="0"
     )
+    
     return shape_text
 
 

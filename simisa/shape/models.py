@@ -393,7 +393,7 @@ class UVOpNonUniformScale(UVOp):
 
 @dataclass
 class LightModelCfg:
-    flags: str,
+    flags: str
     uv_ops: List[UVOp]
 
     def __repr__(self):
@@ -627,24 +627,28 @@ class Shape:
     animations: Optional[List[Animation]] = None
 
     def __repr__(self):
-        return (
-            f"Shape(shape_header={self.shape_header}, "
-            f"volumes (len={len(self.volumes)}), "
-            f"shader_names (len={len(self.shader_names)}), "
-            f"texture_filter_names (len={len(self.texture_filter_names)}), "
-            f"points (len={len(self.points)}), "
-            f"uv_points (len={len(self.uv_points)}), "
-            f"normals (len={len(self.normals)}), "
-            f"sort_vectors (len={len(self.sort_vectors)}), "
-            f"colours (len={len(self.colours)}), "
-            f"matrices (len={len(self.matrices)}), "
-            f"images (len={len(self.images)}), "
-            f"textures (len={len(self.textures)}), "
-            f"light_materials (len={len(self.light_materials)}), "
-            f"light_model_cfgs (len={len(self.light_model_cfgs)}), "
-            f"vtx_states (len={len(self.vtx_states)}), "
-            f"prim_states (len={len(self.prim_states)}), "
-            f"lod_controls (len={len(self.lod_controls)}), "
-            f"animations (len={len(self.animations)}))"
-        )
+        parts = [
+            f"shape_header={self.shape_header}",
+            f"volumes={len(self.volumes)}",
+            f"shader_names={len(self.shader_names)}",
+            f"texture_filter_names={len(self.texture_filter_names)}",
+            f"points={len(self.points)}",
+            f"uv_points={len(self.uv_points)}",
+            f"normals={len(self.normals)}",
+            f"sort_vectors={len(self.sort_vectors)}",
+            f"colours={len(self.colours)}",
+            f"matrices={len(self.matrices)}",
+            f"images={len(self.images)}",
+            f"textures={len(self.textures)}",
+            f"light_materials={len(self.light_materials)}",
+            f"light_model_cfgs={len(self.light_model_cfgs)}",
+            f"vtx_states={len(self.vtx_states)}",
+            f"prim_states={len(self.prim_states)}",
+            f"lod_controls={len(self.lod_controls)}",
+        ]
+
+        if self.animations is not None:
+            parts.append(f"animations={len(self.animations)}")
+
+        return f"Shape({', '.join(parts)})"
 

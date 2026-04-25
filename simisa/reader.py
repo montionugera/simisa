@@ -427,7 +427,7 @@ class BinaryBlockReader(BlockReader):
 
         data = self.stream.read(n)
         if len(data) != n:
-            raise SimisaSubheaderError("Unexpected EOF in block")
+            raise BlockReaderError("Unexpected EOF in block")
 
         self.remaining_bytes -= n
         return data
@@ -437,7 +437,7 @@ class BinaryBlockReader(BlockReader):
             raise RuntimeError("Stream is not initialized")
 
         if self.remaining_bytes < 8:
-            raise SimisaSubheaderError("Not enough bytes for sub-block header")
+            raise BlockReaderError("Not enough bytes for sub-block header")
 
         raw_id = int.from_bytes(self._read(2), "little")
         raw_flags = int.from_bytes(self._read(2), "little")
