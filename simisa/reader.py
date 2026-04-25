@@ -421,21 +421,6 @@ class BinaryBlockReader(BlockReader):
         self.id: TokenID | None = None
         self.label: str | None = None
 
-    @classmethod
-    def from_parent(cls, parent: "BinaryBlockReader", size: int) -> "BinaryBlockReader":
-        sub = cls()
-
-        sub.stream = parent.stream
-        sub.filepath = parent.filepath
-        sub.token_offset = parent.token_offset
-
-        sub.remaining_bytes = size
-        sub.flags = 0
-        sub.id = None
-        sub.label = None
-
-        return sub
-
     def _read(self, n: int) -> bytes:
         if self.stream is None:
             raise RuntimeError("Stream is not initialized")
@@ -458,12 +443,11 @@ class BinaryBlockReader(BlockReader):
         raw_flags = int.from_bytes(self._read(2), "little")
         size = int.from_bytes(self._read(4), "little")
 
-        sub = BinaryFileReader.__new__(BinaryFileReader)
-
+        sub = BinaryBlockReader()
         sub.stream = self.stream
         sub.filepath = self.filepath
-
         sub.token_offset = self.token_offset
+
         sub.filetype = getattr(self, "filetype", "")
         sub.fileversion = getattr(self, "fileversion", 0)
 

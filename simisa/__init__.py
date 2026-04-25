@@ -22,8 +22,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 __version__ = '0.0.1b0'
 __all__ = [
     'is_unicode', 'peek_header', 'is_compressed',
-    'SimisaHeaderError', 'SimisaSubheaderError',
     'TokenID', 'Units'
+    'SimisaHeaderError', 'SimisaSubheaderError',
     'BlockReader', 'BlockWriter', 'BlockFormat',
     'rdb', 'rit', 'shape', 'tdb',
     'terrain', 'tit', 'tsection', 'world'
