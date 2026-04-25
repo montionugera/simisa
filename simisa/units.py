@@ -25,37 +25,74 @@ from enum import IntFlag
 
 class Units(IntFlag):
     Compulsory = 1 << 0
+
+    # kg, t, lb
     Mass = 1 << 1
+
+    # m, cm, mm, km, ft, ', in, "
     Distance = 1 << 2
+
+    # *(ft^2)
     AreaDefaultFT2 = 1 << 3
+
+    # gal, l
     Volume = 1 << 4
+
+    # *(ft^3)
     VolumeDefaultFT3 = 1 << 5
+    
+    # s, m, h
     Time = 1 << 6
     TimeDefaultM = 1 << 7
     TimeDefaultH = 1 << 8
+
+    # a, amps
     Current = 1 << 9
+
+    # v, kv
     Voltage = 1 << 10
+    
+    # lb/h
     MassRateDefaultLBpH = 1 << 11
+
+    # m/s, mph, kph, kmh, km/h
     Speed = 1 << 12
     SpeedDefaultMPH = 1 << 13
+
+    # Hz, rps, rpm
     Frequency = 1 << 14
+
+    # n, kn, lbf
     Force = 1 << 15
+
+    # w, kw, hp
     Power = 1 << 16
+
+    # n/m
     Stiffness = 1 << 17
+
+    # n/m/s (+ '/m/s' in case the newtons is missed), lbf/mph
     Resistance = 1 << 18
+
+    # psi, bar, inhg, kpa
     PressureDefaultPSI = 1 << 19
     PressureDefaultInHg = 1 << 20
+
+    # psi/s, psi/min, bar/s, bar/min, inhg/s, kpa/s
     PressureRateDefaultPSIpS = 1 << 21
     PressureRateDefaultInHgpS = 1 << 22
+
+    # kj/kg, j/g, btu/lb
     EnergyDensity = 1 << 23
+
+    # degc, degf
     TemperatureDifference = 1 << 24
+
+    # kgm^2
     RotationalInertia = 1 << 25
+
+    # Nm/s^2, lbf/mph^2
     ResistanceDavisC = 1 << 26
-    Temperature = 1 << 27
-    Angle = 1 << 28
-    Energy = 1 << 29
-    ForceRate = 1 << 30
-    PowerRate = 1 << 31
 
     # "Any" is all bits set except the Compulsory bit
     Any = ~Compulsory
