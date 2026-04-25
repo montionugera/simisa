@@ -491,6 +491,29 @@ class StfTokenStreamPreprocessor(StfTokenStreamBlockProcessor):
 
 
 class StfReader(StfTokenStreamBlockProcessor):
+    def __init__(
+        self,
+        input_stream=None,
+        filename=None,
+        encoding=None,
+        use_tree=False,
+    ):
+        super().__init__()
+
+        self.stream_reader_factory = self.next_stream_reader_factory()
+        self.simis_signature = None
+
+        if input_stream is not None:
+            if encoding is None:
+                raise ValueError("encoding must be provided when using input_stream")
+
+            input_reader = io.TextIOWrapper(input_stream, encoding=encoding)
+            self._init_reader(filename, use_tree, input_reader)
+
+        else:
+            input_reader, simis_signature = self.stream_reader_factory.get_stream_reader(filename)
+            self.simis_signature = simis_signature
+            self._init_reader(filename, use_tree, input_reader)
 
     @property
     def eof(self) -> bool:
@@ -521,12 +544,6 @@ class StfReader(StfTokenStreamBlockProcessor):
     @classmethod
     def set_next_stream_reader_factory(cls, value):
         cls._next_stream_reader_factory = value
-
-    def __init__(self):
-        super().__init__()
-        self.stream_reader_factory = STFReader.next_stream_reader_factory()
-
-        self._simis_signature = None
 
     @classmethod
     def from_file(cls, file_name: str, use_tree: bool):
