@@ -25,12 +25,17 @@ from .models import *
 
 
 def load(filepath: str) -> Shape:
-    
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+
     with BlockReader.open(filepath) as reader:
         return read_shape(reader)
 
 
 def loads(shape_text: str) -> Shape:
+    if not isinstance(shape_text, str):
+        raise TypeError(f"Parameter 'shape_text' must be str, but got {type(shape_text).__name__}")
+
     reader = BlockReader.from_string(shape_text)
 
     return read_shape(reader)

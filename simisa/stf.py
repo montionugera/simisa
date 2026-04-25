@@ -85,6 +85,7 @@ class StfToken:
         return f"token: {self.contents}"
 
 
-
+class STFReader:
+    pass
 
 

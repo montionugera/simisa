@@ -27,6 +27,12 @@ def dump(shape: Shape, filepath: str, compressed: bool = False) -> None:
     if not isinstance(shape, Shape):
         raise TypeError(f"Parameter 'shape' must be Shape, but got {type(shape).__name__}")
 
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+
+    if not isinstance(compressed, bool):
+        raise TypeError(f"Parameter 'compressed' must be bool, but got {type(compressed).__name__}")
+
     with BlockWriter.open(
         filepath,
         filetype="s",
@@ -49,7 +55,7 @@ def dumps(shape: Shape) -> str:
         filetype="s",
         fileversion="0"
     )
-    
+
     return shape_text
 
 

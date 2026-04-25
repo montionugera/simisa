@@ -85,7 +85,7 @@ class BlockReader(ABC):
         subheader_bytes = stream.read(32 if is_unicode else 16)
         subheader = subheader_bytes[:16 if is_unicode else 8].decode(encoding, errors="ignore")
 
-        if len(subheader) < 5:
+        if len(subheader) < 8:
             raise SimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")
 
         filetype = subheader[5]

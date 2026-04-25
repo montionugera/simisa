@@ -36,6 +36,9 @@ def is_unicode(filepath: str) -> Optional[bool]:
     Returns:
         True if the file is UTF-16 LE encoded, otherwise False.
     """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    
     with open(filepath, "rb") as f:
         bom = f.read(2)
         is_unicode = (bom == codecs.BOM_UTF16_LE)
@@ -58,6 +61,9 @@ def peek_header(filepath: str) -> Optional[str]:
         The detected header string if it starts with a valid SIMISA header,
         otherwise None.
     """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    
     with open(filepath, "rb") as f:
         bom = f.read(2)
         is_unicode = (bom == codecs.BOM_UTF16_LE)
@@ -97,14 +103,200 @@ def is_compressed(filepath: str) -> Optional[bool]:
         False if it is uncompressed,
         None if the header is missing or unrecognized.
     """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    
     header = peek_header(filepath)
 
     if header is None:
         return None
+
     elif header.startswith("SIMISA@F"):
         return True
+
     elif header.startswith("SIMISA@@"):
         return False
 
     return None
 
+
+def peek_subheader(filepath: str) -> Optional[str]:
+    """
+    Reads and extracts a SIMISA subheader from a file.
+
+    The function determines whether the file is compressed and/or UTF-16 LE encoded,
+    then processes the stream accordingly. For compressed files, it decompresses
+    the payload using zlib before reading the subheader. For uncompressed files,
+    it reads directly from the file stream, accounting for potential newline prefixes.
+
+    Args:
+        filepath: Path to the file to inspect.
+
+    Returns:
+        The decoded subheader string if successfully read and valid,
+        otherwise None.
+    """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    
+    compressed = is_compressed(filepath)
+
+    if compressed is None:
+        return None
+
+    with open(filepath, "rb") as f:
+        bom = f.read(2)
+        is_unicode = (bom == codecs.BOM_UTF16_LE)
+        encoding = "utf-16-le" if is_unicode else "ascii"
+
+        if is_unicode:
+            header_bytes = f.read(32)
+            header = header_bytes[:16].decode(encoding)
+        else:
+            header_bytes = bom + f.read(14)
+            header = header_bytes[:8].decode(encoding, errors="ignore")
+
+        if compressed:
+            f.read(2)
+            decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
+            stream = io.BytesIO(decompressor.decompress(f.read()))
+        else:
+            if header.startswith("\r\n"):
+                f.read(4 if is_unicode else 2)
+            stream = f
+
+        try:
+            subheader_bytes = stream.read(32 if is_unicode else 16)
+            subheader = subheader_bytes[:16 if is_unicode else 8].decode(encoding, errors="ignore")
+
+            if len(subheader) < 8:
+                return None
+
+            return subheader
+        finally:
+            if stream is not f:
+                stream.close()
+
+
+def is_binary(filepath: str) -> Optional[bool]:
+    """
+    Determines whether a file is in binary format based on its SIMISA subheader.
+
+    The function reads the subheader using `peek_subheader` and inspects
+    the format indicator character to determine if the file is binary.
+
+    Args:
+        filepath: Path to the file to inspect.
+
+    Returns:
+        True if the file is identified as binary,
+        False if it is not binary,
+        None if the subheader is missing or invalid.
+    """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    
+    subheader = peek_subheader(filepath)
+
+    if subheader is None:
+        return None
+
+    if len(subheader) < 8:
+        return None
+
+    fileformat = subheader[7]
+
+    if fileformat == "b":
+        return True
+
+    return False
+
+
+def is_text(filepath: str) -> Optional[bool]:
+    """
+    Determines whether a file is in text format based on its SIMISA subheader.
+
+    The function reads the subheader using `peek_subheader` and inspects
+    the format indicator character to determine if the file is text-based.
+
+    Args:
+        filepath: Path to the file to inspect.
+
+    Returns:
+        True if the file is identified as text,
+        False if it is not text,
+        None if the subheader is missing or invalid.
+    """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    
+    subheader = peek_subheader(filepath)
+
+    if subheader is None:
+        return None
+
+    if len(subheader) < 8:
+        return None
+
+    fileformat = subheader[7]
+
+    if fileformat == "t":
+        return True
+
+    return False
+
+
+def read_filetype(filepath: str) -> Optional[str]:
+    """
+    Extracts the file type identifier from a SIMISA file subheader.
+
+    The function reads the subheader using `peek_subheader` and returns
+    the character representing the file type.
+
+    Args:
+        filepath: Path to the file to inspect.
+
+    Returns:
+        A single-character string representing the file type,
+        or None if the subheader is missing or invalid.
+    """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    
+    subheader = peek_subheader(filepath)
+
+    if subheader is None:
+        return None
+
+    if len(subheader) < 8:
+        return None
+
+    return subheader[5]
+
+
+def read_fileversion(filepath: str) -> Optional[int]:
+    """
+    Extracts the file version number from a SIMISA file subheader.
+
+    The function reads the subheader using `peek_subheader` and parses
+    the version character as an integer.
+
+    Args:
+        filepath: Path to the file to inspect.
+
+    Returns:
+        An integer representing the file version,
+        or None if the subheader is missing, invalid, or cannot be parsed.
+    """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+
+    subheader = peek_subheader(filepath)
+
+    if subheader is None:
+        return None
+
+    if len(subheader) < 8:
+        return None
+
+    return int(subheader[6])

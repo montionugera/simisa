@@ -21,21 +21,26 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 __version__ = '0.0.1b0'
 __all__ = [
-    'is_unicode', 'peek_header', 'is_compressed',
-    'TokenID', 'Units'
-    'SimisaHeaderError', 'SimisaSubheaderError',
+    'is_unicode', 'peek_header', 'peek_subheader',
+    'is_compressed', 'is_binary', 'is_text', 'read_filetype',
+    'read_fileversion', 'TokenID', 'Units'
     'BlockReader', 'BlockWriter', 'BlockFormat',
-    'rdb', 'rit', 'shape', 'tdb',
-    'terrain', 'tit', 'tsection', 'world'
+    'SimisaHeaderError', 'SimisaSubheaderError',
+    'BlockReaderError', 'StfError',
+    'rdb', 'rit', 'shape', 'tdb', 'terrain',
+    'tit', 'tsection', 'world', 'worldsound'
 ]
 
 __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
 
-from .header import is_unicode, peek_header, is_compressed
+from .header import is_unicode, peek_header, peek_subheader
+from .header import is_compressed, is_binary, is_text, read_filetype
+from .header import read_fileversion
 from .token_id import TokenID
 from .units import Units
 from .reader import SimisaHeaderError, SimisaSubheaderError
-from .reader import BlockReader
+from .reader import BlockReader, BlockReaderError
+from .stf import StfError
 from .writer import BlockWriter
 from .format import BlockFormat
 from . import rdb
@@ -46,3 +51,4 @@ from . import terrain
 from . import tit
 from . import tsection
 from . import world
+from . import worldsound
