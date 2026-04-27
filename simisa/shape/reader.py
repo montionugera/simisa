@@ -32,7 +32,7 @@ def load(filepath: str) -> Shape:
     """
     Load and parse a shape file from disk.
 
-    This function both compressed/uncompressed as well as binary/text data.
+    This function supports both compressed/uncompressed as well as binary/text data.
     It opens the file at the given path, validates that it is a supported shape
     file based on its subheader, and returns a parsed Shape object.
 
@@ -56,7 +56,7 @@ def load(filepath: str) -> Shape:
     with BlockReader.open(filepath) as reader:
 
         if not reader.filetype == 's':
-            raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it actually a shape?")
+            raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it a shape?")
 
         return read_shape(reader)
 
@@ -88,13 +88,24 @@ def loads(shape_text: str) -> Shape:
     reader = BlockReader.from_string(shape_text)
 
     if not reader.filetype == 's':
-        raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it actually a shape?")
+        raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it a shape?")
 
     return read_shape(reader)
 
 
 def read_shape(reader: BlockReader) -> Shape:
+    """
+    Read and parse a shape block from a BlockReader.
 
+    Consumes the `shape` sub-block and its child sections, returning a fully
+    constructed Shape object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a shape block.
+
+    Returns:
+        Shape: The parsed shape.
+    """
     with reader.sub_block(TokenID.shape) as shape_block:
         shape_header = read_shape_header(shape_block)
         volumes = read_volumes(shape_block)
@@ -138,7 +149,18 @@ def read_shape(reader: BlockReader) -> Shape:
 
 
 def read_shape_header(reader: BlockReader) -> ShapeHeader:
+    """
+    Read and parse a shape header block from a BlockReader.
 
+    Consumes the `shape_header` sub-block and its child sections, returning a fully
+    constructed ShapeHeader object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a shape header block.
+
+    Returns:
+        ShapeHeader: The parsed shape header.
+    """
     with reader.sub_block(TokenID.shape_header) as header_block:
         flags1 = header_block.read_flags()
         flags2 = None
@@ -150,7 +172,17 @@ def read_shape_header(reader: BlockReader) -> ShapeHeader:
 
 
 def read_volumes(reader: BlockReader) -> List[VolumeSphere]:
+    """
+    Read and parse volume spheres from a BlockReader.
 
+    Consumes the `volumes` sub-block and returns a list of VolumeSphere objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a volumes block.
+
+    Returns:
+        List[VolumeSphere]: The parsed volume spheres.
+    """
     with reader.sub_block(TokenID.volumes) as volumes_block:
         volume_spheres: List[VolumeSphere] = []
         count = volumes_block.read_int()
@@ -169,7 +201,17 @@ def read_volumes(reader: BlockReader) -> List[VolumeSphere]:
 
 
 def read_vector(reader: BlockReader) -> Vector:
+    """
+    Read and parse a 3D vector from a BlockReader.
 
+    Consumes the `vector` sub-block and returns a Vector object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a vector block.
+
+    Returns:
+        Vector: The parsed vector.
+    """
     with reader.sub_block(TokenID.vector) as vector_block:
         x = vector_block.read_float()
         y = vector_block.read_float()
@@ -179,7 +221,17 @@ def read_vector(reader: BlockReader) -> Vector:
 
 
 def read_shader_names(reader: BlockReader) -> List[str]:
+    """
+    Read and parse shader names from a BlockReader.
 
+    Consumes the `shader_names` sub-block and returns a list of strings.
+
+    Args:
+        reader (BlockReader): Reader positioned at a shader names block.
+
+    Returns:
+        List[str]: The parsed shader names.
+    """
     with reader.sub_block(TokenID.shader_names) as shader_names_block:
         shader_names: List[str] = []
         count = shader_names_block.read_int()
@@ -196,7 +248,17 @@ def read_shader_names(reader: BlockReader) -> List[str]:
 
 
 def read_texture_filter_names(reader: BlockReader) -> List[str]:
+    """
+    Read and parse texture filter names from a BlockReader.
 
+    Consumes the `texture_filter_names` sub-block and returns a list of strings.
+
+    Args:
+        reader (BlockReader): Reader positioned at a texture filter names block.
+
+    Returns:
+        List[str]: The parsed texture filter names.
+    """
     with reader.sub_block(TokenID.texture_filter_names) as texture_filter_names_block:
         named_filter_modes: List[str] = []
         count = texture_filter_names_block.read_int()
@@ -213,7 +275,17 @@ def read_texture_filter_names(reader: BlockReader) -> List[str]:
 
 
 def read_points(reader: BlockReader) -> List[Point]:
+    """
+    Read and parse 3D points from a BlockReader.
 
+    Consumes the `points` sub-block and returns a list of Point objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a points block.
+
+    Returns:
+        List[Point]: The parsed points.
+    """
     with reader.sub_block(TokenID.points) as points_block:
         points: List[Point] = []
         count = points_block.read_int()
@@ -233,7 +305,17 @@ def read_points(reader: BlockReader) -> List[Point]:
 
 
 def read_uv_points(reader: BlockReader) -> List[UVPoint]:
+    """
+    Read and parse UV points from a BlockReader.
 
+    Consumes the `uv_points` sub-block and returns a list of UVPoint objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a UV points block.
+
+    Returns:
+        List[UVPoint]: The parsed UV points.
+    """
     with reader.sub_block(TokenID.uv_points) as uv_points_block:
         uv_points: List[UVPoint] = []
         count = uv_points_block.read_int()
@@ -252,7 +334,17 @@ def read_uv_points(reader: BlockReader) -> List[UVPoint]:
 
 
 def read_normals(reader: BlockReader) -> List[Vector]:
+    """
+    Read and parse normal vectors from a BlockReader.
 
+    Consumes the `normals` sub-block and returns a list of Vector objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a normals block.
+
+    Returns:
+        List[Vector]: The parsed normals.
+    """
     with reader.sub_block(TokenID.normals) as normals_block:
         normals: List[Vector] = []
         count = normals_block.read_int()
@@ -273,7 +365,17 @@ def read_normals(reader: BlockReader) -> List[Vector]:
 
 
 def read_sort_vectors(reader: BlockReader) -> List[Vector]:
+    """
+    Read and parse sort vectors from a BlockReader.
 
+    Consumes the `sort_vectors` sub-block and returns a list of Vector objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a sort vectors block.
+
+    Returns:
+        List[Vector]: The parsed sort vectors.
+    """
     with reader.sub_block(TokenID.sort_vectors) as sort_vectors_block:
         sort_vectors: List[Vector] = []
         count = sort_vectors_block.read_int()
@@ -293,7 +395,17 @@ def read_sort_vectors(reader: BlockReader) -> List[Vector]:
 
 
 def read_colours(reader: BlockReader) -> List[Colour]:
+    """
+    Read and parse colours from a BlockReader.
 
+    Consumes the `colours` sub-block and returns a list of Colour objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a colours block.
+
+    Returns:
+        List[Colour]: The parsed colours.
+    """
     with reader.sub_block(TokenID.colours) as colours_block:
         colours: List[Colour] = []
         count = colours_block.read_int()
@@ -314,7 +426,17 @@ def read_colours(reader: BlockReader) -> List[Colour]:
 
 
 def read_matrices(reader: BlockReader) -> List[Matrix]:
+    """
+    Read and parse transformation matrices from a BlockReader.
 
+    Consumes the `matrices` sub-block and returns a list of Matrix objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a matrices block.
+
+    Returns:
+        List[Matrix]: The parsed matrices.
+    """
     with reader.sub_block(TokenID.matrices) as matrices_block:
         matrices: List[Matrix] = []
         count = matrices_block.read_int()
@@ -351,7 +473,17 @@ def read_matrices(reader: BlockReader) -> List[Matrix]:
 
 
 def read_images(reader: BlockReader) -> List[str]:
+    """
+    Read and parse image names from a BlockReader.
 
+    Consumes the `images` sub-block and returns a list of strings.
+
+    Args:
+        reader (BlockReader): Reader positioned at an images block.
+
+    Returns:
+        List[str]: The parsed image names.
+    """
     with reader.sub_block(TokenID.images) as images_block:
         images: List[str] = []
         count = images_block.read_int()
@@ -368,7 +500,17 @@ def read_images(reader: BlockReader) -> List[str]:
 
 
 def read_textures(reader: BlockReader) -> List[Texture]:
+    """
+    Read and parse textures from a BlockReader.
 
+    Consumes the `textures` sub-block and returns a list of Texture objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a textures block.
+
+    Returns:
+        List[Texture]: The parsed textures.
+    """
     with reader.sub_block(TokenID.textures) as textures_block:
         textures: List[Texture] = []
         count = textures_block.read_int()
@@ -398,7 +540,17 @@ def read_textures(reader: BlockReader) -> List[Texture]:
 
 
 def read_light_materials(reader: BlockReader) -> List[LightMaterial]:
+    """
+    Read and parse light materials from a BlockReader.
 
+    Consumes the `light_materials` sub-block and returns a list of LightMaterial objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a light materials block.
+
+    Returns:
+        List[LightMaterial]: The parsed light materials.
+    """
     with reader.sub_block(TokenID.light_materials) as light_materials_block:
         light_materials: List[LightMaterial] = []
         count = light_materials_block.read_int()
@@ -429,7 +581,17 @@ def read_light_materials(reader: BlockReader) -> List[LightMaterial]:
 
 
 def read_light_model_cfgs(reader: BlockReader) -> List[LightModelCfg]:
+    """
+    Read and parse light model configurations from a BlockReader.
 
+    Consumes the `light_model_cfgs` sub-block and returns a list of LightModelCfg objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a light model configs block.
+
+    Returns:
+        List[LightModelCfg]: The parsed light model configurations.
+    """
     with reader.sub_block(TokenID.light_model_cfgs) as light_model_cfgs_block:
         light_model_cfgs: List[LightMaterial] = []
         count = light_model_cfgs_block.read_int()
@@ -448,7 +610,17 @@ def read_light_model_cfgs(reader: BlockReader) -> List[LightModelCfg]:
 
 
 def read_uv_ops(reader: BlockReader) -> List[UVOp]:
+    """
+    Read and parse UV operations from a BlockReader.
 
+    Consumes the `uv_ops` sub-block and returns a list of UVOp objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a UV ops block.
+
+    Returns:
+        List[UVOp]: The parsed UV operations.
+    """
     with reader.sub_block(TokenID.uv_ops) as uv_ops_block:
         count = uv_ops_block.read_int()
         uv_ops: List[UVOp] = []
@@ -512,7 +684,17 @@ def read_uv_ops(reader: BlockReader) -> List[UVOp]:
 
 
 def read_vtx_states(reader: BlockReader) -> List[VtxState]:
+    """
+    Read and parse vertex states from a BlockReader.
 
+    Consumes the `vtx_states` sub-block and returns a list of VtxState objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a vertex states block.
+
+    Returns:
+        List[VtxState]: The parsed vertex states.
+    """
     with reader.sub_block(TokenID.vtx_states) as vtx_states_block:
         vtx_states: List[VtxState] = []
         count = vtx_states_block.read_int()
@@ -546,7 +728,17 @@ def read_vtx_states(reader: BlockReader) -> List[VtxState]:
 
 
 def read_prim_states(reader: BlockReader) -> List[PrimState]:
+    """
+    Read and parse primitive states from a BlockReader.
 
+    Consumes the `prim_states` sub-block and returns a list of PrimState objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a primitive states block.
+
+    Returns:
+        List[PrimState]: The parsed primitive states.
+    """
     with reader.sub_block(TokenID.prim_states) as prim_states_block:
         prim_states: List[VtxState] = []
         count = prim_states_block.read_int()
@@ -583,7 +775,17 @@ def read_prim_states(reader: BlockReader) -> List[PrimState]:
 
 
 def read_tex_idxs(reader: BlockReader) -> List[int]:
+    """
+    Read and parse texture index lists from a BlockReader.
 
+    Consumes the `tex_idxs` sub-block and returns a list of integer texture indices.
+
+    Args:
+        reader (BlockReader): Reader positioned at a texture indices block.
+
+    Returns:
+        List[int]: The parsed texture indices.
+    """
     with reader.sub_block(TokenID.tex_idxs) as tex_idxs_block:
         tex_idxs: List[int] = []
         count = tex_idxs_block.read_int()
