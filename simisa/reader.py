@@ -193,7 +193,7 @@ class BlockReader(ABC):
         if self.id == TokenID.comment:
             self.skip()
         else:
-            logger.info(f"Expected block comment, but got '{self.id.name}' (id {self.id})")
+            logger.warning(f"Expected block comment, but got '{self.id.name}' (id {self.id})")
             self.skip()
 
     @abstractmethod

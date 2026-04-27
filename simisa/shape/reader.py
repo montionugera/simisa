@@ -58,11 +58,11 @@ def read_shape(reader: BlockReader) -> Shape:
         shape_header = read_shape_header(shape_block)
         volumes = read_volumes(shape_block)
         shader_names = read_shader_names(shape_block)
-        texture_filter_names: List[str] = []
-        points: List[Point] = []
-        uv_points: List[UVPoint] = []
-        normals: List[Vector] = []
-        sort_vectors: List[Vector] = []
+        texture_filter_names = read_texture_filter_names(shape_block)
+        points = read_points(shape_block)
+        uv_points = read_uv_points(shape_block)
+        normals = read_normals(shape_block)
+        sort_vectors = read_sort_vectors(shape_block)
         colours: List[Colour] = []
         matrices: List[Matrix] = []
         images: List[str] = []
@@ -172,3 +172,110 @@ def read_shader_names(reader: BlockReader) -> List[str]:
         shader_names_block.verify_count(count, len(shader_names))
 
         return shader_names
+
+
+def read_texture_filter_names(reader: BlockReader) -> List[str]:
+
+    with reader.sub_block(TokenID.texture_filter_names) as texture_filter_names_block:
+        named_filter_modes: List[str] = []
+        count = texture_filter_names_block.read_int()
+        
+        for named_filter_mode_block in texture_filter_names_block:
+            named_filter_mode = named_filter_mode_block.read_string()
+            named_filter_modes.append(named_filter_mode)
+
+        texture_filter_names_block.verify_count(count, len(named_filter_modes))
+
+        return named_filter_modes
+
+
+def read_points(reader: BlockReader) -> List[Point]:
+
+    with reader.sub_block(TokenID.points) as points_block:
+        points: List[Point] = []
+        count = points_block.read_int()
+        
+        for point_block in points_block:
+            point = read_point(point_block)
+            points.append(point)
+
+        points_block.verify_count(count, len(points))
+
+        return points
+
+
+def read_point(reader: BlockReader) -> Point:
+
+    reader.verify_id(TokenID.point)
+
+    x = reader.read_float()
+    y = reader.read_float()
+    z = reader.read_float()
+
+    return Point(x, y, z)
+
+
+def read_uv_points(reader: BlockReader) -> List[UVPoint]:
+
+    with reader.sub_block(TokenID.uv_points) as uv_points_block:
+        uv_points: List[UVPoint] = []
+        count = uv_points_block.read_int()
+        
+        for uv_point_block in uv_points_block:
+            uv_point = read_uv_point(uv_point_block)
+            uv_points.append(uv_point)
+
+        uv_points_block.verify_count(count, len(uv_points))
+
+        return uv_points
+
+
+def read_uv_point(reader: BlockReader) -> UVPoint:
+
+    reader.verify_id(TokenID.uv_point)
+
+    u = reader.read_float()
+    v = reader.read_float()
+
+    return UVPoint(u, v)
+
+
+def read_normals(reader: BlockReader) -> List[Vector]:
+
+    with reader.sub_block(TokenID.normals) as normals_block:
+        normals: List[Vector] = []
+        count = normals_block.read_int()
+        
+        for vector_block in normals_block:
+            vector = read_vector_item(vector_block)
+            normals.append(vector)
+
+        normals_block.verify_count(count, len(normals))
+
+        return normals
+
+
+def read_vector_item(reader: BlockReader) -> Vector:
+
+    reader.verify_id(TokenID.vector)
+
+    x = reader.read_float()
+    y = reader.read_float()
+    z = reader.read_float()
+
+    return Vector(x, y, z)
+
+
+def read_sort_vectors(reader: BlockReader) -> List[Vector]:
+
+    with reader.sub_block(TokenID.sort_vectors) as sort_vectors_block:
+        sort_vectors: List[Vector] = []
+        count = sort_vectors_block.read_int()
+        
+        for vector_block in sort_vectors_block:
+            vector = read_vector_item(vector_block)
+            sort_vectors.append(vector)
+
+        sort_vectors_block.verify_count(count, len(sort_vectors))
+
+        return sort_vectors
