@@ -315,7 +315,7 @@ class Texture:
     image_index: int
     filter_mode: int
     mipmap_lod_bias: float
-    border_colour: str
+    border_colour: Optional[int] = None
 
     def __repr__(self):
         return (
@@ -325,7 +325,7 @@ class Texture:
 
 @dataclass
 class LightMaterial:
-    flags: str
+    flags: int
     diff_colour_index: int
     amb_colour_index: int
     spec_colour_index: int
@@ -400,7 +400,7 @@ class UVOpNonUniformScale(UVOp):
 
 @dataclass
 class LightModelCfg:
-    flags: str
+    flags: int
     uv_ops: List[UVOp]
 
     def __repr__(self):

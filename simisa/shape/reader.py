@@ -67,8 +67,8 @@ def read_shape(reader: BlockReader) -> Shape:
         matrices = read_matrices(shape_block)
         images = read_images(shape_block)
         textures = read_textures(shape_block)
-        light_materials: List[LightMaterial] = []
-        light_model_cfgs: List[LightModelCfg] = []
+        light_materials = read_light_materials(shape_block)
+        light_model_cfgs = read_light_model_cfgs(shape_block)
         vtx_states: List[VtxState] = []
         prim_states: List[PrimState] = []
         lod_controls: List[LodControl] = []
@@ -354,3 +354,110 @@ def read_textures(reader: BlockReader) -> List[Texture]:
         textures_block.verify_count(count, len(textures))
 
         return textures
+
+
+def read_light_materials(reader: BlockReader) -> List[LightMaterial]:
+
+    with reader.sub_block(TokenID.light_materials) as light_materials_block:
+        light_materials: List[LightMaterial] = []
+        count = light_materials_block.read_int()
+
+        for light_material_block in light_materials_block:
+            light_material_block.verify_id(TokenID.light_material)
+
+            flags = light_material_block.read_flags()
+            diff_colour_index = light_material_block.read_int()
+            amb_colour_index = light_material_block.read_int()
+            spec_colour_index = light_material_block.read_int()
+            emissive_colour_index = light_material_block.read_int()
+            spec_power = light_material_block.read_float()
+
+            light_material = LightMaterial(
+                flags,
+                diff_colour_index,
+                amb_colour_index,
+                spec_colour_index,
+                emissive_colour_index,
+                spec_power
+            )
+            light_materials.append(light_material)
+
+        light_materials_block.verify_count(count, len(light_materials))
+
+        return light_materials
+
+
+def read_light_model_cfgs(reader: BlockReader) -> List[LightModelCfg]:
+
+    with reader.sub_block(TokenID.light_model_cfgs) as light_model_cfgs_block:
+        light_model_cfgs: List[LightMaterial] = []
+        count = light_model_cfgs_block.read_int()
+
+        for light_model_cfg_block in light_model_cfgs_block:
+            light_model_cfg_block.verify_id(TokenID.light_model_cfg)
+
+            flags = light_model_cfg_block.read_flags()
+            uv_ops: List[UVOp] = []
+
+            for uv_op_block in light_model_cfg_block:
+                uv_op_count = uv_op_block.read_int()
+                
+                if uv_op_block.id == TokenID.uv_op_copy:
+                    texture_address_mode = uv_op_block.read_int()
+                    source_uv_index = uv_op_block.read_int()
+
+                    uv_ops.append(UVOpCopy(
+                        texture_address_mode,
+                        source_uv_index
+                    ))
+
+                elif uv_op_block.id == TokenID.uv_op_reflectmapfull:
+                    texture_address_mode = uv_op_block.read_int()
+
+                    uv_ops.append(UVOpReflectMapFull(
+                        texture_address_mode
+                    ))
+
+                elif uv_op_block.id == TokenID.uv_op_reflectmap:
+                    texture_address_mode = uv_op_block.read_int()
+
+                    uv_ops.append(UVOpReflectMap(
+                        texture_address_mode
+                    ))
+
+                elif uv_op_block.id == TokenID.uv_op_uniformscale:
+                    texture_address_mode = uv_op_block.read_int()
+                    source_uv_index = uv_op_block.read_int()
+                    unknown3 = uv_op_block.read_int()
+                    unknown4 = uv_op_block.read_int()
+
+                    uv_ops.append(UVOpUniformScale(
+                        texture_address_mode,
+                        source_uv_index,
+                        unknown3,
+                        unknown4
+                    ))
+
+                elif uv_op_block.id == TokenID.uv_op_nonuniformscale:
+                    texture_address_mode = uv_op_block.read_int()
+                    source_uv_index = uv_op_block.read_int()
+                    unknown3 = uv_op_block.read_int()
+                    unknown4 = uv_op_block.read_int()
+
+                    uv_ops.append(UVOpNonUniformScale(
+                        texture_address_mode,
+                        source_uv_index,
+                        unknown3,
+                        unknown4
+                    ))
+
+                else:
+                    logger.warning(f"Unhandled uv_op: {uv_op_block.id.name} (id: {uv_op_block.id})")
+
+            light_model_cfgs.append(LightModelCfg(flags, uv_ops))
+
+        light_model_cfgs_block.verify_count(count, len(light_model_cfgs))
+
+        return light_model_cfgs
+
+
