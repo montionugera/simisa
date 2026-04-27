@@ -43,11 +43,9 @@ def loads(shape_text: str) -> Shape:
 
 def read_shape(reader: BlockReader) -> Shape:
 
-    with reader.sub_block(TokenID.shape):
-
-        shape_header = read_shape_header(reader)
-
-        volumes: List[VolumeSphere] = []
+    with reader.sub_block(TokenID.shape) as shape_block:
+        shape_header = read_shape_header(shape_block)
+        volumes = read_volumes(shape_block)
         shader_names: List[str] = []
         texture_filter_names: List[str] = []
         points: List[Point] = []
@@ -74,12 +72,12 @@ def read_shape(reader: BlockReader) -> Shape:
         }
 
         for block in reader:
-            handler = handlers.get(block.id)
+            handler = handlers.get(shape_block.id)
 
             if handler:
-                handler(block)
+                handler(shape_block)
             else:
-                block.skip()
+                shape_block.skip()
 
         return Shape(
             shape_header,
@@ -105,31 +103,44 @@ def read_shape(reader: BlockReader) -> Shape:
 
 def read_shape_header(reader: BlockReader) -> ShapeHeader:
 
-    with reader.sub_block(TokenID.shape_header):
+    with reader.sub_block(TokenID.shape_header) as header_block:
+        flags1 = header_block.read_flags()
+        flags2 = None
 
-        flags1 = reader.read_flags()
-        flags2 = reader.read_flags()
+        if not header_block.end_of_block():
+            flags2 = header_block.read_flags()
 
         return ShapeHeader(flags1, flags2)
 
 
+def read_volumes(reader: BlockReader) -> VolumeSphere:
+
+    with reader.sub_block(TokenID.volumes) as volumes_block:
+        volume_spheres: List[VolumeSphere] = []
+        count = volumes_block.read_int()
+        
+        for vol_sphere_block in volumes_block:
+            volume_sphere = read_volume_sphere(vol_sphere_block)
+            volume_spheres.append(volume_sphere)
+
+        return volume_spheres
+
+
 def read_volume_sphere(reader: BlockReader) -> VolumeSphere:
 
-    with reader.sub_block(TokenID.volume_sphere):
-
-        radius = reader.read_float()
-        vector = read_vector()
+    with reader.sub_block(TokenID.vol_sphere) as vol_sphere_block:
+        radius = vol_sphere_block.read_float()
+        vector = read_vector(vol_sphere_block)
 
         return VolumeSphere(radius, vector)
 
 
 def read_vector(reader: BlockReader) -> Vector:
 
-    with reader.sub_block(TokenID.vector):
-
-        x = reader.read_float()
-        y = reader.read_float()
-        z = reader.read_float()
+    with reader.sub_block(TokenID.vector) as vector_block:
+        x = vector_block.read_float()
+        y = vector_block.read_float()
+        z = vector_block.read_float()
 
         return Vector(x, y, z)
 

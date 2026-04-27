@@ -44,6 +44,7 @@ from .reader import SimisaHeaderError, SimisaSubheaderError
 from .reader import BlockReader, BlockReaderError
 from .writer import BlockWriter
 from .format import BlockFormat
+
 from . import rdb
 from . import rit
 from . import shape

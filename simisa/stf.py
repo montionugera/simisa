@@ -22,7 +22,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os
-import warnings
+import logging
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
 from typing import (
@@ -37,6 +37,8 @@ from typing import (
 )
 
 from .units import Units
+
+logger = logging.getLogger(__name__)
 
 
 class StfReaderError(Exception):

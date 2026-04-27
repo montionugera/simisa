@@ -23,6 +23,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import io
 import zlib
+import struct
 import codecs
 import logging
 from abc import ABC, abstractmethod
@@ -384,9 +385,7 @@ class TextFileReader(TextBlockReader):
         if s != "":
             while s != "":
                 if s != ")":
-                    logger.warning(
-                        f"Expected end of file; got '{s}' in {self.filepath}"
-                    )
+                    logger.warning(f"Expected end of file; got '{s}' in {self.filepath}")
                     return
 
                 s = self.stf_reader.read_item()
@@ -443,26 +442,29 @@ class BinaryBlockReader(BlockReader):
         raw_flags = int.from_bytes(self._read(2), "little")
         size = int.from_bytes(self._read(4), "little")
 
-        sub = BinaryBlockReader()
-        sub.stream = self.stream
-        sub.filepath = self.filepath
-        sub.token_offset = self.token_offset
+        sub_block = BinaryBlockReader()
+        sub_block.stream = self.stream
+        sub_block.filepath = self.filepath
+        sub_block.token_offset = self.token_offset
+        sub_block.filetype = self.filetype
+        sub_block.fileversion = self.fileversion
 
-        sub.filetype = getattr(self, "filetype", "")
-        sub.fileversion = getattr(self, "fileversion", 0)
+        sub_block.id = TokenID(raw_id + self.token_offset)
+        sub_block.flags = raw_flags
+        sub_block.remaining_bytes = size
 
-        sub.id = TokenID(raw_id + self.token_offset)
-        sub.flags = raw_flags
-        sub.remaining_bytes = size
-
-        if sub.remaining_bytes > 0:
+        if sub_block.remaining_bytes > 0:
             label_len = int.from_bytes(self._read(1), "little")
+            sub_block.remaining_bytes -= 1
 
             if label_len > 0:
                 raw = self._read(label_len * 2)
-                sub.label = raw.decode("utf-16-le")
+                sub_block.remaining_bytes -= label_len * 2
+                logger.warning(f"remaining bytes for {sub_block.id}: {sub_block.remaining_bytes}")
+                logger.warning(f"label for {sub_block.id}: {raw.hex().upper()}")
+                sub_block.label = raw.decode("utf-16-le")
 
-        return sub
+        return sub_block
 
     def read_flags(self) -> int:
         return int.from_bytes(self._read(4), "little")
@@ -474,7 +476,6 @@ class BinaryBlockReader(BlockReader):
         return int.from_bytes(self._read(4), "little", signed=False)
 
     def read_float(self) -> float:
-        import struct
         return struct.unpack("<f", self._read(4))[0]
 
     def read_string(self) -> str:
@@ -492,7 +493,9 @@ class BinaryBlockReader(BlockReader):
         if self.stream is None:
             return
 
-        self.stream.read(self.remaining_bytes)
+        skipped_bytes = self.stream.read(self.remaining_bytes)
+        if self.remaining_bytes <= 100:
+            logger.warning(f"Skipped data: {skipped_bytes.hex().upper()}")
         self.remaining_bytes = 0
 
     def end_of_block(self) -> bool:
@@ -500,7 +503,7 @@ class BinaryBlockReader(BlockReader):
 
     def verify_end_of_block(self):
         if not self.end_of_block():
-            logger.warning(f"Expected end of block {self.id}; got extra data")
+            logger.warning(f"Expected end of block '{self.id.name}' (id {self.id}); got extra data")
             self.skip()
 
     def close(self):

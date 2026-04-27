@@ -290,10 +290,17 @@ class Animation:
 @dataclass
 class ShapeHeader:
     flags1: str
-    flags2: str
+    flags2: Optional[str] = None
 
     def __repr__(self):
-        return f"ShapeHeader(flags1={self.flags1}, flags2={self.flags2})"
+        parts = [
+            f"flags1={self.flags1}",
+        ]
+
+        if self.flags2 is not None:
+            parts.append(f"flags2={self.flags2}")
+
+        return f"ShapeHeader({', '.join(parts)})"
 
 @dataclass
 class VolumeSphere:
