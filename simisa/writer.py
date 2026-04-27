@@ -29,6 +29,11 @@ from .token_id import TokenID
 logger = logging.getLogger(__name__)
 
 
+class BlockWriterError(Exception):
+    """Raised when a block writer encounters an error or malformed data."""
+    pass
+
+
 class CompressedWriteStream:
     def __init__(self, file, compressor):
         self.file = file
@@ -57,6 +62,24 @@ class BlockWriter(ABC):
         is_unicode: bool = True,
         is_compressed: bool = False
     ):
+        check_params = (
+            ("filepath", filepath, str),
+            ("filetype", filetype, str),
+            ("fileversion", fileversion, str),
+            ("is_binary", is_binary, bool),
+            ("is_unicode", is_unicode, bool),
+            ("is_compressed", is_compressed, bool),
+        )
+
+        for name, value, typ in check_params:
+            if isinstance(value, typ):
+                continue
+
+            raise TypeError(
+                f"Parameter '{name}' must be {typ.__name__}, "
+                f"but got {type(value).__name__}"
+            )
+        
         fileformat = 'b' if is_binary else 't'
         subheader = f"JINX0{filetype}{fileversion}{fileformat}______\r\n"
         encoding = "utf-16-le" if is_unicode else "ascii"

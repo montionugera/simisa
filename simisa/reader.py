@@ -56,6 +56,9 @@ class BlockReader(ABC):
 
     @staticmethod
     def open(filepath: str) -> "BlockReader":
+        if not isinstance(filepath, str):
+            raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    
         compressed = is_compressed(filepath)
 
         if compressed is None:
@@ -144,6 +147,8 @@ class BlockReader(ABC):
     def __iter__(self) -> Iterator["BlockReader"]:
         while not self.end_of_block():
             yield self.read_sub_block()
+
+        self.verify_end_of_block()
     
     def __enter__(self):
         return self
@@ -168,13 +173,27 @@ class BlockReader(ABC):
 
     def verify_id(self, desired_id: TokenID) -> None:
         if self.id != desired_id:
-            logger.info(f"Expected block {desired_id}; got {self.id}")
+            logger.warning(f"Expected block '{desired_id.name}' (id {desired_id}), but got '{self.id.name}' (id {self.id})")
     
+    def verify_count(self, expected: int, actual: int) -> None:
+        block_name = self.id.name if self.id else "<unknown>"
+
+        if actual < expected:
+            logger.warning(
+                f"Too few items in block '{block_name}', "
+                f"read {actual} items but expected {expected}"
+            )
+        elif actual > expected:
+            logger.warning(
+                f"Too many items in block '{block_name}', "
+                f"read {actual} items but expected {expected}"
+            )
+
     def expect_comment(self) -> None:
         if self.id == TokenID.comment:
             self.skip()
         else:
-            logger.info(f"Expected block comment; got {self.id}")
+            logger.info(f"Expected block comment, but got '{self.id.name}' (id {self.id})")
             self.skip()
 
     @abstractmethod
@@ -320,7 +339,7 @@ class TextBlockReader(BlockReader):
             return
 
         if s != ")":
-            logger.warning(f"Expected end of block; got '{s}'")
+            logger.warning(f"Expected end of block, but got '{s}'")
 
         self.at_end_of_block = True
 
@@ -453,13 +472,14 @@ class BinaryBlockReader(BlockReader):
         sub_block.flags = raw_flags
         sub_block.remaining_bytes = size
 
-        if sub_block.remaining_bytes > 0:
-            label_len = int.from_bytes(self._read(1), "little")
-            sub_block.remaining_bytes -= 1
+        self.remaining_bytes -= size
 
-            if label_len > 0:
-                raw = self._read(label_len * 2)
-                sub_block.remaining_bytes -= label_len * 2
+        if sub_block.remaining_bytes > 0:
+            label_length = int.from_bytes(sub_block._read(1), "little")
+
+            if label_length > 0:
+                raw = self._read(label_length * 2)
+                sub_block.remaining_bytes -= label_length * 2
                 logger.warning(f"remaining bytes for {sub_block.id}: {sub_block.remaining_bytes}")
                 logger.warning(f"label for {sub_block.id}: {raw.hex().upper()}")
                 sub_block.label = raw.decode("utf-16-le")
@@ -494,8 +514,12 @@ class BinaryBlockReader(BlockReader):
             return
 
         skipped_bytes = self.stream.read(self.remaining_bytes)
-        if self.remaining_bytes <= 100:
+
+        if self.remaining_bytes <= 1000:
             logger.warning(f"Skipped data: {skipped_bytes.hex().upper()}")
+        else:
+            logger.warning(f"Length of skipped data: {len(skipped_bytes)}")
+
         self.remaining_bytes = 0
 
     def end_of_block(self) -> bool:

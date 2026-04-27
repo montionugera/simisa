@@ -17,11 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
 from typing import List
 
 from .. import TokenID, Units
-from ..reader import BlockReader
+from ..reader import BlockReader, SimisaSubheaderError
 from .models import *
+
+logger = logging.getLogger(__name__)
+
 
 
 def load(filepath: str) -> Shape:
@@ -29,6 +33,10 @@ def load(filepath: str) -> Shape:
         raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
 
     with BlockReader.open(filepath) as reader:
+
+        if not reader.filetype == 's':
+            raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it actually a shape?")
+
         return read_shape(reader)
 
 
@@ -38,6 +46,9 @@ def loads(shape_text: str) -> Shape:
 
     reader = BlockReader.from_string(shape_text)
 
+    if not reader.filetype == 's':
+        raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it actually a shape?")
+
     return read_shape(reader)
 
 
@@ -46,7 +57,7 @@ def read_shape(reader: BlockReader) -> Shape:
     with reader.sub_block(TokenID.shape) as shape_block:
         shape_header = read_shape_header(shape_block)
         volumes = read_volumes(shape_block)
-        shader_names: List[str] = []
+        shader_names = read_shader_names(shape_block)
         texture_filter_names: List[str] = []
         points: List[Point] = []
         uv_points: List[UVPoint] = []
@@ -71,13 +82,13 @@ def read_shape(reader: BlockReader) -> Shape:
             #TokenID.texture: lambda b: textures.append(read_texture(b)),
         }
 
-        for block in reader:
-            handler = handlers.get(shape_block.id)
-
-            if handler:
-                handler(shape_block)
-            else:
-                shape_block.skip()
+        #for block in reader:
+        #    handler = handlers.get(shape_block.id)
+        #
+        #    if handler:
+        #        handler(shape_block)
+        #    else:
+        #        shape_block.skip()
 
         return Shape(
             shape_header,
@@ -113,7 +124,7 @@ def read_shape_header(reader: BlockReader) -> ShapeHeader:
         return ShapeHeader(flags1, flags2)
 
 
-def read_volumes(reader: BlockReader) -> VolumeSphere:
+def read_volumes(reader: BlockReader) -> List[VolumeSphere]:
 
     with reader.sub_block(TokenID.volumes) as volumes_block:
         volume_spheres: List[VolumeSphere] = []
@@ -123,16 +134,19 @@ def read_volumes(reader: BlockReader) -> VolumeSphere:
             volume_sphere = read_volume_sphere(vol_sphere_block)
             volume_spheres.append(volume_sphere)
 
+        volumes_block.verify_count(count, len(volume_spheres))
+
         return volume_spheres
 
 
 def read_volume_sphere(reader: BlockReader) -> VolumeSphere:
 
-    with reader.sub_block(TokenID.vol_sphere) as vol_sphere_block:
-        radius = vol_sphere_block.read_float()
-        vector = read_vector(vol_sphere_block)
+    reader.verify_id(TokenID.vol_sphere)
 
-        return VolumeSphere(radius, vector)
+    vector = read_vector(reader)
+    radius = reader.read_float()
+
+    return VolumeSphere(radius, vector)
 
 
 def read_vector(reader: BlockReader) -> Vector:
@@ -144,3 +158,17 @@ def read_vector(reader: BlockReader) -> Vector:
 
         return Vector(x, y, z)
 
+
+def read_shader_names(reader: BlockReader) -> List[str]:
+
+    with reader.sub_block(TokenID.shader_names) as shader_names_block:
+        shader_names: List[str] = []
+        count = shader_names_block.read_int()
+        
+        for named_shader_block in shader_names_block:
+            named_shader = named_shader_block.read_string()
+            shader_names.append(named_shader)
+
+        shader_names_block.verify_count(count, len(shader_names))
+
+        return shader_names
