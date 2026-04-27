@@ -500,8 +500,8 @@ class BinaryBlockReader(BlockReader):
         if length == 0:
             return ""
 
-        raw = self._read(length * 2)
-        return raw.decode("utf-16-le")
+        raw_string = self._read(length * 2)
+        return raw_string.decode("utf-16-le")
     
     def skip(self):
         if self.remaining_bytes <= 0:
@@ -574,32 +574,3 @@ class BinaryFileReader(BinaryBlockReader):
         if self.stream:
             self.stream.close()
 
-
-
-"""
-Example usage:
-
-with reader.sub_block(TokenID.vertex):
-
-    flags = reader.read_flags()
-    ipoint = reader.read_int()
-    inormal = reader.read_int()
-    color1 = reader.read_flags()
-    color2 = reader.read_flags()
-
-    with reader.sub_block(TokenID.vertex_uvs) as sub:
-        count = sub.read_int()
-        uvs = [sub.read_int() for _ in range(count)]
-
-
-
-Example of iteration over blocks:
-
-for block in reader:
-    if block.id == TokenID.vertex:
-        ...
-    else:
-        block.skip()
-
-
-"""
