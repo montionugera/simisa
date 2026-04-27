@@ -29,6 +29,27 @@ logger = logging.getLogger(__name__)
 
 
 def load(filepath: str) -> Shape:
+    """
+    Load and parse a shape file from disk.
+
+    This function both compressed/uncompressed as well as binary/text data.
+    It opens the file at the given path, validates that it is a supported shape
+    file based on its subheader, and returns a parsed Shape object.
+
+    Args:
+        filepath (str): Path to the shape file.
+
+    Returns:
+        Shape: The parsed shape object.
+
+    Raises:
+        TypeError: If `filepath` is not a string.
+        SimisaHeaderError: If the data has an invalid or unrecognized SIMISA header.
+        SimisaSubheaderError: If the data has an invalid or unrecognized SIMISA subheader.
+        BlockReaderError: If the block reader encounters an error or malformed data.
+        StfReaderError: If the STF reader encounters an error or malformed data.
+        OSError: If the file cannot be opened.
+    """
     if not isinstance(filepath, str):
         raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
 
@@ -41,6 +62,26 @@ def load(filepath: str) -> Shape:
 
 
 def loads(shape_text: str) -> Shape:
+    """
+    Parse a shape from a string containing shape data.
+
+    This function does not support binary or compressed data. It reads shape
+    data from the provided string, validates that it represents a supported
+    shape file based on its subheader, and returns a parsed Shape object.
+
+    Args:
+        shape_text (str): String containing shape file data.
+
+    Returns:
+        Shape: The parsed shape object.
+
+    Raises:
+        TypeError: If `shape_text` is not a string.
+        SimisaHeaderError: If the data has an invalid or unrecognized SIMISA header.
+        SimisaSubheaderError: If the data has an invalid or unrecognized SIMISA subheader.
+        BlockReaderError: If the block reader encounters an error or malformed data.
+        StfReaderError: If the STF reader encounters an error or malformed data.
+    """
     if not isinstance(shape_text, str):
         raise TypeError(f"Parameter 'shape_text' must be str, but got {type(shape_text).__name__}")
 
