@@ -63,8 +63,8 @@ def read_shape(reader: BlockReader) -> Shape:
         uv_points = read_uv_points(shape_block)
         normals = read_normals(shape_block)
         sort_vectors = read_sort_vectors(shape_block)
-        colours: List[Colour] = []
-        matrices: List[Matrix] = []
+        colours = read_colours(shape_block)
+        matrices = read_matrices(shape_block)
         images: List[str] = []
         textures: List[Texture] = []
         light_materials: List[LightMaterial] = []
@@ -73,22 +73,6 @@ def read_shape(reader: BlockReader) -> Shape:
         prim_states: List[PrimState] = []
         lod_controls: List[LodControl] = []
         animations: List[Animation] = []
-
-        handlers = {
-            #TokenID.volume_sphere: lambda b: volumes.append(read_volume_sphere(b)),
-            #TokenID.shader_name: lambda b: shader_names.append(b.read_string()),
-            #TokenID.texture_filter_name: lambda b: texture_filter_names.append(b.read_string()),
-            #TokenID.matrix: lambda b: matrices.append(read_matrix(b)),
-            #TokenID.texture: lambda b: textures.append(read_texture(b)),
-        }
-
-        #for block in reader:
-        #    handler = handlers.get(shape_block.id)
-        #
-        #    if handler:
-        #        handler(shape_block)
-        #    else:
-        #        shape_block.skip()
 
         return Shape(
             shape_header,
@@ -279,3 +263,72 @@ def read_sort_vectors(reader: BlockReader) -> List[Vector]:
         sort_vectors_block.verify_count(count, len(sort_vectors))
 
         return sort_vectors
+
+
+def read_colours(reader: BlockReader) -> List[Colour]:
+
+    with reader.sub_block(TokenID.colours) as colours_block:
+        colours: List[Colour] = []
+        count = colours_block.read_int()
+        
+        for colour_block in colours_block:
+            colour = read_colour(colour_block)
+            colours.append(colour)
+
+        colours_block.verify_count(count, len(colours))
+
+        return colours
+
+
+def read_colour(reader: BlockReader) -> Colour:
+
+    reader.verify_id(TokenID.colour)
+
+    a = reader.read_float()
+    r = reader.read_float()
+    g = reader.read_float()
+    b = reader.read_float()
+
+    return Colour(a, r, g, b)
+
+
+def read_matrices(reader: BlockReader) -> List[Matrix]:
+
+    with reader.sub_block(TokenID.matrices) as matrices_block:
+        matrices: List[Matrix] = []
+        count = matrices_block.read_int()
+        
+        for matrix_block in matrices_block:
+            matrix = read_matrix(matrix_block)
+            matrices.append(matrix)
+
+        matrices_block.verify_count(count, len(matrices))
+
+        return matrices
+
+
+def read_matrix(reader: BlockReader) -> Matrix:
+
+    reader.verify_id(TokenID.matrix)
+
+    name = reader.label
+    ax = reader.read_float()
+    ay = reader.read_float()
+    az = reader.read_float()
+    bx = reader.read_float()
+    by = reader.read_float()
+    bz = reader.read_float()
+    cx = reader.read_float()
+    cy = reader.read_float()
+    cz = reader.read_float()
+    dx = reader.read_float()
+    dy = reader.read_float()
+    dz = reader.read_float()
+
+    return Matrix(
+        name,
+        ax, ay, az,
+        bx, by, bz,
+        cx, cy, cz,
+        dx, dy, dz
+    )
