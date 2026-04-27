@@ -408,11 +408,11 @@ class LightModelCfg:
 
 @dataclass
 class VtxState:
-    flags: str
+    flags: int
     matrix_index: int
     light_material_index: int
     light_model_cfg_index: int
-    light_flags: str
+    light_flags: int
     matrix2_index: Optional[int] = None
 
     def __repr__(self):
@@ -426,7 +426,7 @@ class VtxState:
 @dataclass
 class PrimState:
     name: str
-    flags: str
+    flags: int
     shader_index: int
     texture_indices: List[int]
     z_bias: float

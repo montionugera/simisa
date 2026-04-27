@@ -69,8 +69,8 @@ def read_shape(reader: BlockReader) -> Shape:
         textures = read_textures(shape_block)
         light_materials = read_light_materials(shape_block)
         light_model_cfgs = read_light_model_cfgs(shape_block)
-        vtx_states: List[VtxState] = []
-        prim_states: List[PrimState] = []
+        vtx_states = read_vtx_states(shape_block)
+        prim_states = read_prim_states(shape_block)
         lod_controls: List[LodControl] = []
         animations: List[Animation] = []
 
@@ -397,62 +397,7 @@ def read_light_model_cfgs(reader: BlockReader) -> List[LightModelCfg]:
             light_model_cfg_block.verify_id(TokenID.light_model_cfg)
 
             flags = light_model_cfg_block.read_flags()
-            uv_ops: List[UVOp] = []
-
-            for uv_op_block in light_model_cfg_block:
-                uv_op_count = uv_op_block.read_int()
-                
-                if uv_op_block.id == TokenID.uv_op_copy:
-                    texture_address_mode = uv_op_block.read_int()
-                    source_uv_index = uv_op_block.read_int()
-
-                    uv_ops.append(UVOpCopy(
-                        texture_address_mode,
-                        source_uv_index
-                    ))
-
-                elif uv_op_block.id == TokenID.uv_op_reflectmapfull:
-                    texture_address_mode = uv_op_block.read_int()
-
-                    uv_ops.append(UVOpReflectMapFull(
-                        texture_address_mode
-                    ))
-
-                elif uv_op_block.id == TokenID.uv_op_reflectmap:
-                    texture_address_mode = uv_op_block.read_int()
-
-                    uv_ops.append(UVOpReflectMap(
-                        texture_address_mode
-                    ))
-
-                elif uv_op_block.id == TokenID.uv_op_uniformscale:
-                    texture_address_mode = uv_op_block.read_int()
-                    source_uv_index = uv_op_block.read_int()
-                    unknown3 = uv_op_block.read_int()
-                    unknown4 = uv_op_block.read_int()
-
-                    uv_ops.append(UVOpUniformScale(
-                        texture_address_mode,
-                        source_uv_index,
-                        unknown3,
-                        unknown4
-                    ))
-
-                elif uv_op_block.id == TokenID.uv_op_nonuniformscale:
-                    texture_address_mode = uv_op_block.read_int()
-                    source_uv_index = uv_op_block.read_int()
-                    unknown3 = uv_op_block.read_int()
-                    unknown4 = uv_op_block.read_int()
-
-                    uv_ops.append(UVOpNonUniformScale(
-                        texture_address_mode,
-                        source_uv_index,
-                        unknown3,
-                        unknown4
-                    ))
-
-                else:
-                    logger.warning(f"Unhandled uv_op: {uv_op_block.id.name} (id: {uv_op_block.id})")
+            uv_ops = read_uv_ops(light_model_cfg_block)
 
             light_model_cfgs.append(LightModelCfg(flags, uv_ops))
 
@@ -461,3 +406,150 @@ def read_light_model_cfgs(reader: BlockReader) -> List[LightModelCfg]:
         return light_model_cfgs
 
 
+def read_uv_ops(reader: BlockReader) -> List[UVOp]:
+
+    with reader.sub_block(TokenID.uv_ops) as uv_ops_block:
+        count = uv_ops_block.read_int()
+        uv_ops: List[UVOp] = []
+
+        for uv_op_block in uv_ops_block:
+            if uv_op_block.id == TokenID.uv_op_copy:
+                texture_address_mode = uv_op_block.read_int()
+                source_uv_index = uv_op_block.read_int()
+
+                uv_ops.append(UVOpCopy(
+                    texture_address_mode,
+                    source_uv_index
+                ))
+
+            elif uv_op_block.id == TokenID.uv_op_reflectmapfull:
+                texture_address_mode = uv_op_block.read_int()
+
+                uv_ops.append(UVOpReflectMapFull(
+                    texture_address_mode
+                ))
+
+            elif uv_op_block.id == TokenID.uv_op_reflectmap:
+                texture_address_mode = uv_op_block.read_int()
+
+                uv_ops.append(UVOpReflectMap(
+                    texture_address_mode
+                ))
+
+            elif uv_op_block.id == TokenID.uv_op_uniformscale:
+                texture_address_mode = uv_op_block.read_int()
+                source_uv_index = uv_op_block.read_int()
+                unknown3 = uv_op_block.read_int()
+                unknown4 = uv_op_block.read_int()
+
+                uv_ops.append(UVOpUniformScale(
+                    texture_address_mode,
+                    source_uv_index,
+                    unknown3,
+                    unknown4
+                ))
+
+            elif uv_op_block.id == TokenID.uv_op_nonuniformscale:
+                texture_address_mode = uv_op_block.read_int()
+                source_uv_index = uv_op_block.read_int()
+                unknown3 = uv_op_block.read_int()
+                unknown4 = uv_op_block.read_int()
+
+                uv_ops.append(UVOpNonUniformScale(
+                    texture_address_mode,
+                    source_uv_index,
+                    unknown3,
+                    unknown4
+                ))
+
+            else:
+                logger.warning(f"Unhandled uv_op: {uv_op_block.id.name} (id: {uv_op_block.id})")
+        
+        uv_ops_block.verify_count(count, len(uv_ops))
+
+        return uv_ops
+
+
+def read_vtx_states(reader: BlockReader) -> List[VtxState]:
+
+    with reader.sub_block(TokenID.vtx_states) as vtx_states_block:
+        vtx_states: List[VtxState] = []
+        count = vtx_states_block.read_int()
+        
+        for vtx_state_block in vtx_states_block:
+            vtx_state_block.verify_id(TokenID.vtx_state)
+
+            flags = vtx_state_block.read_flags()
+            matrix_index = vtx_state_block.read_int()
+            light_material_index = vtx_state_block.read_int()
+            light_model_cfg_index = vtx_state_block.read_int()
+            light_flags = vtx_state_block.read_flags()
+            matrix2_index = None
+            
+            if not vtx_state_block.end_of_block():
+                matrix2_index = vtx_state_block.read_int()
+            
+            vtx_state = VtxState(
+                flags,
+                matrix_index,
+                light_material_index,
+                light_model_cfg_index,
+                light_flags,
+                matrix2_index
+            )
+            vtx_states.append(vtx_state)
+
+        vtx_states_block.verify_count(count, len(vtx_states))
+
+        return vtx_states
+
+
+def read_prim_states(reader: BlockReader) -> List[PrimState]:
+
+    with reader.sub_block(TokenID.prim_states) as prim_states_block:
+        prim_states: List[VtxState] = []
+        count = prim_states_block.read_int()
+        
+        for prim_state_block in prim_states_block:
+            prim_state_block.verify_id(TokenID.prim_state)
+
+            name = prim_state_block.label
+            flags = prim_state_block.read_flags()
+            shader_index = prim_state_block.read_int()
+            texture_indices = read_tex_idxs(prim_state_block)
+            z_bias = prim_state_block.read_float()
+            vtx_state_index = prim_state_block.read_int()
+            alpha_test_mode = prim_state_block.read_int()
+            light_cfg_index = prim_state_block.read_int()
+            z_buffer_mode = prim_state_block.read_int()
+            
+            prim_state = PrimState(
+                name,
+                flags,
+                shader_index,
+                texture_indices,
+                z_bias,
+                vtx_state_index,
+                alpha_test_mode,
+                light_cfg_index,
+                z_buffer_mode
+            )
+            prim_states.append(prim_state)
+
+        prim_states_block.verify_count(count, len(prim_states))
+
+        return prim_states
+
+
+def read_tex_idxs(reader: BlockReader) -> List[int]:
+
+    with reader.sub_block(TokenID.tex_idxs) as tex_idxs_block:
+        tex_idxs: List[int] = []
+        count = tex_idxs_block.read_int()
+        
+        for _ in range(count):
+            tex_idxs.append(tex_idxs_block.read_int())
+
+        tex_idxs_block.verify_count(count, len(tex_idxs))
+
+        return tex_idxs
