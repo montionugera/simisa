@@ -478,11 +478,8 @@ class BinaryBlockReader(BlockReader):
             label_length = int.from_bytes(sub_block._read(1), "little")
 
             if label_length > 0:
-                raw = self._read(label_length * 2)
-                sub_block.remaining_bytes -= label_length * 2
-                logger.warning(f"remaining bytes for {sub_block.id}: {sub_block.remaining_bytes}")
-                logger.warning(f"label for {sub_block.id}: {raw.hex().upper()}")
-                sub_block.label = raw.decode("utf-16-le")
+                raw_label = sub_block._read(label_length * 2)
+                sub_block.label = raw_label.decode("utf-16-le")
 
         return sub_block
 
