@@ -798,7 +798,17 @@ def read_tex_idxs(reader: BlockReader) -> List[int]:
 
 
 def read_lod_controls(reader: BlockReader) -> List[LodControl]:
+    """
+    Read and parse LOD controls from a BlockReader.
 
+    Consumes the `lod_controls` sub-block and returns a list of LodControl objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a LOD controls block.
+
+    Returns:
+        List[LodControl]: The parsed LOD controls.
+    """
     with reader.sub_block(TokenID.lod_controls) as lod_controls_block:
         lod_controls: List[LodControl] = []
         count = lod_controls_block.read_int()
@@ -826,7 +836,17 @@ def read_lod_controls(reader: BlockReader) -> List[LodControl]:
 
 
 def read_distance_levels(reader: BlockReader) -> List[DistanceLevel]:
+    """
+    Read and parse distance levels from a BlockReader.
 
+    Consumes the `distance_levels` sub-block and returns a list of DistanceLevel objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a distance levels block.
+
+    Returns:
+        List[DistanceLevel]: The parsed distance levels.
+    """
     with reader.sub_block(TokenID.distance_levels) as distance_levels_block:
         distance_levels: List[DistanceLevel] = []
         count = distance_levels_block.read_int()
@@ -849,7 +869,17 @@ def read_distance_levels(reader: BlockReader) -> List[DistanceLevel]:
 
 
 def read_distance_level_header(reader: BlockReader) -> DistanceLevelHeader:
+    """
+    Read and parse a distance level header from a BlockReader.
 
+    Consumes the `distance_level_header` sub-block and returns a DistanceLevelHeader object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a distance level header block.
+
+    Returns:
+        DistanceLevelHeader: The parsed distance level header.
+    """
     with reader.sub_block(TokenID.distance_level_header) as dlevel_header_block:
         dlevel_selection: int = 0
         hierarchy: List[int] = []
@@ -872,7 +902,17 @@ def read_distance_level_header(reader: BlockReader) -> DistanceLevelHeader:
 
 
 def read_sub_objects(reader: BlockReader) -> List[SubObject]:
+    """
+    Read and parse sub-objects from a BlockReader.
 
+    Consumes the `sub_objects` sub-block and returns a list of SubObject objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a sub-objects block.
+
+    Returns:
+        List[SubObject]: The parsed sub-objects.
+    """
     with reader.sub_block(TokenID.sub_objects) as sub_objects_block:
         sub_objects: List[SubObject] = []
         count = sub_objects_block.read_int()
@@ -900,7 +940,17 @@ def read_sub_objects(reader: BlockReader) -> List[SubObject]:
 
 
 def read_sub_object_header(reader: BlockReader) -> List[SubObjectHeader]:
+    """
+    Read and parse a sub-object header from a BlockReader.
 
+    Consumes the `sub_object_header` sub-block and returns a SubObjectHeader object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a sub-object header block.
+
+    Returns:
+        SubObjectHeader: The parsed sub-object header.
+    """
     with reader.sub_block(TokenID.sub_object_header) as sub_object_header_block:
         flags = sub_object_header_block.read_flags()
         sort_vector_index = sub_object_header_block.read_int()
@@ -927,7 +977,17 @@ def read_sub_object_header(reader: BlockReader) -> List[SubObjectHeader]:
 
 
 def read_geometry_info(reader: BlockReader) -> GeometryInfo:
+    """
+    Read and parse geometry information from a BlockReader.
 
+    Consumes the `geometry_info` sub-block and returns a GeometryInfo object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a geometry info block.
+
+    Returns:
+        GeometryInfo: The parsed geometry information.
+    """
     with reader.sub_block(TokenID.geometry_info) as geometry_info_block:
         face_normals = geometry_info_block.read_int()
         tx_light_cmds = geometry_info_block.read_int()
@@ -960,7 +1020,17 @@ def read_geometry_info(reader: BlockReader) -> GeometryInfo:
 
 
 def read_geometry_nodes(reader: BlockReader) -> List[GeometryNode]:
+    """
+    Read and parse geometry nodes from a BlockReader.
 
+    Consumes the `geometry_nodes` sub-block and returns a list of GeometryNode objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a geometry nodes block.
+
+    Returns:
+        List[GeometryNode]: The parsed geometry nodes.
+    """
     with reader.sub_block(TokenID.geometry_nodes) as geometry_nodes_block:
         geometry_nodes: List[GeometryNode] = []
         count = geometry_nodes_block.read_int()
@@ -991,7 +1061,17 @@ def read_geometry_nodes(reader: BlockReader) -> List[GeometryNode]:
 
 
 def read_cullable_prims(reader: BlockReader) -> CullablePrims:
+    """
+    Read and parse cullable primitives from a BlockReader.
 
+    Consumes the `cullable_prims` sub-block and returns a CullablePrims object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a cullable prims block.
+
+    Returns:
+        CullablePrims: The parsed cullable primitives.
+    """
     with reader.sub_block(TokenID.cullable_prims) as cullable_prims_block:
         num_prims = cullable_prims_block.read_int()
         num_flat_sections = cullable_prims_block.read_int()
@@ -1005,7 +1085,17 @@ def read_cullable_prims(reader: BlockReader) -> CullablePrims:
 
 
 def read_geometry_node_map(reader: BlockReader) -> List[int]:
+    """
+    Read and parse a geometry node map from a BlockReader.
 
+    Consumes the `geometry_node_map` sub-block and returns a list of indices.
+
+    Args:
+        reader (BlockReader): Reader positioned at a geometry node map block.
+
+    Returns:
+        List[int]: The parsed geometry node map.
+    """
     with reader.sub_block(TokenID.geometry_node_map) as geometry_node_map_block:
         geometry_node_map: List[int] = []
         count = geometry_node_map_block.read_int()
@@ -1019,7 +1109,17 @@ def read_geometry_node_map(reader: BlockReader) -> List[int]:
 
 
 def read_subobject_shaders(reader: BlockReader) -> List[int]:
+    """
+    Read and parse sub-object shader indices from a BlockReader.
 
+    Consumes the `subobject_shaders` sub-block and returns a list of indices.
+
+    Args:
+        reader (BlockReader): Reader positioned at a subobject shaders block.
+
+    Returns:
+        List[int]: The parsed shader indices.
+    """
     with reader.sub_block(TokenID.subobject_shaders) as subobject_shaders_block:
         subobject_shaders: List[int] = []
         count = subobject_shaders_block.read_int()
@@ -1033,7 +1133,17 @@ def read_subobject_shaders(reader: BlockReader) -> List[int]:
 
 
 def read_subobject_light_cfgs(reader: BlockReader) -> List[int]:
+    """
+    Read and parse sub-object light configuration indices from a BlockReader.
 
+    Consumes the `subobject_light_cfgs` sub-block and returns a list of indices.
+
+    Args:
+        reader (BlockReader): Reader positioned at a subobject light configs block.
+
+    Returns:
+        List[int]: The parsed light configuration indices.
+    """
     with reader.sub_block(TokenID.subobject_light_cfgs) as subobject_light_cfgs_block:
         subobject_light_cfgs: List[int] = []
         count = subobject_light_cfgs_block.read_int()
@@ -1047,7 +1157,17 @@ def read_subobject_light_cfgs(reader: BlockReader) -> List[int]:
 
 
 def read_vertices(reader: BlockReader) -> List[Vertex]:
+    """
+    Read and parse vertices from a BlockReader.
 
+    Consumes the `vertices` sub-block and returns a list of Vertex objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a vertices block.
+
+    Returns:
+        List[Vertex]: The parsed vertices.
+    """
     with reader.sub_block(TokenID.vertices) as vertices_block:
         vertices: List[Vertex] = []
         count = vertices_block.read_int()
@@ -1078,7 +1198,17 @@ def read_vertices(reader: BlockReader) -> List[Vertex]:
 
 
 def read_vertex_uvs(reader: BlockReader) -> List[int]:
+    """
+    Read and parse vertex UV indices from a BlockReader.
 
+    Consumes the `vertex_uvs` sub-block and returns a list of indices.
+
+    Args:
+        reader (BlockReader): Reader positioned at a vertex UVs block.
+
+    Returns:
+        List[int]: The parsed vertex UV indices.
+    """
     with reader.sub_block(TokenID.vertex_uvs) as vertex_uvs_block:
         vertex_uvs: List[int] = []
         count = vertex_uvs_block.read_int()
