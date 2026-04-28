@@ -165,7 +165,7 @@ class NormalIdx:
 class IndexedTrilist:
     vertex_idxs: List[VertexIdx]
     normal_idxs: List[NormalIdx]
-    flags: List[str]
+    flags: List[int]
 
     def __repr__(self):
         return (

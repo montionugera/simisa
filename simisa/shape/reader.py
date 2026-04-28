@@ -922,9 +922,8 @@ def read_sub_objects(reader: BlockReader) -> List[SubObject]:
 
             sub_object_header = read_sub_object_header(sub_object_block)
             vertices = read_vertices(sub_object_block)
-            sub_object_block.skip()
-            vertex_sets = []#read_vertex_sets(sub_object_block)
-            primitives = []#read_primitives(sub_object_block)
+            vertex_sets = read_vertex_sets(sub_object_block)
+            primitives = read_primitives(sub_object_block)
 
             sub_object = SubObject(
                 sub_object_header,
@@ -1219,3 +1218,175 @@ def read_vertex_uvs(reader: BlockReader) -> List[int]:
         vertex_uvs_block.verify_count(count, len(vertex_uvs))
 
         return vertex_uvs
+
+
+def read_vertex_sets(reader: BlockReader) -> List[VertexSet]:
+    """
+    Read and parse vertex sets from a BlockReader.
+
+    Consumes the `vertex_sets` sub-block and returns a list of VertexSet objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a vertex sets block.
+
+    Returns:
+        List[VertexSet]: The parsed vertex sets.
+    """
+    with reader.sub_block(TokenID.vertex_sets) as vertex_sets_block:
+        vertex_sets: List[VertexSet] = []
+        count = vertex_sets_block.read_int()
+        
+        for vertex_set_block in vertex_sets_block:
+            vertex_set_block.verify_id(TokenID.vertex_set)
+
+            vtx_state = vertex_set_block.read_int()
+            vtx_start_index = vertex_set_block.read_int()
+            vtx_count = vertex_set_block.read_int()
+
+            vertex_set = VertexSet(
+                vtx_state,
+                vtx_start_index,
+                vtx_count
+            )
+            vertex_sets.append(vertex_set)
+
+        vertex_sets_block.verify_count(count, len(vertex_sets))
+
+        return vertex_sets
+
+
+def read_primitives(reader: BlockReader) -> List[Primitive]:
+    """
+    Read and parse primitives from a BlockReader.
+
+    Consumes the `primitives` sub-block and returns a list of Primitive objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a primitives block.
+
+    Returns:
+        List[Primitive]: The parsed primitives.
+    """
+    with reader.sub_block(TokenID.primitives) as primitives_block:
+        primitives: List[Primitive] = []
+        count = primitives_block.read_int()
+        
+        num_blocks_read = 0
+        prim_state_idx = 0
+        
+        for primitive_block in primitives_block:
+            if primitive_block.id == TokenID.prim_state_idx:
+                prim_state_idx = primitive_block.read_int()
+                num_blocks_read += 1
+        
+            elif primitive_block.id == TokenID.indexed_trilist:
+                vertex_idxs = read_vertex_idxs(primitive_block)
+                normal_idxs = read_normal_idxs(primitive_block)
+                flags = read_flags(primitive_block)
+
+                indexed_trilist = IndexedTrilist(
+                    vertex_idxs,
+                    normal_idxs,
+                    flags
+                )
+                primitive = Primitive(
+                    prim_state_idx,
+                    indexed_trilist
+                )
+
+                primitives.append(primitive)
+                num_blocks_read += 1
+            
+            else:
+                logger.warning(f"Unhandled primitive: {primitive_block.id.name} (id: {primitive_block.id})")
+
+
+        primitives_block.verify_count(count, num_blocks_read)
+
+        return primitives
+
+
+def read_vertex_idxs(reader: BlockReader) -> List[VertexIdx]:
+    """
+    Read and parse vertex indices from a BlockReader.
+
+    Consumes the `vertex_idxs` sub-block and returns a list of VertexIdx objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a vertex indices block.
+
+    Returns:
+        List[VertexIdx]: The parsed vertex indices.
+    """
+    with reader.sub_block(TokenID.vertex_idxs) as vertex_idxs_block:
+        vertex_idxs: List[VertexIdx] = []
+        count = vertex_idxs_block.read_int()
+        
+        for _ in range(count // 3):
+            vertex1_index = vertex_idxs_block.read_int()
+            vertex2_index = vertex_idxs_block.read_int()
+            vertex3_index = vertex_idxs_block.read_int()
+
+            vertex_idxs.append(VertexIdx(
+                vertex1_index,
+                vertex2_index,
+                vertex3_index
+            ))
+
+        vertex_idxs_block.verify_count(count // 3, len(vertex_idxs))
+
+        return vertex_idxs
+
+
+def read_normal_idxs(reader: BlockReader) -> List[NormalIdx]:
+    """
+    Read and parse normal indices from a BlockReader.
+
+    Consumes the `normal_idxs` sub-block and returns a list of NormalIdx objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a normal indices block.
+
+    Returns:
+        List[NormalIdx]: The parsed normal indices.
+    """
+    with reader.sub_block(TokenID.normal_idxs) as normal_idxs_block:
+        normal_idxs: List[NormalIdx] = []
+        count = normal_idxs_block.read_int()
+        
+        for _ in range(count):
+            index = normal_idxs_block.read_int()
+            unknown2 = normal_idxs_block.read_int()
+
+            normal_idxs.append(NormalIdx(
+                index,
+                unknown2
+            ))
+
+        normal_idxs_block.verify_count(count, len(normal_idxs))
+
+        return normal_idxs
+
+
+def read_flags(reader: BlockReader) -> List[int]:
+    """
+    Read and parse flag values from a BlockReader.
+
+    Consumes the `flags` sub-block and returns a list of integers.
+
+    Args:
+        reader (BlockReader): Reader positioned at a flags block.
+
+    Returns:
+        List[int]: The parsed flag values.
+    """
+    with reader.sub_block(TokenID.flags) as flags_block:
+        flags: List[int] = []
+        count = flags_block.read_int()
+        
+        for _ in range(count):
+            flags.append(flags_block.read_flags())
+
+        flags_block.verify_count(count, len(flags))
+
+        return flags
