@@ -507,11 +507,11 @@ class GeometryInfo:
 
 @dataclass
 class SubObjectHeader:
-    flags: str
+    flags: int
     sort_vector_index: int
     volume_index: int
-    source_vtx_fmt_flags: str
-    destination_vtx_fmt_flags: str
+    source_vtx_fmt_flags: int
+    destination_vtx_fmt_flags: int
     geometry_info: GeometryInfo
     subobject_shaders: List[int]
     subobject_light_cfgs: List[int]

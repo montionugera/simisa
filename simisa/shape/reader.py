@@ -123,7 +123,7 @@ def read_shape(reader: BlockReader) -> Shape:
         light_model_cfgs = read_light_model_cfgs(shape_block)
         vtx_states = read_vtx_states(shape_block)
         prim_states = read_prim_states(shape_block)
-        lod_controls: List[LodControl] = []
+        lod_controls = read_lod_controls(shape_block)
         animations: List[Animation] = []
 
         return Shape(
@@ -361,7 +361,6 @@ def read_normals(reader: BlockReader) -> List[Vector]:
         normals_block.verify_count(count, len(normals))
 
         return normals
-
 
 
 def read_sort_vectors(reader: BlockReader) -> List[Vector]:
@@ -796,3 +795,252 @@ def read_tex_idxs(reader: BlockReader) -> List[int]:
         tex_idxs_block.verify_count(count, len(tex_idxs))
 
         return tex_idxs
+
+
+def read_lod_controls(reader: BlockReader) -> List[LodControl]:
+
+    with reader.sub_block(TokenID.lod_controls) as lod_controls_block:
+        lod_controls: List[LodControl] = []
+        count = lod_controls_block.read_int()
+        
+        for lod_control_block in lod_controls_block:
+            lod_control_block.verify_id(TokenID.lod_control)
+
+            distance_levels_header: int = 0
+            distance_levels: List[DistanceLevel] = []
+
+            with lod_control_block.sub_block(TokenID.distance_levels_header) as dlevels_header_block:
+                distance_levels_header = dlevels_header_block.read_int()
+            
+            distance_levels = read_distance_levels(lod_control_block)
+
+            lod_control = LodControl(
+                distance_levels_header,
+                distance_levels
+            )
+            lod_controls.append(lod_control)
+
+        lod_controls_block.verify_count(count, len(lod_controls))
+
+        return lod_controls
+
+
+def read_distance_levels(reader: BlockReader) -> List[DistanceLevel]:
+
+    with reader.sub_block(TokenID.distance_levels) as distance_levels_block:
+        distance_levels: List[DistanceLevel] = []
+        count = distance_levels_block.read_int()
+        
+        for distance_level_block in distance_levels_block:
+            distance_level_block.verify_id(TokenID.distance_level)
+
+            distance_level_header = read_distance_level_header(distance_level_block)
+            sub_objects = read_sub_objects(distance_level_block)
+
+            distance_level = DistanceLevel(
+                distance_level_header,
+                sub_objects
+            )
+            distance_levels.append(distance_level)
+
+        distance_levels_block.verify_count(count, len(distance_levels))
+
+        return distance_levels
+
+
+def read_distance_level_header(reader: BlockReader) -> DistanceLevelHeader:
+
+    with reader.sub_block(TokenID.distance_level_header) as dlevel_header_block:
+        dlevel_selection: int = 0
+        hierarchy: List[int] = []
+        
+        with dlevel_header_block.sub_block(TokenID.dlevel_selection) as dlevel_selection_block:
+            dlevel_selection = dlevel_selection_block.read_int()
+
+        with dlevel_header_block.sub_block(TokenID.hierarchy) as hierarchy_block:
+            count = hierarchy_block.read_int()
+            
+            for _ in range(count):
+                hierarchy.append(hierarchy_block.read_int())
+
+            hierarchy_block.verify_count(count, len(hierarchy))
+
+        return DistanceLevelHeader(
+            dlevel_selection,
+            hierarchy
+        )
+
+
+def read_sub_objects(reader: BlockReader) -> List[SubObject]:
+
+    with reader.sub_block(TokenID.sub_objects) as sub_objects_block:
+        sub_objects: List[SubObject] = []
+        count = sub_objects_block.read_int()
+        
+        for sub_object_block in sub_objects_block:
+            sub_object_block.verify_id(TokenID.sub_object)
+
+            sub_object_header = read_sub_object_header(sub_object_block)
+            sub_object_block.skip()
+            vertices = []#read_vertices(sub_object_block)
+            vertex_sets = []#read_vertex_sets(sub_object_block)
+            primitives = []#read_primitives(sub_object_block)
+
+            sub_object = SubObject(
+                sub_object_header,
+                vertices,
+                vertex_sets,
+                primitives
+            )
+            sub_objects.append(sub_object)
+
+        sub_objects_block.verify_count(count, len(sub_objects))
+
+        return sub_objects
+
+
+def read_sub_object_header(reader: BlockReader) -> List[SubObjectHeader]:
+
+    with reader.sub_block(TokenID.sub_object_header) as sub_object_header_block:
+        flags = sub_object_header_block.read_flags()
+        sort_vector_index = sub_object_header_block.read_int()
+        volume_index = sub_object_header_block.read_int()
+        source_vtx_fmt_flags = sub_object_header_block.read_flags()
+        destination_vtx_fmt_flags = sub_object_header_block.read_flags()
+        geometry_info = read_geometry_info(sub_object_header_block)
+        subobject_shaders = read_subobject_shaders(sub_object_header_block)
+        subobject_light_cfgs = read_subobject_light_cfgs(sub_object_header_block)
+        subobject_id = sub_object_header_block.read_int()
+
+        sub_object_header = SubObjectHeader(
+            flags,
+            sort_vector_index,
+            volume_index,
+            source_vtx_fmt_flags,
+            destination_vtx_fmt_flags,
+            geometry_info,
+            subobject_shaders,
+            subobject_light_cfgs,
+            subobject_id
+        )
+        return sub_object_header
+
+
+def read_geometry_info(reader: BlockReader) -> GeometryInfo:
+
+    with reader.sub_block(TokenID.geometry_info) as geometry_info_block:
+        face_normals = geometry_info_block.read_int()
+        tx_light_cmds = geometry_info_block.read_int()
+        node_x_tx_light_cmds = geometry_info_block.read_int()
+        trilist_indices = geometry_info_block.read_int()
+        line_list_indices = geometry_info_block.read_int()
+        node_x_trilist_indices = geometry_info_block.read_int()
+        trilists = geometry_info_block.read_int()
+        line_lists = geometry_info_block.read_int()
+        pt_lists = geometry_info_block.read_int()
+        node_x_trilists = geometry_info_block.read_int()
+        geometry_nodes = read_geometry_nodes(geometry_info_block)
+        geometry_node_map = read_geometry_node_map(geometry_info_block)
+
+        geometry_info = GeometryInfo(
+            face_normals,
+            tx_light_cmds,
+            node_x_tx_light_cmds,
+            trilist_indices,
+            line_list_indices,
+            node_x_trilist_indices,
+            trilists,
+            line_lists,
+            pt_lists,
+            node_x_trilists,
+            geometry_nodes,
+            geometry_node_map
+        )
+        return geometry_info
+
+
+def read_geometry_nodes(reader: BlockReader) -> List[GeometryNode]:
+
+    with reader.sub_block(TokenID.geometry_nodes) as geometry_nodes_block:
+        geometry_nodes: List[GeometryNode] = []
+        count = geometry_nodes_block.read_int()
+        
+        for geometry_node_block in geometry_nodes_block:
+            geometry_node_block.verify_id(TokenID.geometry_node)
+
+            tx_light_cmds = geometry_node_block.read_int()
+            node_x_tx_light_cmds = geometry_node_block.read_int()
+            trilists = geometry_node_block.read_int()
+            line_lists = geometry_node_block.read_int()
+            pt_lists = geometry_node_block.read_int()
+            cullable_prims = read_cullable_prims(geometry_node_block)
+
+            geometry_node = GeometryNode(
+                tx_light_cmds,
+                node_x_tx_light_cmds,
+                trilists,
+                line_lists,
+                pt_lists,
+                cullable_prims
+            )
+            geometry_nodes.append(geometry_node)
+
+        geometry_nodes_block.verify_count(count, len(geometry_nodes))
+
+        return geometry_nodes
+
+
+def read_cullable_prims(reader: BlockReader) -> CullablePrims:
+
+    with reader.sub_block(TokenID.cullable_prims) as cullable_prims_block:
+        num_prims = cullable_prims_block.read_int()
+        num_flat_sections = cullable_prims_block.read_int()
+        num_prim_indices = cullable_prims_block.read_int()
+
+        return CullablePrims(
+            num_prims,
+            num_flat_sections,
+            num_prim_indices
+        )
+
+
+def read_geometry_node_map(reader: BlockReader) -> List[int]:
+
+    with reader.sub_block(TokenID.geometry_node_map) as geometry_node_map_block:
+        geometry_node_map: List[int] = []
+        count = geometry_node_map_block.read_int()
+        
+        for _ in range(count):
+            geometry_node_map.append(geometry_node_map_block.read_int())
+
+        geometry_node_map_block.verify_count(count, len(geometry_node_map))
+
+        return geometry_node_map
+
+
+def read_subobject_shaders(reader: BlockReader) -> List[int]:
+
+    with reader.sub_block(TokenID.subobject_shaders) as subobject_shaders_block:
+        subobject_shaders: List[int] = []
+        count = subobject_shaders_block.read_int()
+        
+        for _ in range(count):
+            subobject_shaders.append(subobject_shaders_block.read_int())
+
+        subobject_shaders_block.verify_count(count, len(subobject_shaders))
+
+        return subobject_shaders
+
+
+def read_subobject_light_cfgs(reader: BlockReader) -> List[int]:
+
+    with reader.sub_block(TokenID.subobject_light_cfgs) as subobject_light_cfgs_block:
+        subobject_light_cfgs: List[int] = []
+        count = subobject_light_cfgs_block.read_int()
+        
+        for _ in range(count):
+            subobject_light_cfgs.append(subobject_light_cfgs_block.read_int())
+
+        subobject_light_cfgs_block.verify_count(count, len(subobject_light_cfgs))
+
+        return subobject_light_cfgs
