@@ -24,6 +24,6 @@ from dataclasses import dataclass
 class BlockFormat:
     items_per_line: Optional[int] = None
     disable_inner_indent: bool = False
-    newline_after_first_item: bool = True
     newline_after_start: bool = False
+    newline_after_count: bool = True
     newline_before_closing: bool = True
