@@ -276,8 +276,8 @@ class AnimationNode:
 
 @dataclass
 class Animation:
+    frame_count: int
     frame_rate: int
-    anima_count: int
     frametion_nodes: List[AnimationNode]
 
     def __repr__(self):

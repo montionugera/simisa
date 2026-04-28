@@ -20,7 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import logging
 from typing import List
 
-from .. import TokenID, Units
+from .. import TokenID
 from ..reader import BlockReader, SimisaSubheaderError
 from .models import *
 
@@ -124,7 +124,11 @@ def read_shape(reader: BlockReader) -> Shape:
         vtx_states = read_vtx_states(shape_block)
         prim_states = read_prim_states(shape_block)
         lod_controls = read_lod_controls(shape_block)
-        animations: List[Animation] = []
+
+        if not shape_block.end_of_block():
+            animations = read_animations(shape_block)
+        else:
+            animations = None
 
         return Shape(
             shape_header,
@@ -1277,7 +1281,6 @@ def read_primitives(reader: BlockReader) -> List[Primitive]:
         for primitive_block in primitives_block:
             if primitive_block.id == TokenID.prim_state_idx:
                 prim_state_idx = primitive_block.read_int()
-                num_blocks_read += 1
         
             elif primitive_block.id == TokenID.indexed_trilist:
                 vertex_idxs = read_vertex_idxs(primitive_block)
@@ -1295,11 +1298,11 @@ def read_primitives(reader: BlockReader) -> List[Primitive]:
                 )
 
                 primitives.append(primitive)
-                num_blocks_read += 1
             
             else:
                 logger.warning(f"Unhandled primitive: {primitive_block.id.name} (id: {primitive_block.id})")
 
+            num_blocks_read += 1
 
         primitives_block.verify_count(count, num_blocks_read)
 
@@ -1390,3 +1393,184 @@ def read_flags(reader: BlockReader) -> List[int]:
         flags_block.verify_count(count, len(flags))
 
         return flags
+
+
+def read_animations(reader: BlockReader) -> List[Animation]:
+    """
+    Read and parse animations from a BlockReader.
+
+    Consumes the `animations` sub-block and returns a list of Animation objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at an animations block.
+
+    Returns:
+        List[Animation]: The parsed animations.
+    """
+    with reader.sub_block(TokenID.animations) as animations_block:
+        animations: List[Animation] = []
+        count = animations_block.read_int()
+        
+        for animation_block in animations_block:
+            animation_block.verify_id(TokenID.animation)
+
+            frame_count = animation_block.read_int()
+            frame_rate = animation_block.read_int()
+            animation_nodes = read_anim_nodes(animation_block)
+            
+            animation = Animation(
+                frame_count,
+                frame_rate,
+                animation_nodes
+            )
+            animations.append(animation)
+
+        animations_block.verify_count(count, len(animations))
+
+        return animations
+
+
+def read_anim_nodes(reader: BlockReader) -> List[AnimationNode]:
+    """
+    Read and parse animation nodes from a BlockReader.
+
+    Consumes the `anim_nodes` sub-block and returns a list of AnimationNode objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at an animation nodes block.
+
+    Returns:
+        List[AnimationNode]: The parsed animation nodes.
+    """
+    with reader.sub_block(TokenID.anim_nodes) as anim_nodes_block:
+        anim_nodes: List[AnimationNode] = []
+        count = anim_nodes_block.read_int()
+        
+        for anim_node_block in anim_nodes_block:
+            anim_node_block.verify_id(TokenID.anim_node)
+
+            name = anim_node_block.label
+            controllers = read_controllers(anim_node_block)
+            
+            anim_node = AnimationNode(
+                name,
+                controllers
+            )
+            anim_nodes.append(anim_node)
+
+        anim_nodes_block.verify_count(count, len(anim_nodes))
+
+        return anim_nodes
+
+
+def read_controllers(reader: BlockReader) -> List[Controller]:
+    """
+    Read and parse controllers from a BlockReader.
+
+    Consumes the `controllers` sub-block and returns a list of Controller objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a controllers block.
+
+    Returns:
+        List[Controller]: The parsed controllers.
+    """
+    with reader.sub_block(TokenID.controllers) as controllers_block:
+        controllers: List[Controller] = []
+        count = controllers_block.read_int()
+        
+        for controller_block in controllers_block:
+            keyframes = read_keypositions(controller_block)
+
+            if controller_block.id == TokenID.tcb_rot:
+                controllers.append(TCBRot(keyframes))
+            
+            elif controller_block.id == TokenID.linear_pos:
+                controllers.append(LinearPos(keyframes))
+            
+            elif controller_block.id == TokenID.tcb_pos:
+                controllers.append(TCBPos(keyframes))
+            
+            else:
+                logger.warning(f"Unhandled controller: {controller_block.id.name} (id: {controller_block.id})")
+
+        controllers_block.verify_count(count, len(controllers))
+
+        return controllers
+
+
+def read_keypositions(reader: BlockReader) -> List[KeyPosition]:
+    """
+    Read and parse keyframe positions from a BlockReader.
+
+    Consumes keyframe blocks and returns a list of KeyPosition objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at keyframe data.
+
+    Returns:
+        List[KeyPosition]: The parsed key positions.
+    """
+    keypositions: List[KeyPosition] = []
+    count = reader.read_int()
+
+    for keyposition_block in reader:
+        if keyposition_block.id == TokenID.tcb_key:
+            frame = keyposition_block.read_int()
+            x = keyposition_block.read_float()
+            y = keyposition_block.read_float()
+            z = keyposition_block.read_float()
+            w = keyposition_block.read_float()
+            tension = keyposition_block.read_float()
+            continuity = keyposition_block.read_float()
+            bias = keyposition_block.read_float()
+            ease_in = keyposition_block.read_float()
+            ease_out = keyposition_block.read_float()
+
+            keypositions.append(TCBKey(
+                frame,
+                x,
+                y,
+                z,
+                w,
+                tension,
+                continuity,
+                bias,
+                ease_in,
+                ease_out
+            ))
+        
+        elif keyposition_block.id == TokenID.linear_key:
+            frame = keyposition_block.read_int()
+            x = keyposition_block.read_float()
+            y = keyposition_block.read_float()
+            z = keyposition_block.read_float()
+
+            keypositions.append(LinearKey(
+                frame,
+                x,
+                y,
+                z
+            ))
+        
+        elif keyposition_block.id == TokenID.slerp_rot:
+            frame = keyposition_block.read_int()
+            x = keyposition_block.read_float()
+            y = keyposition_block.read_float()
+            z = keyposition_block.read_float()
+            w = keyposition_block.read_float()
+
+            keypositions.append(SlerpRot(
+                frame,
+                x,
+                y,
+                z,
+                w
+            ))
+        
+        else:
+            logger.warning(f"Unhandled keyposition: {keyposition_block.id.name} (id: {keyposition_block.id})")
+
+    reader.verify_count(count, len(keypositions))
+
+    return keypositions

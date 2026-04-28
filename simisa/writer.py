@@ -145,22 +145,6 @@ class BlockWriter(ABC):
             self.end_block()
 
     @abstractmethod
-    def begin_list_block(self, block_id: TokenID, list_format: BlockFormat, label: Optional[str] = None):
-        pass
-
-    @abstractmethod
-    def end_list_block(self):
-        pass
-
-    @contextmanager
-    def list_block(self, block_id: TokenID, list_format: BlockFormat, label: Optional[str] = None):
-        self.begin_list_block(block_id, list_format, label)
-        try:
-            yield self
-        finally:
-            self.end_list_block()
-
-    @abstractmethod
     def write_flags(self, value: int):
         pass
 
@@ -184,7 +168,11 @@ class BlockWriter(ABC):
     def write_comment(self, text: str):
         pass
 
-    @abstractmethod
+    #@abstractmethod # TODO Use this along with begin_block and end_block to manage text list formats
+    def write_count(self, text: str):
+        pass
+
+    @abstractmethod # TODO delete this
     def write_list(
         self,
         block_id: TokenID,
