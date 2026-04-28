@@ -529,11 +529,11 @@ class SubObjectHeader:
 
 @dataclass
 class Vertex:
-    flags: str
+    flags: int
     point_index: int
     normal_index: int
-    colour1: str
-    colour2: str
+    colour1: int
+    colour2: int
     vertex_uvs: List[int]
 
     def __repr__(self):

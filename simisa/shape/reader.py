@@ -881,8 +881,8 @@ def read_sub_objects(reader: BlockReader) -> List[SubObject]:
             sub_object_block.verify_id(TokenID.sub_object)
 
             sub_object_header = read_sub_object_header(sub_object_block)
+            vertices = read_vertices(sub_object_block)
             sub_object_block.skip()
-            vertices = []#read_vertices(sub_object_block)
             vertex_sets = []#read_vertex_sets(sub_object_block)
             primitives = []#read_primitives(sub_object_block)
 
@@ -1044,3 +1044,48 @@ def read_subobject_light_cfgs(reader: BlockReader) -> List[int]:
         subobject_light_cfgs_block.verify_count(count, len(subobject_light_cfgs))
 
         return subobject_light_cfgs
+
+
+def read_vertices(reader: BlockReader) -> List[Vertex]:
+
+    with reader.sub_block(TokenID.vertices) as vertices_block:
+        vertices: List[Vertex] = []
+        count = vertices_block.read_int()
+        
+        for vertex_block in vertices_block:
+            vertex_block.verify_id(TokenID.vertex)
+
+            flags = vertex_block.read_flags()
+            point_index = vertex_block.read_int()
+            normal_index = vertex_block.read_int()
+            colour1 = vertex_block.read_flags()
+            colour2 = vertex_block.read_flags()
+            vertex_uvs = read_vertex_uvs(vertex_block)
+
+            vertex = Vertex(
+                flags,
+                point_index,
+                normal_index,
+                colour1,
+                colour2,
+                vertex_uvs
+            )
+            vertices.append(vertex)
+
+        vertices_block.verify_count(count, len(vertices))
+
+        return vertices
+
+
+def read_vertex_uvs(reader: BlockReader) -> List[int]:
+
+    with reader.sub_block(TokenID.vertex_uvs) as vertex_uvs_block:
+        vertex_uvs: List[int] = []
+        count = vertex_uvs_block.read_int()
+        
+        for _ in range(count):
+            vertex_uvs.append(vertex_uvs_block.read_int())
+
+        vertex_uvs_block.verify_count(count, len(vertex_uvs))
+
+        return vertex_uvs
