@@ -28,8 +28,9 @@ __all__ = [
     'BlockReader', 'BlockWriter', 'BlockFormat',
     'SimisaHeaderError', 'SimisaSubheaderError',
     'BlockReaderError', 'StfReaderError',
-    'rdb', 'rit', 'shape', 'tdb', 'terrain',
-    'tit', 'tsection', 'world', 'worldsound'
+    'roaddatabase', 'shape', 'terrain',
+    'tracksections', 'trackdatabase',
+    'world', 'worldsound'
 ]
 
 __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
