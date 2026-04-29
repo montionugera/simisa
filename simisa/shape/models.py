@@ -278,7 +278,7 @@ class AnimationNode:
 class Animation:
     frame_count: int
     frame_rate: int
-    frametion_nodes: List[AnimationNode]
+    animation_nodes: List[AnimationNode]
 
     def __repr__(self):
         return (
