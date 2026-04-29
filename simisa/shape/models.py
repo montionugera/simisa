@@ -195,6 +195,7 @@ class Controller(ABC):
     def __repr__(self):
         return f"Controller({self._base_repr()})"
 
+@dataclass
 class TCBRot(Controller):
     keyframes: List[KeyPosition]
 
