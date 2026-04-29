@@ -45,12 +45,10 @@ from .reader import BlockReader, BlockReaderError
 from .writer import BlockWriter
 from .format import BlockFormat
 
-from . import rdb
-from . import rit
+from . import roaddatabase
 from . import shape
-from . import tdb
 from . import terrain
-from . import tit
-from . import tsection
+from . import trackdatabase
+from . import tracksections
 from . import world
 from . import worldsound
