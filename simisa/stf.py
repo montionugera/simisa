@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import logging
 from dataclasses import dataclass
 from typing import Optional
 
@@ -152,11 +153,15 @@ class StfReaderContext:
 
 class StfReader:
 
-    def __init__(self, stream: StfTokenStream, context: StfReaderContext,
-                 parent: Optional["StfReader"] = None):
+    def __init__(
+        self,
+        stream: StfTokenStream,
+        #context: StfReaderContext,
+        parent: Optional["StfReader"] = None
+    ):
 
         self.stream = stream
-        self.ctx = context
+        #self.ctx = context
         self.parent = parent
 
         self.id = None
@@ -164,148 +169,107 @@ class StfReader:
 
         self._ended = False
 
+    @classmethod
+    def from_stream(cls, stream, source_name="<stream>"):
+        lexer = StfLexer(stream, source_name)
+        token_stream = StfTokenStream(lexer)
+        return cls(token_stream)
+
     def next(self) -> StfToken:
         return self.stream.next()
 
     def peek(self) -> StfToken:
         return self.stream.peek()
 
-    def read_sub_block(self) -> "StfReader": # TODO: Belongs in textblockreader
-
-        token = self.next()
-
-        if token.is_eof:
-            raise RuntimeError("Unexpected EOF while reading sub-block")
-
-        if token.is_block_end:
-            return self.read_sub_block()
-
-        child = StfReader(self.stream, self.ctx, parent=self)
-
-        # block id
-        child.id = self._get_token_id(token.value)
-
-        nxt = self.next()
-
-        # optional label or direct '('
-        if nxt.is_block_start:
-            return child
-
-        child.label = nxt.value
-
-        nxt = self.next()
-
-        if not nxt.is_block_start:
-            raise RuntimeError(f"Expected '(' after block header, got {nxt.value}")
-
-        return child
-
-    def __iter__(self): # TODO: Belongs in textblockreader
-        while not self.end_of_block():
-            yield self.read_sub_block()
-
-        self.verify_end_of_block()
-
-    def end_of_block(self) -> bool: # TODO: Belongs in textblockreader
-        t = self.peek()
-        return t.is_eof or t.is_block_end
-
-    def verify_end_of_block(self): # TODO: Belongs in textblockreader
-        if self._ended:
-            return
-
-        t = self.next()
-
-        if not t.is_block_end:
-            raise RuntimeError(
-                f"Expected end of block {self.id}, got {t.value}"
-            )
-
-        self._ended = True
-
-    def skip(self): # TODO: Belongs in textblockreader
-        self.skip_block()
-
-    def skip_block(self): # TODO: Belongs in textblockreader
-        depth = 0
-
-        while True:
-            t = self.next()
-
-            if t.is_eof:
-                return
-
-            if t.is_block_start:
-                depth += 1
-
-            elif t.is_block_end:
-                if depth == 0:
-                    return
-                depth -= 1
-
-    def read_word(self) -> str:
-        return self.next().value
-
-    def read_string(self) -> str:
-        return self.next().value
-
-    def read_int(self) -> int:
-        return int(self.next().value)
-
-    def read_uint(self) -> int:
-        return int(self.next().value)
-
-    def read_float(self) -> float:
-        return float(self.next().value)
-
-    def read_flags(self) -> int:
-        return int(self.next().value, 16)
-
     def _expect(self, value: str):
         t = self.next()
         if t.value.lower() != value.lower():
-            raise RuntimeError(f"Expected {value}, got {t.value}")
+            raise StfReaderError(f"Expected {value}, got {t.value}")
 
     def _handle_include(self):
-        self.expect("(")
-        name = self.read_word()
-        self.expect(")")
+        # self.expect("(")
+        # name = self.read_word()
+        # self.expect(")")
 
-        stream = self.ctx.includes.open(name)
+        # stream = self.ctx.includes.open(name)
 
-        lexer = StfLexer(stream, name)
-        token_stream = StfTokenStream(lexer)
+        # lexer = StfLexer(stream, name)
+        # token_stream = StfTokenStream(lexer)
 
-        subreader = StfReader(token_stream, self.ctx)
-
-
-    ######################
-    # Methods actually used directly from reader.py
-    ########################
+        # subreader = StfReader(token_stream, self.ctx)
+        pass
 
     def peek_past_whitespace(self):
-        pass
-    
+        t = self.peek()
+        if t.is_eof:
+            return ""
+        return t.value
+
     def eof(self):
-        pass
+        return self.stream.eof()
 
     def verify_start_of_block(self):
-        pass
+        t = self.next()
+        if t.value != "(":
+            raise StfReaderError(
+                f"Expected '(' at line {t.line} in {t.source}, got '{t.value}'"
+            )
 
     def read_item(self):
-        pass
+        t = self.next()
 
-    def read_hex(self):
-        pass
+        if t.is_eof:
+            return ""
 
-    def read_int(self):
-        pass
+        return t.value
 
-    def read_uint(self):
-        pass
+    def read_hex(self, default=None):
+        s = self.read_item()
+        if s == "":
+            if default is not None:
+                return default
+            raise StfReaderError("Unexpected EOF while reading hex")
 
-    def read_float(self):
-        pass
+        try:
+            # Handles both "FF" and "0xFF"
+            return int(s, 16)
+        except ValueError:
+            raise StfReaderError(f"Invalid hex value: {s}")
+
+    def read_int(self, default=None):
+        s = self.read_item()
+        if s == "":
+            if default is not None:
+                return default
+            raise StfReaderError("Unexpected EOF while reading int")
+
+        try:
+            return int(s, 10)
+        except ValueError:
+            raise StfReaderError(f"Invalid int value: {s}")
+
+    def read_uint(self, default=None):
+        value = self.read_int(default)
+
+        if value is None:
+            return None
+
+        if value < 0:
+            raise StfReaderError(f"Expected unsigned int, got {value}")
+
+        return value
+
+    def read_float(self, default=None):
+        s = self.read_item()
+        if s == "":
+            if default is not None:
+                return default
+            raise StfReaderError("Unexpected EOF while reading float")
+
+        try:
+            return float(s)
+        except ValueError:
+            raise StfReaderError(f"Invalid float value: {s}")
 
     def close(self):
-        pass
+        self._ended = True

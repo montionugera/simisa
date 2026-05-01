@@ -22,11 +22,11 @@ from simisa import BlockReader
 from simisa import shape
 
 
-# def test_shape_load(global_storage):
-#     shape_path = global_storage["shape_path"]
-#     s = shape.load(shape_path)
-#     print(s)
-#     assert False
+def test_shape_load(global_storage):
+    shape_path = global_storage["shape_path"]
+    s = shape.load(shape_path)
+    print(s)
+    assert False
 
 
 # def test_shape_loads_uncompressed(global_storage):
@@ -49,9 +49,6 @@ def test_shape_loads_compressed(global_storage):
     shape_compressed_path = global_storage["shape_compressed_path"]
     with open(shape_compressed_path, 'rb') as f:
         shape_bytes = f.read()
-        #for i, b in enumerate(shape_bytes[:50]):
-        #    print(f"{i:04x}: {b:02x}")
-        #assert False
         
         with pytest.raises(TypeError):
             shape.loads(shape_bytes)

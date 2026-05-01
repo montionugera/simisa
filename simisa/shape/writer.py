@@ -39,7 +39,7 @@ def dump(shape: Shape, filepath: str, compressed: bool = False) -> None:
         fileversion="0",
         is_binary=compressed,
         is_unicode=not compressed,
-        is_compressed=compressed,
+        is_compressed=compressed
     ) as writer:
         write_shape(writer, shape)
 
@@ -53,7 +53,10 @@ def dumps(shape: Shape) -> str:
     shape_text = BlockWriter.to_string(
         writer,
         filetype="s",
-        fileversion="0"
+        fileversion="0",
+        is_binary=False,
+        is_unicode=True,
+        is_compressed=False
     )
 
     return shape_text

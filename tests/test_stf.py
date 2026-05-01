@@ -20,21 +20,21 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 
 import io
-from simisa.stf3 import Lexer, TokenStream, Parser, ParserContext, IncludeResolver, UnitParser
+# from simisa.stf3 import Lexer, TokenStream, Parser, ParserContext, IncludeResolver, UnitParser
 
 
-def test_parse_real_file():
-    file_path = "./data/DK10f_A1tPnt5dLft.sd"
+# def test_parse_real_file():
+#     file_path = "./data/DK10f_A1tPnt5dLft.sd"
 
-    include_resolver = IncludeResolver()
-    unit_parser = UnitParser()
-    context = ParserContext(include_resolver, unit_parser)
+#     include_resolver = IncludeResolver()
+#     unit_parser = UnitParser()
+#     context = ParserContext(include_resolver, unit_parser)
 
-    with open(file_path, "r", encoding="utf-16-le", errors="replace") as f:
-        lexer = Lexer(f, file_path)
-        stream = TokenStream(lexer)
-        parser = Parser(stream, context)
+#     with open(file_path, "r", encoding="utf-16-le", errors="replace") as f:
+#         lexer = Lexer(f, file_path)
+#         stream = TokenStream(lexer)
+#         parser = Parser(stream, context)
 
-        parser.parse()
+#         parser.parse()
 
-    assert False  # replace with real assertions later
+#     assert False  # replace with real assertions later

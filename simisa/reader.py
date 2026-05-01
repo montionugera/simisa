@@ -103,7 +103,9 @@ class BlockReader(ABC):
         if fileformat != "t":
             raise SimisaSubheaderError(f"Unrecognized subheader '{subheader}' in {filepath}")
         
-        return TextFileReader(stream, filepath, filetype, fileversion, encoding)
+        text_stream = io.TextIOWrapper(stream, encoding=encoding)
+
+        return TextFileReader(text_stream, filepath, filetype, fileversion, encoding)
 
     @staticmethod
     def from_string(data: str) -> "BlockReader":
@@ -306,6 +308,104 @@ class BlockReader(ABC):
 #         return self._next_token()
 
 
+
+"""
+
+    def read_sub_block(self) -> "StfReader": # TODO: Belongs in textblockreader
+
+        token = self.next()
+
+        if token.is_eof:
+            raise RuntimeError("Unexpected EOF while reading sub-block")
+
+        if token.is_block_end:
+            return self.read_sub_block()
+
+        child = StfReader(self.stream, self.ctx, parent=self)
+
+        # block id
+        child.id = self._get_token_id(token.value)
+
+        nxt = self.next()
+
+        # optional label or direct '('
+        if nxt.is_block_start:
+            return child
+
+        child.label = nxt.value
+
+        nxt = self.next()
+
+        if not nxt.is_block_start:
+            raise RuntimeError(f"Expected '(' after block header, got {nxt.value}")
+
+        return child
+
+    def __iter__(self): # TODO: Belongs in textblockreader
+        while not self.end_of_block():
+            yield self.read_sub_block()
+
+        self.verify_end_of_block()
+
+    def end_of_block(self) -> bool: # TODO: Belongs in textblockreader
+        t = self.peek()
+        return t.is_eof or t.is_block_end
+
+    def verify_end_of_block(self): # TODO: Belongs in textblockreader
+        if self._ended:
+            return
+
+        t = self.next()
+
+        if not t.is_block_end:
+            raise RuntimeError(
+                f"Expected end of block {self.id}, got {t.value}"
+            )
+
+        self._ended = True
+
+    def skip(self): # TODO: Belongs in textblockreader
+        self.skip_block()
+
+    def skip_block(self): # TODO: Belongs in textblockreader
+        depth = 0
+
+        while True:
+            t = self.next()
+
+            if t.is_eof:
+                return
+
+            if t.is_block_start:
+                depth += 1
+
+            elif t.is_block_end:
+                if depth == 0:
+                    return
+                depth -= 1
+
+    def read_word(self) -> str:
+        return self.next().value
+
+    def read_string(self) -> str:
+        return self.next().value
+
+    def read_int(self) -> int:
+        return int(self.next().value)
+
+    def read_uint(self) -> int:
+        return int(self.next().value)
+
+    def read_float(self) -> float:
+        return float(self.next().value)
+
+    def read_flags(self) -> int:
+        return int(self.next().value, 16)
+
+"""
+
+
+
 class TextBlockReader(BlockReader):
     _token_table: dict[str, TokenID] | None = None
 
@@ -330,6 +430,7 @@ class TextBlockReader(BlockReader):
             self._init_token_table()
 
         t = token.lower()
+        print(t)
 
         token_id = self._token_table.get(t)
         if token_id is not None:
@@ -347,7 +448,7 @@ class TextBlockReader(BlockReader):
 
     def read_sub_block(self) -> BlockReader:
         block = TextBlockReader()
-        block.f = self.stf_reader
+        block.stf_reader = self.stf_reader
 
         token = self.stf_reader.read_item()
 
@@ -427,12 +528,17 @@ class TextBlockReader(BlockReader):
     def read_string(self) -> str:
         return self.stf_reader.read_item()
 
+    def close(self):
+        if not self.is_closed:
+            if self.stf_reader:
+                self.stf_reader.close()
+            self.is_closed = True
 
 class TextFileReader(TextBlockReader):
 
     def __init__(
         self,
-        input_stream: TextIO,
+        stream: TextIO,
         filepath: str,
         filetype: str,
         fileversion: int,
@@ -444,16 +550,12 @@ class TextFileReader(TextBlockReader):
         self.filetype = filetype
         self.fileversion = fileversion
         self.encoding = encoding
-        self.stream = input_stream
+        self.stream = stream
 
         self.is_closed = False
         self.at_end_of_block = False
 
-        self.stf_reader = StfReader(
-            input_stream=input_stream,
-            filename=filepath,
-            encoding=encoding
-        )
+        self.stf_reader = StfReader.from_stream(stream)
 
     def skip(self):
         if self.is_closed:
