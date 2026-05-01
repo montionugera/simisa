@@ -129,7 +129,7 @@ class BlockReader(ABC):
 
         subheader = stream.read(16)
 
-        if len(subheader) < 5:
+        if len(subheader) < 8:
             raise SimisaSubheaderError("Subheader too short in string input")
 
         filetype = subheader[5]
@@ -235,6 +235,75 @@ class BlockReader(ABC):
     @abstractmethod
     def close(self):
         pass
+
+
+# class TextBlockReader(BlockReader):
+
+#     def __init__(self, parser: Parser):
+#         self.parser = parser
+#         self.at_end_of_block = False
+#         self.id: TokenID | None = None
+#         self.label: str | None = None
+
+#     def _next_token(self) -> str:
+#         return self.parser.next().value
+
+#     def _peek_token(self) -> str:
+#         return self.parser.peek().value
+
+#     def read_sub_block(self) -> BlockReader:
+#         block = TextBlockReader(self.parser)
+
+#         token = self._next_token()
+
+#         if token == "(":
+#             block.id = TokenID.comment
+#             return block
+
+#         block.id = self._get_token_id(token)
+
+#         token = self._next_token()
+
+#         if token != "(":
+#             block.label = token
+
+#         return block
+
+#     def skip(self):
+#         self.parser.skip_block()
+#         self.at_end_of_block = True
+
+#     def end_of_block(self) -> bool:
+#         return (
+#             self.at_end_of_block
+#             or self._peek_token() == ")"
+#         )
+
+#     def verify_end_of_block(self):
+#         if self.at_end_of_block:
+#             return
+
+#         s = self._next_token()
+
+#         if s != ")":
+#             logger.warning(f"Expected end of block, but got '{s}'")
+
+#         self.at_end_of_block = True
+
+#     def read_flags(self) -> int:
+#         return int(self._next_token(), 16)
+
+#     def read_int(self) -> int:
+#         return int(self._next_token())
+
+#     def read_uint(self) -> int:
+#         return int(self._next_token())
+
+#     def read_float(self) -> float:
+#         return float(self._next_token())
+
+#     def read_string(self) -> str:
+#         return self._next_token()
 
 
 class TextBlockReader(BlockReader):
