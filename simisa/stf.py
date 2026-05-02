@@ -153,27 +153,26 @@ class StfReaderContext:
 
 class StfReader:
 
-    def __init__(
-        self,
-        stream: StfTokenStream,
-        #context: StfReaderContext,
-        parent: Optional["StfReader"] = None
-    ):
-
-        self.stream = stream
-        #self.ctx = context
-        self.parent = parent
-
-        self.id = None
-        self.label = None
-
-        self._ended = False
-
     @classmethod
     def from_stream(cls, stream, source_name="<stream>"):
         lexer = StfLexer(stream, source_name)
         token_stream = StfTokenStream(lexer)
         return cls(token_stream)
+    
+    def __init__(
+        self,
+        stream: StfTokenStream,
+        parent: Optional["StfReader"] = None
+    ):
+        self.stream = stream
+        self.parent = parent
+
+        #self.ctx = context
+
+        self.id = None
+        self.label = None
+
+        self._ended = False
 
     def next(self) -> StfToken:
         return self.stream.next()
@@ -184,7 +183,7 @@ class StfReader:
     def _expect(self, value: str):
         t = self.next()
         if t.value.lower() != value.lower():
-            raise StfReaderError(f"Expected {value}, got {t.value}")
+            raise StfReaderError(f"Expected {value}, but got {t.value}")
 
     def _handle_include(self):
         # self.expect("(")
@@ -212,7 +211,7 @@ class StfReader:
         t = self.next()
         if t.value != "(":
             raise StfReaderError(
-                f"Expected '(' at line {t.line} in {t.source}, got '{t.value}'"
+                f"Expected '(' at line {t.line} in {t.source}, but got '{t.value}'"
             )
 
     def read_item(self):
@@ -255,7 +254,7 @@ class StfReader:
             return None
 
         if value < 0:
-            raise StfReaderError(f"Expected unsigned int, got {value}")
+            raise StfReaderError(f"Expected unsigned int, but got {value}")
 
         return value
 
