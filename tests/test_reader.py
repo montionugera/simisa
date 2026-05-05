@@ -23,8 +23,7 @@ from simisa import shape
 
 
 def test_shape_load(global_storage):
-    shape_path = global_storage["shape_path"]
-    s = shape.load(shape_path)
+    s = shape.load(global_storage["shape_path"])
     assert False
 
 
@@ -37,8 +36,7 @@ def test_shape_loads_uncompressed(global_storage):
 
 
 def test_shape_load_compressed(global_storage):
-    shape_compressed_path = global_storage["shape_compressed_path"]
-    s = shape.load(shape_compressed_path)
+    s = shape.load(global_storage["shape_compressed_path"])
     assert False
 
 
