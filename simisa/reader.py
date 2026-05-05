@@ -38,12 +38,12 @@ logger = logging.getLogger(__name__)
 
 
 class SimisaHeaderError(Exception):
-    """Raised when a simisa header is missing or invalid."""
+    """Raised when a SIMISA header is missing or invalid."""
     pass
 
 
 class SimisaSubheaderError(Exception):
-    """Raised when a simisa subheader is missing or invalid."""
+    """Raised when a SIMISA subheader is missing or invalid."""
     pass
 
 
@@ -53,9 +53,42 @@ class BlockReaderError(Exception):
 
 
 class BlockReader(ABC):
+    """
+    Streaming reader for SIMISA hierarchical block files.
+
+    A BlockReader represents a validated view over a parsed SIMISA stream,
+    supporting iteration over nested blocks with enforced structural integrity.
+
+    Input formats:
+    - Compressed / uncompressed
+    - UTF-16 LE / ASCII
+    - Binary / text
+    """
 
     @staticmethod
     def open(filepath: str) -> "BlockReader":
+        """
+        Open a SIMISA file and construct a BlockReader.
+
+        Parsing pipeline:
+        - Detect compression from header
+        - Decode header (ASCII or UTF-16 LE)
+        - Decompress payload if required
+        - Parse subheader metadata
+        - Select binary or text reader
+
+        Args:
+            filepath: Path to SIMISA file.
+
+        Returns:
+            BlockReader: BinaryFileReader or TextFileReader.
+
+        Raises:
+            TypeError: filepath is not str.
+            SimisaHeaderError: Invalid or unknown header.
+            SimisaSubheaderError: Invalid or unsupported subheader.
+            OSError: File cannot be opened.
+        """
         if not isinstance(filepath, str):
             raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
     
@@ -109,6 +142,25 @@ class BlockReader(ABC):
 
     @staticmethod
     def from_string(data: str) -> "BlockReader":
+        """
+        Construct a BlockReader from in-memory SIMISA text data.
+
+        Constraints:
+        - Text format only
+        - No compression support
+        - Requires SIMISA@@ header
+
+        Args:
+            data: Raw SIMISA text payload.
+
+        Returns:
+            TextFileReader
+
+        Raises:
+            TypeError: data is not str.
+            SimisaHeaderError: Invalid or unsupported header.
+            SimisaSubheaderError: Invalid subheader or unsupported format.
+        """
         if not isinstance(data, str):
             raise TypeError(f"Parameter 'data' must be str, but got {type(data).__name__}")
 
@@ -147,6 +199,12 @@ class BlockReader(ABC):
         return TextFileReader(stream, "<string>", filetype, fileversion, "utf-8")
 
     def __iter__(self) -> Iterator["BlockReader"]:
+        """
+        Iterate over immediate child blocks.
+
+        Returns:
+            Iterator[BlockReader]
+        """
         return self.sub_blocks()
 
     def __enter__(self):
@@ -157,6 +215,19 @@ class BlockReader(ABC):
 
     @contextmanager
     def sub_block(self, expected_id: TokenID | None = None) -> "BlockReader":
+        """
+        Context-scoped access to a single child block.
+
+        Ensures block lifecycle correctness:
+        - Optional ID validation on entry
+        - Mandatory end-of-block validation on exit
+
+        Args:
+            expected_id: Expected TokenID for validation.
+
+        Yields:
+            BlockReader: Child block instance.
+        """
         sub_block = self.read_sub_block()
 
         if expected_id is not None:
@@ -168,6 +239,19 @@ class BlockReader(ABC):
             sub_block.verify_end_of_block()
     
     def sub_blocks(self, expected_id: TokenID | None = None) -> Iterator["BlockReader"]:
+        """
+        Iterate over all remaining child blocks.
+
+        Guarantees:
+        - Sequential consumption until end_of_block()
+        - Each block is finalized via verify_end_of_block()
+
+        Args:
+            expected_id: Optional TokenID to validate each block.
+
+        Yields:
+            BlockReader: Child blocks.
+        """
         while not self.end_of_block():
             sub_block = self.read_sub_block()
 
@@ -180,6 +264,14 @@ class BlockReader(ABC):
                 sub_block.verify_end_of_block()
 
     def verify_id(self, desired_id: TokenID) -> None:
+        """
+        Validate current block identifier.
+
+        Emits warning on mismatch, does not raise.
+
+        Args:
+            desired_id: Expected TokenID.
+        """
         if self.id != desired_id:
             logger.warning(
                 f"Expected block '{desired_id.name}' (id {desired_id}), "
@@ -187,6 +279,15 @@ class BlockReader(ABC):
             )
     
     def verify_count(self, expected: int, actual: int) -> None:
+        """
+        Validate element count consistency within a block.
+
+        Emits warning if actual != expected, does not raise.
+
+        Args:
+            expected: Expected number of elements.
+            actual: Observed number of elements.
+        """
         block_name = self.id.name if self.id else "<unknown>"
 
         if actual < expected:
@@ -201,6 +302,13 @@ class BlockReader(ABC):
             )
 
     def expect_comment(self) -> None:
+        """
+        Consume a comment block if present.
+
+        Behavior:
+        - If comment: skip silently
+        - Else: log warning and skip current block
+        """
         if self.id == TokenID.comment:
             self.skip()
         else:
