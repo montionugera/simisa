@@ -25,7 +25,6 @@ from simisa import shape
 def test_shape_load(global_storage):
     shape_path = global_storage["shape_path"]
     s = shape.load(shape_path)
-    print(s)
     assert False
 
 
@@ -38,12 +37,17 @@ def test_shape_load(global_storage):
 #     assert False
 
 
-# def test_shape_load_compressed(global_storage):
-#     shape_compressed_path = global_storage["shape_compressed_path"]
-#     s = shape.load(shape_compressed_path)
-#     print(s)
-#     assert False
+def test_shape_load_compressed(global_storage):
+    shape_compressed_path = global_storage["shape_compressed_path"]
+    s = shape.load(shape_compressed_path)
+    assert False
 
+def test_shape_load_compare(global_storage):
+    shape_path = global_storage["shape_path"]
+    s = shape.load(shape_path)
+    shape_compressed_path = global_storage["shape_compressed_path"]
+    sc = shape.load(shape_compressed_path)
+    assert s == sc
 
 def test_shape_loads_compressed(global_storage):
     shape_compressed_path = global_storage["shape_compressed_path"]

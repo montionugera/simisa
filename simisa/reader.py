@@ -295,6 +295,7 @@ class TextBlockReader(BlockReader):
         sub_block.stf_reader = self.stf_reader
 
         token = self.stf_reader.read_item()
+        print("read sub block 1")
 
         if token == "":
             self.at_end_of_block = True
@@ -307,12 +308,18 @@ class TextBlockReader(BlockReader):
         sub_block.id = self._get_token_id(token)
 
         token = self.stf_reader.read_item()
+        print("read sub block 2")
+
+        if token == ")":
+            self.at_end_of_block = True
+            return sub_block
 
         if token != "(":
             sub_block.label = token
             token = self.stf_reader.read_item()
+            print("read sub block 3")
             if token != "(":
-                raise StfReaderError(f"Expected '(' after label, but got '{token}'")
+                raise BlockReaderError(f"Expected '(' after label, but got '{token}'")
 
         sub_block.start_depth = self.stf_reader.depth
         
@@ -322,8 +329,9 @@ class TextBlockReader(BlockReader):
         if self.at_end_of_block:
             return
 
-        while self.depth > self.start_depth:
+        while self.stf_reader.depth > self.start_depth:
             token = self.stf_reader.read_item()
+            #print("read skip")
 
             if token == "":
                 logger.warning("Unexpected end of file")
@@ -333,13 +341,13 @@ class TextBlockReader(BlockReader):
         self.at_end_of_block = True
 
     def end_of_block(self) -> bool:
-        #if self.at_end_of_block:
-        #    return True
+        if self.at_end_of_block:
+            return True
 
-        token = self.stf_reader.peek().value
+        next_token = self.stf_reader.peek().value
 
         return (
-            token == ")" and
+            next_token == ")" and
             self.stf_reader.depth == self.start_depth
         )
 
@@ -358,27 +366,48 @@ class TextBlockReader(BlockReader):
 
     #     self.at_end_of_block = True
     def verify_end_of_block(self):
-        if self.at_end_of_block:
-            return
+        print(f"end of block '{self.stf_reader.peek().value}'")
 
-        if not self.end_of_block():
+        next_token = self.stf_reader.peek().value
+        
+        if next_token != ')':
             logger.warning(f"Expected end of block, but got '{self.stf_reader.peek().value}'")
+            #self.skip()
+        
+        if next_token == ')':
+            self.stf_reader.read_item()
 
-        self.at_end_of_block = True
+        #if not self.end_of_block():
+            #logger.warning(f"Expected end of block, but got '{self.stf_reader.peek().value}'")
+            #self.skip()
+
+        # if self.at_end_of_block:
+        #     return
+
+        # if not self.end_of_block():
+        #     logger.warning(f"Expected end of block, but got '{self.stf_reader.peek().value}'")
+        #     self.skip()
+
+        # self.at_end_of_block = True
 
     def read_flags(self) -> int:
+        print("read flags")
         return self.stf_reader.read_hex(None)
 
     def read_int(self) -> int:
+        print("read int")
         return self.stf_reader.read_int(None)
 
     def read_uint(self) -> int:
+        print("read uint")
         return self.stf_reader.read_uint(None)
 
     def read_float(self) -> float:
+        print("read float")
         return self.stf_reader.read_float(None)
 
     def read_string(self) -> str:
+        print("read string")
         return self.stf_reader.read_item()
 
     def close(self):

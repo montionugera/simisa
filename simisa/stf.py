@@ -145,7 +145,7 @@ class StfTokenStream:
         return self.buffer.is_eof
 
 
-class StfReaderContext:
+class StfUnitsReader:
     def __init__(self, include_resolver, unit_parser):
         self.includes = include_resolver
         self.units = unit_parser
@@ -157,6 +157,7 @@ class StfReader:
     def from_stream(cls, stream, source_name="<stream>"):
         lexer = StfLexer(stream, source_name)
         token_stream = StfTokenStream(lexer)
+
         return cls(token_stream)
     
     def __init__(
@@ -207,13 +208,6 @@ class StfReader:
 
     def eof(self):
         return self.stream.eof()
-
-    def verify_start_of_block(self):
-        t = self.next()
-        if t.value != "(":
-            raise StfReaderError(
-                f"Expected '(' at line {t.line} in {t.source}, but got '{t.value}'"
-            )
 
     def read_item(self):
         token = self.next()
