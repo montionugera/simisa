@@ -179,8 +179,6 @@ class BlockReader(ABC):
             finally:
                 sub_block.verify_end_of_block()
 
-        self.verify_end_of_block()
-
     def verify_id(self, desired_id: TokenID) -> None:
         if self.id != desired_id:
             logger.warning(
@@ -295,7 +293,6 @@ class TextBlockReader(BlockReader):
         sub_block.stf_reader = self.stf_reader
 
         token = self.stf_reader.read_item()
-        print("read sub block 1")
 
         if token == "":
             self.at_end_of_block = True
@@ -308,7 +305,6 @@ class TextBlockReader(BlockReader):
         sub_block.id = self._get_token_id(token)
 
         token = self.stf_reader.read_item()
-        print("read sub block 2")
 
         if token == ")":
             self.at_end_of_block = True
@@ -317,7 +313,6 @@ class TextBlockReader(BlockReader):
         if token != "(":
             sub_block.label = token
             token = self.stf_reader.read_item()
-            print("read sub block 3")
             if token != "(":
                 raise BlockReaderError(f"Expected '(' after label, but got '{token}'")
 
@@ -331,7 +326,6 @@ class TextBlockReader(BlockReader):
 
         while self.stf_reader.depth > self.start_depth:
             token = self.stf_reader.read_item()
-            #print("read skip")
 
             if token == "":
                 logger.warning("Unexpected end of file")
@@ -366,8 +360,6 @@ class TextBlockReader(BlockReader):
 
     #     self.at_end_of_block = True
     def verify_end_of_block(self):
-        print(f"end of block '{self.stf_reader.peek().value}'")
-
         next_token = self.stf_reader.peek().value
         
         if next_token != ')':
@@ -391,23 +383,18 @@ class TextBlockReader(BlockReader):
         # self.at_end_of_block = True
 
     def read_flags(self) -> int:
-        print("read flags")
         return self.stf_reader.read_hex(None)
 
     def read_int(self) -> int:
-        print("read int")
         return self.stf_reader.read_int(None)
 
     def read_uint(self) -> int:
-        print("read uint")
         return self.stf_reader.read_uint(None)
 
     def read_float(self) -> float:
-        print("read float")
         return self.stf_reader.read_float(None)
 
     def read_string(self) -> str:
-        print("read string")
         return self.stf_reader.read_item()
 
     def close(self):

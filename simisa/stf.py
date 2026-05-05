@@ -60,6 +60,7 @@ class StfLexer:
         self.stream = stream
         self.source = source_name
         self.line = 1
+        self._buffer = self.stream.read(1)
 
     def next_token(self) -> StfToken:
         self._skip_whitespace()
@@ -82,17 +83,15 @@ class StfLexer:
 
         return self._read_word()
 
-    def _read(self) -> str:
-        c = self.stream.read(1)
+    def _read(self):
+        c = self._buffer
+        self._buffer = self.stream.read(1)
         if c == "\n":
             self.line += 1
         return c
-
-    def _peek(self) -> str:
-        pos = self.stream.tell()
-        c = self.stream.read(1)
-        self.stream.seek(pos)
-        return c
+    
+    def _peek(self):
+        return self._buffer
 
     def _skip_whitespace(self):
         while True:
@@ -223,7 +222,7 @@ class StfReader:
             if self.depth < 0:
                 raise StfReaderError("Unbalanced ')' detected")
 
-        print(f"[READ] token={token.value}, depth={self.depth}")
+        #print(f"[READ] token={token.value}, depth={self.depth}")
 
         return token.value
 
