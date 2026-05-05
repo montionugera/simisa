@@ -171,7 +171,7 @@ class StfReader:
 
         self.id = None
         self.label = None
-        self.block_depth = 0
+        self.depth = 0
 
         self._ended = False
 
@@ -215,13 +215,6 @@ class StfReader:
                 f"Expected '(' at line {t.line} in {t.source}, but got '{t.value}'"
             )
 
-    # def read_item(self):
-    #     t = self.next()
-
-    #     if t.is_eof:
-    #         return ""
-
-    #     return t.value
     def read_item(self):
         token = self.next()
 
@@ -229,12 +222,14 @@ class StfReader:
             return ""
 
         if token.value == "(":
-            self.block_depth += 1
+            self.depth += 1
 
         elif token.value == ")":
-            self.block_depth -= 1
-            if self.block_depth < 0:
+            self.depth -= 1
+            if self.depth < 0:
                 raise StfReaderError("Unbalanced ')' detected")
+
+        print(f"[READ] token={token.value}, depth={self.depth}")
 
         return token.value
 

@@ -203,7 +203,7 @@ class TextBlockWriter(BlockWriter):
 
     def __init__(self):
         self.stream: TextIO | None = None
-        self.block_depth = 0
+        self.depth = 0
 
     def begin_block(self, block_id: TokenID, label: Optional[str] = None):
         raise NotImplementedError
@@ -231,7 +231,7 @@ class TextBlockWriter(BlockWriter):
 
     def _indent(self):
         if self.stream:
-            self.stream.write("    " * self.block_depth)
+            self.stream.write("    " * self.depth)
 
     def write_list(
         self,
@@ -249,7 +249,7 @@ class TextBlockWriter(BlockWriter):
         if format.newline_after_header and self.stream:
             self.stream.write("\n")
 
-        self.block_depth += 1
+        self.depth += 1
 
         if item_writer is None:
             item_writer = self.write_int
@@ -271,7 +271,7 @@ class TextBlockWriter(BlockWriter):
 
             line_count += 1
 
-        self.block_depth -= 1
+        self.depth -= 1
 
         if format.newline_before_closing and self.stream:
             self.stream.write("\n")
