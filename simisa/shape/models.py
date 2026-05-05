@@ -582,7 +582,7 @@ class SubObject:
 
 @dataclass
 class DistanceLevelHeader:
-    dlevel_selection: int
+    dlevel_selection: float
     hierarchy: List[int]
     
     def __repr__(self):

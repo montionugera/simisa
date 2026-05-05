@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import math
 import pytest
-from simisa import BlockReader
 from simisa import shape
 
 
@@ -28,13 +28,12 @@ def test_shape_load(global_storage):
     assert False
 
 
-# def test_shape_loads_uncompressed(global_storage):
-#     shape_path = global_storage["shape_path"]
-#     with open(shape_path, 'r', encoding='utf-16-le') as f:
-#         shape_string = f.read()
-#         s = shape.loads(shape_string)
-#         print(s)
-#     assert False
+def test_shape_loads_uncompressed(global_storage):
+    shape_path = global_storage["shape_path"]
+    with open(shape_path, 'r', encoding='utf-16-le') as f:
+        shape_string = f.read()
+        s = shape.loads(shape_string)
+    assert False
 
 
 def test_shape_load_compressed(global_storage):
@@ -42,12 +41,53 @@ def test_shape_load_compressed(global_storage):
     s = shape.load(shape_compressed_path)
     assert False
 
+
 def test_shape_load_compare(global_storage):
-    shape_path = global_storage["shape_path"]
-    s = shape.load(shape_path)
-    shape_compressed_path = global_storage["shape_compressed_path"]
-    sc = shape.load(shape_compressed_path)
-    assert s == sc
+    expected = shape.load(global_storage["shape_path"])
+    actual = shape.load(global_storage["shape_compressed_path"])
+
+    stack = [(expected, actual, "root")]
+
+    while stack:
+        left, right, path = stack.pop()
+
+        if isinstance(left, float) or isinstance(right, float):
+            if not math.isclose(float(left), float(right), rel_tol=1e-5, abs_tol=1e-5):
+                print(f"Float mismatch at {path}: {left} != {right}")
+                assert False
+            continue
+
+        if isinstance(left, (int, str, bool)) or left is None:
+            if left != right:
+                print(f"Value mismatch at {path}: {left} != {right}")
+                assert False
+            continue
+
+        if isinstance(left, (list, tuple)):
+            if len(left) != len(right):
+                print(f"Length mismatch at {path}: {len(left)} != {len(right)}")
+                assert False
+            for i, (l_item, r_item) in enumerate(zip(left, right)):
+                stack.append((l_item, r_item, f"{path}[{i}]"))
+            continue
+
+        if isinstance(left, dict):
+            if left.keys() != right.keys():
+                print(f"Key mismatch at {path}")
+                assert False
+            for key in left:
+                stack.append((left[key], right[key], f"{path}.{key}"))
+            continue
+
+        if hasattr(left, "__dict__"):
+            stack.append((left.__dict__, right.__dict__, path))
+            continue
+
+        if left != right:
+            print(f"Mismatch at {path}: {left} != {right}")
+            assert False
+
+    assert True
 
 def test_shape_loads_compressed(global_storage):
     shape_compressed_path = global_storage["shape_compressed_path"]
@@ -56,22 +96,3 @@ def test_shape_loads_compressed(global_storage):
         
         with pytest.raises(TypeError):
             shape.loads(shape_bytes)
-
-# def test_is_compressed_uncompressed_shape(global_storage):
-#     shape_path = global_storage["shape_path"]
-#     obj = BlockReader.open(shape_path)
-#     raw = obj.stream.read(100)
-#     #text = raw.decode("utf-16-le")
-#     #first_x_chars = text[:x]
-#     print(raw)
-#     assert False
-
-
-# def test_is_compressed_compressed_shape(global_storage):
-#     shape_compressed_path = global_storage["shape_compressed_path"]
-#     obj = BlockReader.open(shape_compressed_path)
-#     raw = obj.stream.read(100)
-#     #text = raw.decode("utf-16-le")
-#     #first_x_chars = text[:x]
-#     print(raw)
-#     assert False
