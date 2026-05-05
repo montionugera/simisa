@@ -131,24 +131,24 @@ def read_shape(reader: BlockReader) -> Shape:
             animations = None
 
         return Shape(
-            shape_header,
-            volumes,
-            shader_names,
-            texture_filter_names,
-            points,
-            uv_points,
-            normals,
-            sort_vectors,
-            colours,
-            matrices,
-            images,
-            textures,
-            light_materials,
-            light_model_cfgs,
-            vtx_states,
-            prim_states,
-            lod_controls,
-            animations,
+            shape_header=shape_header,
+            volumes=volumes,
+            shader_names=shader_names,
+            texture_filter_names=texture_filter_names,
+            points=points,
+            uv_points=uv_points,
+            normals=normals,
+            sort_vectors=sort_vectors,
+            colours=colours,
+            matrices=matrices,
+            images=images,
+            textures=textures,
+            light_materials=light_materials,
+            light_model_cfgs=light_model_cfgs,
+            vtx_states=vtx_states,
+            prim_states=prim_states,
+            lod_controls=lod_controls,
+            animations=animations
         )
 
 
@@ -172,7 +172,10 @@ def read_shape_header(reader: BlockReader) -> ShapeHeader:
         if not header_block.end_of_block():
             flags2 = header_block.read_flags()
 
-        return ShapeHeader(flags1, flags2)
+        return ShapeHeader(
+            flags1=flags1,
+            flags2=flags2
+        )
 
 
 def read_volumes(reader: BlockReader) -> List[VolumeSphere]:
@@ -197,7 +200,10 @@ def read_volumes(reader: BlockReader) -> List[VolumeSphere]:
             vector = read_vector(vol_sphere_block)
             radius = vol_sphere_block.read_float()
 
-            volume_spheres.append(VolumeSphere(radius, vector))
+            volume_spheres.append(VolumeSphere(
+                vector=vector,
+                radius=radius
+            ))
 
         volumes_block.verify_count(count, len(volume_spheres))
 
@@ -221,7 +227,11 @@ def read_vector(reader: BlockReader) -> Vector:
         y = vector_block.read_float()
         z = vector_block.read_float()
 
-        return Vector(x, y, z)
+        return Vector(
+            x=x,
+            y=y,
+            z=z
+        )
 
 
 def read_shader_names(reader: BlockReader) -> List[str]:
@@ -301,7 +311,11 @@ def read_points(reader: BlockReader) -> List[Point]:
             y = point_block.read_float()
             z = point_block.read_float()
 
-            points.append(Point(x, y, z))
+            points.append(Point(
+                x=x,
+                y=y,
+                z=z
+            ))
 
         points_block.verify_count(count, len(points))
 
@@ -330,7 +344,10 @@ def read_uv_points(reader: BlockReader) -> List[UVPoint]:
             u = uv_point_block.read_float()
             v = uv_point_block.read_float()
 
-            uv_points.append(UVPoint(u, v))
+            uv_points.append(UVPoint(
+                u=u,
+                v=v
+            ))
 
         uv_points_block.verify_count(count, len(uv_points))
 
@@ -360,7 +377,11 @@ def read_normals(reader: BlockReader) -> List[Vector]:
             y = vector_block.read_float()
             z = vector_block.read_float()
 
-            normals.append(Vector(x, y, z))
+            normals.append(Vector(
+                x=x,
+                y=y,
+                z=z
+            ))
 
         normals_block.verify_count(count, len(normals))
 
@@ -390,7 +411,11 @@ def read_sort_vectors(reader: BlockReader) -> List[Vector]:
             y = vector_block.read_float()
             z = vector_block.read_float()
 
-            sort_vectors.append(Vector(x, y, z))
+            sort_vectors.append(Vector(
+                x=x,
+                y=y,
+                z=z
+            ))
 
         sort_vectors_block.verify_count(count, len(sort_vectors))
 
@@ -421,7 +446,12 @@ def read_colours(reader: BlockReader) -> List[Colour]:
             g = colour_block.read_float()
             b = colour_block.read_float()
 
-            colours.append(Colour(a, r, g, b))
+            colours.append(Colour(
+                a=a,
+                r=r,
+                g=g,
+                b=b
+            ))
 
         colours_block.verify_count(count, len(colours))
 
@@ -462,11 +492,19 @@ def read_matrices(reader: BlockReader) -> List[Matrix]:
             dz = matrix_block.read_float()
 
             matrix = Matrix(
-                name,
-                ax, ay, az,
-                bx, by, bz,
-                cx, cy, cz,
-                dx, dy, dz
+                name=name,
+                ax=ax,
+                ay=ay,
+                az=az,
+                bx=bx,
+                by=by,
+                bz=bz,
+                cx=cx,
+                cy=cy,
+                cz=cz,
+                dx=dx,
+                dy=dy,
+                dz=dz
             )
             matrices.append(matrix)
 
@@ -530,10 +568,10 @@ def read_textures(reader: BlockReader) -> List[Texture]:
                 border_colour = texture_block.read_flags()
             
             texture = Texture(
-                image_index,
-                filter_mode,
-                mipmap_lod_bias,
-                border_colour
+                image_index=image_index,
+                filter_mode=filter_mode,
+                mipmap_lod_bias=mipmap_lod_bias,
+                border_colour=border_colour
             )
             textures.append(texture)
 
@@ -569,12 +607,12 @@ def read_light_materials(reader: BlockReader) -> List[LightMaterial]:
             spec_power = light_material_block.read_float()
 
             light_material = LightMaterial(
-                flags,
-                diff_colour_index,
-                amb_colour_index,
-                spec_colour_index,
-                emissive_colour_index,
-                spec_power
+                flags=flags,
+                diff_colour_index=diff_colour_index,
+                amb_colour_index=amb_colour_index,
+                spec_colour_index=spec_colour_index,
+                emissive_colour_index=emissive_colour_index,
+                spec_power=spec_power
             )
             light_materials.append(light_material)
 
@@ -605,7 +643,10 @@ def read_light_model_cfgs(reader: BlockReader) -> List[LightModelCfg]:
             flags = light_model_cfg_block.read_flags()
             uv_ops = read_uv_ops(light_model_cfg_block)
 
-            light_model_cfgs.append(LightModelCfg(flags, uv_ops))
+            light_model_cfgs.append(LightModelCfg(
+                flags=flags,
+                uv_ops=uv_ops
+            ))
 
         light_model_cfgs_block.verify_count(count, len(light_model_cfgs))
 
@@ -634,22 +675,22 @@ def read_uv_ops(reader: BlockReader) -> List[UVOp]:
                 source_uv_index = uv_op_block.read_int()
 
                 uv_ops.append(UVOpCopy(
-                    texture_address_mode,
-                    source_uv_index
+                    texture_address_mode=texture_address_mode,
+                    source_uv_index=source_uv_index
                 ))
 
             elif uv_op_block.id == TokenID.uv_op_reflectmapfull:
                 texture_address_mode = uv_op_block.read_int()
 
                 uv_ops.append(UVOpReflectMapFull(
-                    texture_address_mode
+                    texture_address_mode=texture_address_mode
                 ))
 
             elif uv_op_block.id == TokenID.uv_op_reflectmap:
                 texture_address_mode = uv_op_block.read_int()
 
                 uv_ops.append(UVOpReflectMap(
-                    texture_address_mode
+                    texture_address_mode=texture_address_mode
                 ))
 
             elif uv_op_block.id == TokenID.uv_op_uniformscale:
@@ -659,10 +700,10 @@ def read_uv_ops(reader: BlockReader) -> List[UVOp]:
                 unknown4 = uv_op_block.read_int()
 
                 uv_ops.append(UVOpUniformScale(
-                    texture_address_mode,
-                    source_uv_index,
-                    unknown3,
-                    unknown4
+                    texture_address_mode=texture_address_mode,
+                    source_uv_index=source_uv_index,
+                    unknown3=unknown3,
+                    unknown4=unknown4
                 ))
 
             elif uv_op_block.id == TokenID.uv_op_nonuniformscale:
@@ -672,10 +713,10 @@ def read_uv_ops(reader: BlockReader) -> List[UVOp]:
                 unknown4 = uv_op_block.read_int()
 
                 uv_ops.append(UVOpNonUniformScale(
-                    texture_address_mode,
-                    source_uv_index,
-                    unknown3,
-                    unknown4
+                    texture_address_mode=texture_address_mode,
+                    source_uv_index=source_uv_index,
+                    unknown3=unknown3,
+                    unknown4=unknown4
                 ))
 
             else:
@@ -716,12 +757,12 @@ def read_vtx_states(reader: BlockReader) -> List[VtxState]:
                 matrix2_index = vtx_state_block.read_int()
             
             vtx_state = VtxState(
-                flags,
-                matrix_index,
-                light_material_index,
-                light_model_cfg_index,
-                light_flags,
-                matrix2_index
+                flags=flags,
+                matrix_index=matrix_index,
+                light_material_index=light_material_index,
+                light_model_cfg_index=light_model_cfg_index,
+                light_flags=light_flags,
+                matrix2_index=matrix2_index
             )
             vtx_states.append(vtx_state)
 
@@ -760,15 +801,15 @@ def read_prim_states(reader: BlockReader) -> List[PrimState]:
             z_buffer_mode = prim_state_block.read_int()
             
             prim_state = PrimState(
-                name,
-                flags,
-                shader_index,
-                texture_indices,
-                z_bias,
-                vtx_state_index,
-                alpha_test_mode,
-                light_cfg_index,
-                z_buffer_mode
+                name=name,
+                flags=flags,
+                shader_index=shader_index,
+                texture_indices=texture_indices,
+                z_bias=z_bias,
+                vtx_state_index=vtx_state_index,
+                alpha_test_mode=alpha_test_mode,
+                light_cfg_index=light_cfg_index,
+                z_buffer_mode=z_buffer_mode
             )
             prim_states.append(prim_state)
 
@@ -829,8 +870,8 @@ def read_lod_controls(reader: BlockReader) -> List[LodControl]:
             distance_levels = read_distance_levels(lod_control_block)
 
             lod_control = LodControl(
-                distance_levels_header,
-                distance_levels
+                distance_levels_header=distance_levels_header,
+                distance_levels=distance_levels
             )
             lod_controls.append(lod_control)
 
@@ -862,8 +903,8 @@ def read_distance_levels(reader: BlockReader) -> List[DistanceLevel]:
             sub_objects = read_sub_objects(distance_level_block)
 
             distance_level = DistanceLevel(
-                distance_level_header,
-                sub_objects
+                distance_level_header=distance_level_header,
+                sub_objects=sub_objects
             )
             distance_levels.append(distance_level)
 
@@ -930,10 +971,10 @@ def read_sub_objects(reader: BlockReader) -> List[SubObject]:
             primitives = read_primitives(sub_object_block)
 
             sub_object = SubObject(
-                sub_object_header,
-                vertices,
-                vertex_sets,
-                primitives
+                sub_object_header=sub_object_header,
+                vertices=vertices,
+                vertex_sets=vertex_sets,
+                primitives=primitives
             )
             sub_objects.append(sub_object)
 
@@ -966,15 +1007,15 @@ def read_sub_object_header(reader: BlockReader) -> List[SubObjectHeader]:
         subobject_id = sub_object_header_block.read_int()
 
         sub_object_header = SubObjectHeader(
-            flags,
-            sort_vector_index,
-            volume_index,
-            source_vtx_fmt_flags,
-            destination_vtx_fmt_flags,
-            geometry_info,
-            subobject_shaders,
-            subobject_light_cfgs,
-            subobject_id
+            flags=flags,
+            sort_vector_index=sort_vector_index,
+            volume_index=volume_index,
+            source_vtx_fmt_flags=source_vtx_fmt_flags,
+            destination_vtx_fmt_flags=destination_vtx_fmt_flags,
+            geometry_info=geometry_info,
+            subobject_shaders=subobject_shaders,
+            subobject_light_cfgs=subobject_light_cfgs,
+            subobject_id=subobject_id
         )
         return sub_object_header
 
@@ -1006,18 +1047,18 @@ def read_geometry_info(reader: BlockReader) -> GeometryInfo:
         geometry_node_map = read_geometry_node_map(geometry_info_block)
 
         geometry_info = GeometryInfo(
-            face_normals,
-            tx_light_cmds,
-            node_x_tx_light_cmds,
-            trilist_indices,
-            line_list_indices,
-            node_x_trilist_indices,
-            trilists,
-            line_lists,
-            pt_lists,
-            node_x_trilists,
-            geometry_nodes,
-            geometry_node_map
+            face_normals=face_normals,
+            tx_light_cmds=tx_light_cmds,
+            node_x_tx_light_cmds=node_x_tx_light_cmds,
+            trilist_indices=trilist_indices,
+            line_list_indices=line_list_indices,
+            node_x_trilist_indices=node_x_trilist_indices,
+            trilists=trilists,
+            line_lists=line_lists,
+            pt_lists=pt_lists,
+            node_x_trilists=node_x_trilists,
+            geometry_nodes=geometry_nodes,
+            geometry_node_map=geometry_node_map
         )
         return geometry_info
 
@@ -1049,12 +1090,12 @@ def read_geometry_nodes(reader: BlockReader) -> List[GeometryNode]:
             cullable_prims = read_cullable_prims(geometry_node_block)
 
             geometry_node = GeometryNode(
-                tx_light_cmds,
-                node_x_tx_light_cmds,
-                trilists,
-                line_lists,
-                pt_lists,
-                cullable_prims
+                tx_light_cmds=tx_light_cmds,
+                node_x_tx_light_cmds=node_x_tx_light_cmds,
+                trilists=trilists,
+                line_lists=line_lists,
+                pt_lists=pt_lists,
+                cullable_prims=cullable_prims
             )
             geometry_nodes.append(geometry_node)
 
@@ -1081,9 +1122,9 @@ def read_cullable_prims(reader: BlockReader) -> CullablePrims:
         num_prim_indices = cullable_prims_block.read_int()
 
         return CullablePrims(
-            num_prims,
-            num_flat_sections,
-            num_prim_indices
+            num_prims=num_prims,
+            num_flat_sections=num_flat_sections,
+            num_prim_indices=num_prim_indices
         )
 
 
@@ -1186,12 +1227,12 @@ def read_vertices(reader: BlockReader) -> List[Vertex]:
             vertex_uvs = read_vertex_uvs(vertex_block)
 
             vertex = Vertex(
-                flags,
-                point_index,
-                normal_index,
-                colour1,
-                colour2,
-                vertex_uvs
+                flags=flags,
+                point_index=point_index,
+                normal_index=normal_index,
+                colour1=colour1,
+                colour2=colour2,
+                vertex_uvs=vertex_uvs
             )
             vertices.append(vertex)
 
@@ -1248,9 +1289,9 @@ def read_vertex_sets(reader: BlockReader) -> List[VertexSet]:
             vtx_count = vertex_set_block.read_int()
 
             vertex_set = VertexSet(
-                vtx_state,
-                vtx_start_index,
-                vtx_count
+                vtx_state=vtx_state,
+                vtx_start_index=vtx_start_index,
+                vtx_count=vtx_count
             )
             vertex_sets.append(vertex_set)
 
@@ -1276,11 +1317,11 @@ def read_primitives(reader: BlockReader) -> List[Primitive]:
         count = primitives_block.read_int()
         
         num_blocks_read = 0
-        prim_state_idx = 0
+        prim_state_index = 0
         
         for primitive_block in primitives_block:
             if primitive_block.id == TokenID.prim_state_idx:
-                prim_state_idx = primitive_block.read_int()
+                prim_state_index = primitive_block.read_int()
         
             elif primitive_block.id == TokenID.indexed_trilist:
                 vertex_idxs = read_vertex_idxs(primitive_block)
@@ -1288,13 +1329,13 @@ def read_primitives(reader: BlockReader) -> List[Primitive]:
                 flags = read_flags(primitive_block)
 
                 indexed_trilist = IndexedTrilist(
-                    vertex_idxs,
-                    normal_idxs,
-                    flags
+                    vertex_idxs=vertex_idxs,
+                    normal_idxs=normal_idxs,
+                    flags=flags
                 )
                 primitive = Primitive(
-                    prim_state_idx,
-                    indexed_trilist
+                    prim_state_index=prim_state_index,
+                    indexed_trilist=indexed_trilist
                 )
 
                 primitives.append(primitive)
@@ -1331,9 +1372,9 @@ def read_vertex_idxs(reader: BlockReader) -> List[VertexIdx]:
             vertex3_index = vertex_idxs_block.read_int()
 
             vertex_idxs.append(VertexIdx(
-                vertex1_index,
-                vertex2_index,
-                vertex3_index
+                vertex1_index=vertex1_index,
+                vertex2_index=vertex2_index,
+                vertex3_index=vertex3_index
             ))
 
         vertex_idxs_block.verify_count(count // 3, len(vertex_idxs))
@@ -1362,8 +1403,8 @@ def read_normal_idxs(reader: BlockReader) -> List[NormalIdx]:
             unknown2 = normal_idxs_block.read_int()
 
             normal_idxs.append(NormalIdx(
-                index,
-                unknown2
+                index=index,
+                unknown2=unknown2
             ))
 
         normal_idxs_block.verify_count(count, len(normal_idxs))
@@ -1419,9 +1460,9 @@ def read_animations(reader: BlockReader) -> List[Animation]:
             animation_nodes = read_anim_nodes(animation_block)
             
             animation = Animation(
-                frame_count,
-                frame_rate,
-                animation_nodes
+                frame_count=frame_count,
+                frame_rate=frame_rate,
+                animation_nodes=animation_nodes
             )
             animations.append(animation)
 
@@ -1453,8 +1494,8 @@ def read_anim_nodes(reader: BlockReader) -> List[AnimationNode]:
             controllers = read_controllers(anim_node_block)
             
             anim_node = AnimationNode(
-                name,
-                controllers
+                name=name,
+                controllers=controllers
             )
             anim_nodes.append(anim_node)
 
@@ -1483,13 +1524,19 @@ def read_controllers(reader: BlockReader) -> List[Controller]:
             keyframes = read_keypositions(controller_block)
 
             if controller_block.id == TokenID.tcb_rot:
-                controllers.append(TCBRot(keyframes))
+                controllers.append(TCBRot(
+                    keyframes=keyframes
+                ))
             
             elif controller_block.id == TokenID.linear_pos:
-                controllers.append(LinearPos(keyframes))
+                controllers.append(LinearPos(
+                    keyframes=keyframes
+                ))
             
             elif controller_block.id == TokenID.tcb_pos:
-                controllers.append(TCBPos(keyframes))
+                controllers.append(TCBPos(
+                    keyframes=keyframes
+                ))
             
             else:
                 logger.warning(f"Unhandled controller: {controller_block.id.name} (id: {controller_block.id})")
@@ -1528,16 +1575,16 @@ def read_keypositions(reader: BlockReader) -> List[KeyPosition]:
             ease_out = keyposition_block.read_float()
 
             keypositions.append(TCBKey(
-                frame,
-                x,
-                y,
-                z,
-                w,
-                tension,
-                continuity,
-                bias,
-                ease_in,
-                ease_out
+                frame=frame,
+                x=x,
+                y=y,
+                z=z,
+                w=w,
+                tension=tension,
+                continuity=continuity,
+                bias=bias,
+                ease_in=ease_in,
+                ease_out=ease_out
             ))
         
         elif keyposition_block.id == TokenID.linear_key:
@@ -1547,10 +1594,10 @@ def read_keypositions(reader: BlockReader) -> List[KeyPosition]:
             z = keyposition_block.read_float()
 
             keypositions.append(LinearKey(
-                frame,
-                x,
-                y,
-                z
+                frame=frame,
+                x=x,
+                y=y,
+                z=z
             ))
         
         elif keyposition_block.id == TokenID.slerp_rot:
@@ -1561,11 +1608,11 @@ def read_keypositions(reader: BlockReader) -> List[KeyPosition]:
             w = keyposition_block.read_float()
 
             keypositions.append(SlerpRot(
-                frame,
-                x,
-                y,
-                z,
-                w
+                frame=frame,
+                x=x,
+                y=y,
+                z=z,
+                w=w
             ))
         
         else:
