@@ -191,10 +191,7 @@ def read_volumes(reader: BlockReader) -> List[VolumeSphere]:
         volume_spheres: List[VolumeSphere] = []
         count = volumes_block.read_int()
         
-        for vol_sphere_block in volumes_block:
-            print("new")
-            vol_sphere_block.verify_id(TokenID.vol_sphere)
-            print(vol_sphere_block.id)
+        for vol_sphere_block in volumes_block.sub_blocks(TokenID.vol_sphere):
 
             vector = read_vector(vol_sphere_block)
             radius = vol_sphere_block.read_float()

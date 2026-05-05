@@ -171,6 +171,7 @@ class StfReader:
 
         self.id = None
         self.label = None
+        self.block_depth = 0
 
         self._ended = False
 
@@ -214,13 +215,28 @@ class StfReader:
                 f"Expected '(' at line {t.line} in {t.source}, but got '{t.value}'"
             )
 
-    def read_item(self):
-        t = self.next()
+    # def read_item(self):
+    #     t = self.next()
 
-        if t.is_eof:
+    #     if t.is_eof:
+    #         return ""
+
+    #     return t.value
+    def read_item(self):
+        token = self.next()
+
+        if token.is_eof:
             return ""
 
-        return t.value
+        if token.value == "(":
+            self.block_depth += 1
+
+        elif token.value == ")":
+            self.block_depth -= 1
+            if self.block_depth < 0:
+                raise StfReaderError("Unbalanced ')' detected")
+
+        return token.value
 
     def read_hex(self, default=None):
         s = self.read_item()

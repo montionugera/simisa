@@ -28,7 +28,7 @@ import codecs
 import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Optional, Iterator, BinaryIO, TextIO
+from typing import Optional, Iterator, BinaryIO, TextIO, Dict
 
 from .header import is_compressed
 from .token_id import TokenID
@@ -147,12 +147,8 @@ class BlockReader(ABC):
         return TextFileReader(stream, "<string>", filetype, fileversion, "utf-8")
 
     def __iter__(self) -> Iterator["BlockReader"]:
-        while not self.end_of_block():
-            print("iterator next")
-            yield self.read_sub_block()
-        print("iterator stopped")
-        self.verify_end_of_block()
-    
+        return self.sub_blocks()
+
     def __enter__(self):
         return self
 
@@ -160,10 +156,7 @@ class BlockReader(ABC):
         self.close()
 
     @contextmanager
-    def sub_block(self, expected_id: TokenID | None = None):
-        """
-        Read and validate a nested sub-block.
-        """
+    def sub_block(self, expected_id: TokenID | None = None) -> "BlockReader":
         sub_block = self.read_sub_block()
 
         if expected_id is not None:
@@ -173,6 +166,20 @@ class BlockReader(ABC):
             yield sub_block
         finally:
             sub_block.verify_end_of_block()
+    
+    def sub_blocks(self, expected_id: TokenID | None = None) -> Iterator["BlockReader"]:
+        while not self.end_of_block():
+            sub_block = self.read_sub_block()
+
+            if expected_id is not None:
+                sub_block.verify_id(expected_id)
+
+            try:
+                yield sub_block
+            finally:
+                sub_block.verify_end_of_block()
+
+        self.verify_end_of_block()
 
     def verify_id(self, desired_id: TokenID) -> None:
         if self.id != desired_id:
@@ -241,15 +248,15 @@ class BlockReader(ABC):
 
 
 class TextBlockReader(BlockReader):
-    _token_table: dict[str, TokenID] | None = None
+    _token_table: Dict[str, TokenID] | None = None
 
     def __init__(self):
         self.stf_reader: StfReader | None = None
         self.at_end_of_block: bool = False
         self.id: TokenID | None = None
         self.label: str | None = None
-        self.depth: int = 0
-        self.is_closed = False
+        self.start_depth: int = 0
+        self.is_closed: bool = False
 
     @classmethod
     def _init_token_table(cls):
@@ -279,47 +286,35 @@ class TextBlockReader(BlockReader):
 
     def _read(self) -> str:
         token = self.stf_reader.read_item()
-
-        if token == "":
-            return ""
-
-        if token == "(":
-            self.depth += 1
-        
-        elif token == ")":
-            self.depth -= 1
-
-        print(f"[READ] token={token}, depth={self.depth}")
-
+        print(f"[READ] reader={self}, token={token}, depth={self.stf_reader.block_depth}")
         return token
 
     def read_sub_block(self) -> BlockReader:
         sub_block = TextBlockReader()
         sub_block.stf_reader = self.stf_reader
 
-        token = sub_block._read()
+        token = self._read()
 
         if token == "":
             self.at_end_of_block = True
             return sub_block
 
-        if token == ")":
-            self.at_end_of_block = True
-            return sub_block
+        #if token == ")":
+        #    self.at_end_of_block = True
+        #    return sub_block
 
         sub_block.id = self._get_token_id(token)
 
-        token = sub_block._read()
+        token = self._read()
 
-        if token == "(":
-            return sub_block
-
-        sub_block.label = token
-
-        token = sub_block._read()
         if token != "(":
-            raise StfReaderError(f"Expected '(' after label, got '{token}'")
+            sub_block.label = token
+            token = self._read()
+            if token != "(":
+                raise StfReaderError(f"Expected '(' after label, but got '{token}'")
 
+        sub_block.start_depth = self.stf_reader.block_depth
+        
         return sub_block
 
     def skip(self):
@@ -337,41 +332,63 @@ class TextBlockReader(BlockReader):
         self.at_end_of_block = True
 
     def end_of_block(self) -> bool:
+        #if self.at_end_of_block:
+        #    return True
+
+        token = self.stf_reader.peek().value
+
         return (
-            self.at_end_of_block
-            or self.depth == 0
-            or self.stf_reader.eof()
+            token == ")" and
+            self.stf_reader.block_depth == self.start_depth
         )
 
+    # def verify_end_of_block(self):
+    #     if self.at_end_of_block:
+    #         return
+
+    #     token = self._read()
+
+    #     if token.startswith("#") or token.lower() == "comment":
+    #         self.skip()
+    #         return
+
+    #     if token != ")":
+    #         logger.warning(f"Expected end of block, but got '{token}'")
+
+    #     self.at_end_of_block = True
     def verify_end_of_block(self):
         if self.at_end_of_block:
             return
 
-        token = self._read()
-
-        if token.startswith("#") or token.lower() == "comment":
-            self.skip()
-            return
-
-        if token != ")":
-            logger.warning(f"Expected end of block, but got '{token}'")
+        if not self.end_of_block():
+            logger.warning(f"Expected end of block, but got '{self.stf_reader.peek().value}'")
 
         self.at_end_of_block = True
 
     def read_flags(self) -> int:
-        return self.stf_reader.read_hex(None)
+        v = self.stf_reader.read_hex(None)
+        print(f"[READ] reader={self}, token={v}, depth={self.stf_reader.block_depth}")
+        return v
 
     def read_int(self) -> int:
-        return self.stf_reader.read_int(None)
+        v = self.stf_reader.read_int(None)
+        print(f"[READ] reader={self}, token={v}, depth={self.stf_reader.block_depth}")
+        return v
 
     def read_uint(self) -> int:
-        return self.stf_reader.read_uint(None)
+        v = self.stf_reader.read_uint(None)
+        print(f"[READ] reader={self}, token={v}, depth={self.stf_reader.block_depth}")
+        return v
 
     def read_float(self) -> float:
-        return self.stf_reader.read_float(None)
+        v = self.stf_reader.read_float(None)
+        print(f"[READ] reader={self}, token={v}, depth={self.stf_reader.block_depth}")
+        return v
 
     def read_string(self) -> str:
-        return self._read()
+        v = self._read()
+        print(f"[READ] reader={self}, token={v}, depth={self.stf_reader.block_depth}")
+        return v
 
     def close(self):
         if not self.is_closed:
@@ -421,7 +438,7 @@ class TextFileReader(TextBlockReader):
         if s != "":
             while s != "":
                 if s != ")":
-                    logger.warning(f"Expected end of file; got '{s}' in {self.filepath}")
+                    logger.warning(f"Expected end of file, but got '{s}' in {self.filepath}")
                     return
 
                 s = self.stf_reader.read_item()
