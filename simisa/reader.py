@@ -345,42 +345,14 @@ class TextBlockReader(BlockReader):
             self.stf_reader.depth == self.start_depth
         )
 
-    # def verify_end_of_block(self):
-    #     if self.at_end_of_block:
-    #         return
-
-    #     token = self.stf_reader.read_item()
-
-    #     if token.startswith("#") or token.lower() == "comment":
-    #         self.skip()
-    #         return
-
-    #     if token != ")":
-    #         logger.warning(f"Expected end of block, but got '{token}'")
-
-    #     self.at_end_of_block = True
     def verify_end_of_block(self):
         next_token = self.stf_reader.peek().value
         
         if next_token != ')':
             logger.warning(f"Expected end of block, but got '{self.stf_reader.peek().value}'")
-            #self.skip()
         
         if next_token == ')':
             self.stf_reader.read_item()
-
-        #if not self.end_of_block():
-            #logger.warning(f"Expected end of block, but got '{self.stf_reader.peek().value}'")
-            #self.skip()
-
-        # if self.at_end_of_block:
-        #     return
-
-        # if not self.end_of_block():
-        #     logger.warning(f"Expected end of block, but got '{self.stf_reader.peek().value}'")
-        #     self.skip()
-
-        # self.at_end_of_block = True
 
     def read_flags(self) -> int:
         return self.stf_reader.read_hex(None)
