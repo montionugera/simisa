@@ -22,204 +22,170 @@ import simisa
 
 
 def test_peek_header_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    header = simisa.peek_header(shape_path)
+    header = simisa.peek_header(global_storage["shape_path"])
     assert header.startswith("SIMISA@@")
 
 
 def test_peek_header_compressed_shape(global_storage):
-    shape_compressed_path = global_storage["shape_compressed_path"]
-    header = simisa.peek_header(shape_compressed_path)
+    header = simisa.peek_header(global_storage["shape_compressed_path"])
     assert header.startswith("SIMISA@F")
 
 
 def test_peek_header_emptyfile(global_storage):
-    emptyfile_path = global_storage["emptyfile_path"]
-    header = simisa.peek_header(emptyfile_path)
+    header = simisa.peek_header(global_storage["emptyfile_path"])
     assert header is None
 
 
 def test_peek_header_garbagefile(global_storage):
-    garbagefile_path = global_storage["garbagefile_path"]
-    header = simisa.peek_header(garbagefile_path)
+    header = simisa.peek_header(global_storage["garbagefile_path"])
     assert header is None
 
 
 def test_is_compressed_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    is_compressed = simisa.is_compressed(shape_path)
+    is_compressed = simisa.is_compressed(global_storage["shape_path"])
     assert not is_compressed
 
 
 def test_is_compressed_compressed_shape(global_storage):
-    shape_compressed_path = global_storage["shape_compressed_path"]
-    is_compressed = simisa.is_compressed(shape_compressed_path)
+    is_compressed = simisa.is_compressed(global_storage["shape_compressed_path"])
     assert is_compressed
 
 
 def test_is_compressed_uncompressed_worldfile(global_storage):
-    worldfile_path = global_storage["worldfile_path"]
-    is_compressed = simisa.is_compressed(worldfile_path)
+    is_compressed = simisa.is_compressed(global_storage["worldfile_path"])
     assert not is_compressed
 
 
 def test_is_compressed_compressed_worldfile(global_storage):
-    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
-    is_compressed = simisa.is_compressed(worldfile_compressed_path)
+    is_compressed = simisa.is_compressed(global_storage["worldfile_compressed_path"])
     assert is_compressed
 
 
 def test_is_compressed_emptyfile(global_storage):
-    emptyfile_path = global_storage["emptyfile_path"]
-    is_compressed = simisa.is_compressed(emptyfile_path)
+    is_compressed = simisa.is_compressed(global_storage["emptyfile_path"])
     assert is_compressed is None
 
 
 def test_is_compressed_garbagefile(global_storage):
-    garbagefile_path = global_storage["garbagefile_path"]
-    is_compressed = simisa.is_compressed(garbagefile_path)
+    is_compressed = simisa.is_compressed(global_storage["garbagefile_path"])
     assert is_compressed is None
 
 
 def test_is_unicode_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    is_unicode = simisa.is_unicode(shape_path)
+    is_unicode = simisa.is_unicode(global_storage["shape_path"])
     assert is_unicode
 
 
 def test_is_unicode_compressed_worldfile(global_storage):
-    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
-    is_unicode = simisa.is_unicode(worldfile_compressed_path)
+    is_unicode = simisa.is_unicode(global_storage["worldfile_compressed_path"])
     assert not is_unicode
 
 
 def test_is_unicode_emptyfile(global_storage):
-    emptyfile_path = global_storage["emptyfile_path"]
-    is_unicode = simisa.is_unicode(emptyfile_path)
+    is_unicode = simisa.is_unicode(global_storage["emptyfile_path"])
     assert not is_unicode
 
 
 def test_is_unicode_garbagefile(global_storage):
-    garbagefile_path = global_storage["garbagefile_path"]
-    is_unicode = simisa.is_unicode(garbagefile_path)
+    is_unicode = simisa.is_unicode(global_storage["garbagefile_path"])
     assert not is_unicode
 
 
 def test_peek_subheader_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    subheader = simisa.peek_subheader(shape_path)
+    subheader = simisa.peek_subheader(global_storage["shape_path"])
     assert subheader == "JINX0s1t"
 
 
 def test_peek_subheader_compressed_worldfile(global_storage):
-    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
-    subheader = simisa.peek_subheader(worldfile_compressed_path)
+    subheader = simisa.peek_subheader(global_storage["worldfile_compressed_path"])
     assert subheader == "JINX0w0b"
 
 
 def test_peek_subheader_emptyfile(global_storage):
-    emptyfile_path = global_storage["emptyfile_path"]
-    subheader = simisa.peek_subheader(emptyfile_path)
+    subheader = simisa.peek_subheader(global_storage["emptyfile_path"])
     assert subheader is None
 
 
 def test_peek_subheader_garbagefile(global_storage):
-    garbagefile_path = global_storage["garbagefile_path"]
-    subheader = simisa.peek_subheader(garbagefile_path)
+    subheader = simisa.peek_subheader(global_storage["garbagefile_path"])
     assert subheader is None
 
 
 def test_is_binary_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    is_binary = simisa.is_binary(shape_path)
+    is_binary = simisa.is_binary(global_storage["shape_path"])
     assert not is_binary
 
 
 def test_is_binary_compressed_worldfile(global_storage):
-    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
-    is_binary = simisa.is_binary(worldfile_compressed_path)
+    is_binary = simisa.is_binary(global_storage["worldfile_compressed_path"])
     assert is_binary
 
 
 def test_is_binary_emptyfile(global_storage):
-    emptyfile_path = global_storage["emptyfile_path"]
-    is_binary = simisa.is_binary(emptyfile_path)
+    is_binary = simisa.is_binary(global_storage["emptyfile_path"])
     assert is_binary is None
 
 
 def test_is_binary_garbagefile(global_storage):
-    garbagefile_path = global_storage["garbagefile_path"]
-    is_binary = simisa.is_binary(garbagefile_path)
+    is_binary = simisa.is_binary(global_storage["garbagefile_path"])
     assert is_binary is None
 
 
 def test_is_text_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    is_text = simisa.is_text(shape_path)
+    is_text = simisa.is_text(global_storage["shape_path"])
     assert is_text
 
 
 def test_is_text_compressed_worldfile(global_storage):
-    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
-    is_text = simisa.is_text(worldfile_compressed_path)
+    is_text = simisa.is_text(global_storage["worldfile_compressed_path"])
     assert not is_text
 
 
 def test_is_text_emptyfile(global_storage):
-    emptyfile_path = global_storage["emptyfile_path"]
-    is_text = simisa.is_text(emptyfile_path)
+    is_text = simisa.is_text(global_storage["emptyfile_path"])
     assert is_text is None
 
 
 def test_is_text_garbagefile(global_storage):
-    garbagefile_path = global_storage["garbagefile_path"]
-    is_text = simisa.is_text(garbagefile_path)
+    is_text = simisa.is_text(global_storage["garbagefile_path"])
     assert is_text is None
 
 
 def test_read_filetype_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    filetype = simisa.read_filetype(shape_path)
+    filetype = simisa.read_filetype(global_storage["shape_path"])
     assert filetype == 's'
 
 
 def test_read_filetype_compressed_worldfile(global_storage):
-    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
-    filetype = simisa.read_filetype(worldfile_compressed_path)
+    filetype = simisa.read_filetype(global_storage["worldfile_compressed_path"])
     assert filetype == 'w'
 
 
 def test_read_filetype_emptyfile(global_storage):
-    emptyfile_path = global_storage["emptyfile_path"]
-    filetype = simisa.read_filetype(emptyfile_path)
+    filetype = simisa.read_filetype(global_storage["emptyfile_path"])
     assert filetype is None
 
 
 def test_read_filetype_garbagefile(global_storage):
-    garbagefile_path = global_storage["garbagefile_path"]
-    filetype = simisa.read_filetype(garbagefile_path)
+    filetype = simisa.read_filetype(global_storage["garbagefile_path"])
     assert filetype is None
 
 
 def test_read_fileversion_uncompressed_shape(global_storage):
-    shape_path = global_storage["shape_path"]
-    fileversion = simisa.read_fileversion(shape_path)
+    fileversion = simisa.read_fileversion(global_storage["shape_path"])
     assert fileversion == 1
 
 
 def test_read_fileversion_compressed_worldfile(global_storage):
-    worldfile_compressed_path = global_storage["worldfile_compressed_path"]
-    fileversion = simisa.read_fileversion(worldfile_compressed_path)
+    fileversion = simisa.read_fileversion(global_storage["worldfile_compressed_path"])
     assert fileversion == 0
 
 
 def test_read_fileversion_emptyfile(global_storage):
-    emptyfile_path = global_storage["emptyfile_path"]
-    fileversion = simisa.read_fileversion(emptyfile_path)
+    fileversion = simisa.read_fileversion(global_storage["emptyfile_path"])
     assert fileversion is None
 
 
 def test_read_fileversion_garbagefile(global_storage):
-    garbagefile_path = global_storage["garbagefile_path"]
-    fileversion = simisa.read_fileversion(garbagefile_path)
+    fileversion = simisa.read_fileversion(global_storage["garbagefile_path"])
     assert fileversion is None
