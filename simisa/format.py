@@ -20,6 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 from typing import Optional
 from dataclasses import dataclass
 
+
 @dataclass
 class BlockFormat:
     items_per_line: Optional[int] = None

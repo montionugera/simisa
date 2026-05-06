@@ -54,40 +54,47 @@ class BlockReaderError(Exception):
 
 class BlockReader(ABC):
     """
-    Streaming reader for SIMISA hierarchical block files.
+    Structured streaming reader for SIMISA hierarchical block files.
 
-    A BlockReader represents a validated view over a parsed SIMISA stream,
-    supporting iteration over nested blocks with enforced structural integrity.
+    Provides a validated view over a SIMISA stream, supporting:
+    - Iteration over nested blocks
+    - Context-managed sub-block access
+    - Validation of block IDs and element counts
 
-    Input formats:
-    - Compressed / uncompressed
-    - UTF-16 LE / ASCII
-    - Binary / text
+    Every block must be explicitly closed with either `skip()` or
+    `verify_end_of_block()` to maintain structural integrity.
+
+    Supports input streams that are:
+    - Compressed (zlib DEFLATE) or uncompressed
+    - UTF-16 LE or ASCII encoded
+    - Binary or text formatted
     """
 
     @staticmethod
     def open(filepath: str) -> "BlockReader":
         """
-        Open a SIMISA file and construct a BlockReader.
+        Open a SIMISA file and construct an appropriate BlockReader.
 
-        Parsing pipeline:
-        - Detect compression from header
-        - Decode header (ASCII or UTF-16 LE)
-        - Decompress payload if required
-        - Parse subheader metadata
-        - Select binary or text reader
+        This method reads the file header and subheader to determine:
+        - Compression (SIMISA@F = compressed, SIMISA@@ = uncompressed)
+        - Encoding (UTF-16 LE via BOM, otherwise ASCII)
+        - Format type (binary or text)
+        - Token offset for binary blocks (based on subheader[5])
+
+        It then returns either a `BinaryFileReader` or `TextFileReader` 
+        configured to read the parsed stream.
 
         Args:
-            filepath: Path to SIMISA file.
+            filepath (str): Path to a SIMISA file on disk.
 
         Returns:
-            BlockReader: BinaryFileReader or TextFileReader.
+            BlockReader: Instance of `BinaryFileReader` or `TextFileReader`.
 
         Raises:
-            TypeError: filepath is not str.
-            SimisaHeaderError: Invalid or unknown header.
-            SimisaSubheaderError: Invalid or unsupported subheader.
-            OSError: File cannot be opened.
+            TypeError: If `filepath` is not a string.
+            SimisaHeaderError: If the file header is missing or unrecognized.
+            SimisaSubheaderError: If the subheader is invalid or unsupported.
+            OSError: If the file cannot be opened.
         """
         if not isinstance(filepath, str):
             raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
@@ -146,20 +153,20 @@ class BlockReader(ABC):
         Construct a BlockReader from in-memory SIMISA text data.
 
         Constraints:
-        - Text format only
-        - No compression support
-        - Requires SIMISA@@ header
+        - Only supports text format
+        - Does not support compressed data
+        - The first characters may include a UTF-8 BOM, which is stripped
 
         Args:
-            data: Raw SIMISA text payload.
+            data (str): Raw SIMISA text payload.
 
         Returns:
-            TextFileReader
+            TextFileReader: A reader over the provided string stream.
 
         Raises:
-            TypeError: data is not str.
-            SimisaHeaderError: Invalid or unsupported header.
-            SimisaSubheaderError: Invalid subheader or unsupported format.
+            TypeError: If `data` is not a string.
+            SimisaHeaderError: If the string does not start with a recognized header.
+            SimisaSubheaderError: If the subheader is missing, too short, or binary.
         """
         if not isinstance(data, str):
             raise TypeError(f"Parameter 'data' must be str, but got {type(data).__name__}")

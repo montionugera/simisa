@@ -29,6 +29,9 @@ from .units import Units
 
 logger = logging.getLogger(__name__)
 
+# TODO Handle units
+# TODO Handle includes
+
 
 class StfReaderError(Exception):
     """Raised when an stf reader encounters an error or malformed data."""
@@ -234,7 +237,6 @@ class StfReader:
             raise StfReaderError("Unexpected EOF while reading hex")
 
         try:
-            # Handles both "FF" and "0xFF"
             return int(s, 16)
         except ValueError:
             raise StfReaderError(f"Invalid hex value: {s}")
