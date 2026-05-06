@@ -56,7 +56,7 @@ def load(filepath: str) -> Shape:
     with BlockReader.open(filepath) as reader:
 
         if not reader.filetype == 's':
-            raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it a shape?")
+            raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it a shape file?")
 
         return read_shape(reader)
 
@@ -88,7 +88,7 @@ def loads(shape_text: str) -> Shape:
     reader = BlockReader.from_string(shape_text)
 
     if not reader.filetype == 's':
-        raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it a shape?")
+        raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it a shape file?")
 
     return read_shape(reader)
 

@@ -22,12 +22,12 @@ import simisa
 
 
 def test_peek_header_uncompressed_shape(global_storage):
-    header = simisa.peek_header(global_storage["shape_path"])
+    header = simisa.peek_header(global_storage["shapefile_path"])
     assert header.startswith("SIMISA@@")
 
 
 def test_peek_header_compressed_shape(global_storage):
-    header = simisa.peek_header(global_storage["shape_compressed_path"])
+    header = simisa.peek_header(global_storage["shapefile_compressed_path"])
     assert header.startswith("SIMISA@F")
 
 
@@ -42,12 +42,12 @@ def test_peek_header_garbagefile(global_storage):
 
 
 def test_is_compressed_uncompressed_shape(global_storage):
-    is_compressed = simisa.is_compressed(global_storage["shape_path"])
+    is_compressed = simisa.is_compressed(global_storage["shapefile_path"])
     assert not is_compressed
 
 
 def test_is_compressed_compressed_shape(global_storage):
-    is_compressed = simisa.is_compressed(global_storage["shape_compressed_path"])
+    is_compressed = simisa.is_compressed(global_storage["shapefile_compressed_path"])
     assert is_compressed
 
 
@@ -72,7 +72,7 @@ def test_is_compressed_garbagefile(global_storage):
 
 
 def test_is_unicode_uncompressed_shape(global_storage):
-    is_unicode = simisa.is_unicode(global_storage["shape_path"])
+    is_unicode = simisa.is_unicode(global_storage["shapefile_path"])
     assert is_unicode
 
 
@@ -92,7 +92,7 @@ def test_is_unicode_garbagefile(global_storage):
 
 
 def test_peek_subheader_uncompressed_shape(global_storage):
-    subheader = simisa.peek_subheader(global_storage["shape_path"])
+    subheader = simisa.peek_subheader(global_storage["shapefile_path"])
     assert subheader == "JINX0s1t"
 
 
@@ -112,7 +112,7 @@ def test_peek_subheader_garbagefile(global_storage):
 
 
 def test_is_binary_uncompressed_shape(global_storage):
-    is_binary = simisa.is_binary(global_storage["shape_path"])
+    is_binary = simisa.is_binary(global_storage["shapefile_path"])
     assert not is_binary
 
 
@@ -132,7 +132,7 @@ def test_is_binary_garbagefile(global_storage):
 
 
 def test_is_text_uncompressed_shape(global_storage):
-    is_text = simisa.is_text(global_storage["shape_path"])
+    is_text = simisa.is_text(global_storage["shapefile_path"])
     assert is_text
 
 
@@ -152,7 +152,7 @@ def test_is_text_garbagefile(global_storage):
 
 
 def test_read_filetype_uncompressed_shape(global_storage):
-    filetype = simisa.read_filetype(global_storage["shape_path"])
+    filetype = simisa.read_filetype(global_storage["shapefile_path"])
     assert filetype == 's'
 
 
@@ -172,7 +172,7 @@ def test_read_filetype_garbagefile(global_storage):
 
 
 def test_read_fileversion_uncompressed_shape(global_storage):
-    fileversion = simisa.read_fileversion(global_storage["shape_path"])
+    fileversion = simisa.read_fileversion(global_storage["shapefile_path"])
     assert fileversion == 1
 
 

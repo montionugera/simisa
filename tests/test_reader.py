@@ -23,26 +23,26 @@ from simisa import shape
 
 
 def test_shape_load(global_storage):
-    s = shape.load(global_storage["shape_path"])
+    s = shape.load(global_storage["shapefile_path"])
     assert False
 
 
 def test_shape_loads_uncompressed(global_storage):
-    shape_path = global_storage["shape_path"]
-    with open(shape_path, 'r', encoding='utf-16-le') as f:
+    shapefile_path = global_storage["shapefile_path"]
+    with open(shapefile_path, 'r', encoding='utf-16-le') as f:
         shape_string = f.read()
         s = shape.loads(shape_string)
     assert False
 
 
 def test_shape_load_compressed(global_storage):
-    s = shape.load(global_storage["shape_compressed_path"])
+    s = shape.load(global_storage["shapefile_compressed_path"])
     assert False
 
 
 def test_shape_load_compare(global_storage):
-    expected = shape.load(global_storage["shape_path"])
-    actual = shape.load(global_storage["shape_compressed_path"])
+    expected = shape.load(global_storage["shapefile_path"])
+    actual = shape.load(global_storage["shapefile_compressed_path"])
 
     stack = [(expected, actual, "root")]
 
@@ -88,8 +88,8 @@ def test_shape_load_compare(global_storage):
     assert True
 
 def test_shape_loads_compressed(global_storage):
-    shape_compressed_path = global_storage["shape_compressed_path"]
-    with open(shape_compressed_path, 'rb') as f:
+    shapefile_compressed_path = global_storage["shapefile_compressed_path"]
+    with open(shapefile_compressed_path, 'rb') as f:
         shape_bytes = f.read()
         
         with pytest.raises(TypeError):

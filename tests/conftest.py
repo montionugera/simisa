@@ -38,12 +38,17 @@ def reader_from_body(body: str) -> BlockReader:
 @pytest.fixture(scope="session")
 def global_storage():
     data = {
-        "shape_path": "./tests/data/DK10f_A1tPnt5dLft.s",
-        "shape_compressed_path": "./tests/data/DK10f_A1tPnt5dLft_compressed.s",
+        "emptyfile_path": "./tests/data/empty.txt",
+        "garbagefile_path": "./tests/data/garbage.txt",
+        "shapefile_path": "./tests/data/DK10f_A1tPnt5dLft.s",
+        "shapefile_compressed_path": "./tests/data/DK10f_A1tPnt5dLft_compressed.s",
+        "tsectionext_path": "./tests/data/tsectionext.dat",
+        "tsectionglobal_path": "./tests/data/tsectionglobal.dat",
+        "tsectionlocal_path": "./tests/data/tsectionlocal.dat",
+        "terrainfile_compressed_path": "./tests/data/-11dc0894.t",
         "worldfile_path": "./tests/data/w-005655+015119.w",
         "worldfile_compressed_path": "./tests/data/w-005655+015119_compressed.w",
-        "emptyfile_path": "./tests/data/empty.txt",
-        "garbagefile_path": "./tests/data/garbage.txt"
+        "worldsoundfile_path": "./tests/data/w-005656+015119.ws"
     }
-    data["shape"] = load_file(data["shape_path"])
+    data["shape"] = load_file(data["shapefile_path"])
     return data

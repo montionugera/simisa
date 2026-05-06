@@ -367,6 +367,7 @@ class BlockReader(ABC):
 
 
 class TextBlockReader(BlockReader):
+    # TODO improve performance, its a bit slow compared to the binary reader
     _token_table: Dict[str, TokenID] | None = None
 
     def __init__(self):
