@@ -721,6 +721,7 @@ def read_uv_ops(reader: BlockReader) -> List[UVOp]:
 
             else:
                 logger.warning(f"Unhandled uv_op: {uv_op_block.id.name} (id: {uv_op_block.id})")
+                uv_op_block.skip()
         
         uv_ops_block.verify_count(count, len(uv_ops))
 
@@ -1342,6 +1343,7 @@ def read_primitives(reader: BlockReader) -> List[Primitive]:
             
             else:
                 logger.warning(f"Unhandled primitive: {primitive_block.id.name} (id: {primitive_block.id})")
+                primitive_block.skip()
 
             num_blocks_read += 1
 
@@ -1540,6 +1542,7 @@ def read_controllers(reader: BlockReader) -> List[Controller]:
             
             else:
                 logger.warning(f"Unhandled controller: {controller_block.id.name} (id: {controller_block.id})")
+                controller_block.skip()
 
         controllers_block.verify_count(count, len(controllers))
 
@@ -1617,6 +1620,7 @@ def read_keypositions(reader: BlockReader) -> List[KeyPosition]:
         
         else:
             logger.warning(f"Unhandled keyposition: {keyposition_block.id.name} (id: {keyposition_block.id})")
+            keyposition_block.skip()
 
     reader.verify_count(count, len(keypositions))
 
