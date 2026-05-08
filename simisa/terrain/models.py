@@ -50,11 +50,14 @@ class TerrainSamples:
     def __repr__(self):
         return (
             "TerrainSamples("
-            f"nsamples={self.terrain_nsamples}, "
-            f"rotation={self.terrain_sample_rotation}, "
-            f"floor={self.terrain_sample_floor}, "
-            f"scale={self.terrain_sample_scale}, "
-            f"size={self.terrain_sample_size})"
+            f"terrain_nsamples={self.terrain_nsamples}, "
+            f"terrain_sample_rotation={self.terrain_sample_rotation}, "
+            f"terrain_sample_floor={self.terrain_sample_floor}, "
+            f"terrain_sample_scale={self.terrain_sample_scale}, "
+            f"terrain_sample_size={self.terrain_sample_size}, "
+            f"terrain_sample_ybuffer={self.terrain_sample_ybuffer}, "
+            f"terrain_sample_ebuffer={self.terrain_sample_ebuffer}, "
+            f"terrain_sample_nbuffer={self.terrain_sample_nbuffer})"
         )
 
 
@@ -94,9 +97,9 @@ class TerrainShader:
     def __repr__(self):
         return (
             "TerrainShader("
-            f"name='{self.shader_name}', "
-            f"texslots={len(self.terrain_texslots)}, "
-            f"uvcalcs={len(self.terrain_uvcalcs)})"
+            f"shader_name='{self.shader_name}', "
+            f"terrain_texslots (len={len(self.terrain_texslots)}), "
+            f"terrain_uvcalcs (len={len(self.terrain_uvcalcs)}))"
         )
 
 
@@ -130,9 +133,20 @@ class TerrainPatchsetPatch:
         return (
             "TerrainPatchsetPatch("
             f"flags={self.flags}, "
-            f"center=({self.center_x}, {self.center_z}), "
-            f"radius={self.radius_m}, "
-            f"shader_index={self.shader_index})"
+            f"center_x={self.center_x}, "
+            f"center_z={self.center_z}, "
+            f"average_y={self.average_y}, "
+            f"range_y={self.range_y}, "
+            f"factor_y={self.factor_y}, "
+            f"shader_index={self.shader_index}, "
+            f"error_bias={self.error_bias}, "
+            f"x={self.x}, "
+            f"y={self.y}, "
+            f"w={self.w}, "
+            f"h={self.h}, "
+            f"b={self.b}, "
+            f"c={self.c}, "
+            f"radius_m={self.radius_m})"
         )
 
 
@@ -150,8 +164,9 @@ class TerrainPatchset:
     def __repr__(self):
         return (
             "TerrainPatchset("
-            f"distance={self.terrain_patchset_distance}, "
-            f"npatches={self.terrain_patchset_npatches})"
+            f"terrain_patchset_distance={self.terrain_patchset_distance}, "
+            f"terrain_patchset_npatches={self.terrain_patchset_npatches}, "
+            f"terrain_patchset_patches (len={len(self.terrain_patchset_patches)}))"
         )
 
 
@@ -167,7 +182,10 @@ class Terrain:
     def __repr__(self):
         return (
             "Terrain("
-            f"err_scale={self.terrain_errthreshold_scale}, "
-            f"shaders={len(self.terrain_shaders or [])}, "
-            f"patchsets={len(self.terrain_patchsets or [])})"
+            f"terrain_errthreshold_scale={self.terrain_errthreshold_scale}, "
+            f"terrain_water_height_offset={self.terrain_water_height_offset}, "
+            f"terrain_alwaysselect_maxdist={self.terrain_alwaysselect_maxdist}, "
+            f"terrain_samples={self.terrain_samples}, "
+            f"terrain_shaders (len={len(self.terrain_shaders or [])}), "
+            f"terrain_patchsets (len={len(self.terrain_patchsets or [])}))"
         )

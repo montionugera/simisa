@@ -97,7 +97,7 @@ def read_shape(reader: BlockReader) -> Shape:
     """
     Read and parse a shape block from a BlockReader.
 
-    Consumes the `shape` sub-block and its child sections, returning a fully
+    Consumes the `shape` sub-block and its child blocks, returning a fully
     constructed Shape object.
 
     Args:
@@ -156,7 +156,7 @@ def read_shape_header(reader: BlockReader) -> ShapeHeader:
     """
     Read and parse a shape header block from a BlockReader.
 
-    Consumes the `shape_header` sub-block and its child sections, returning a fully
+    Consumes the `shape_header` sub-block, returning a fully
     constructed ShapeHeader object.
 
     Args:

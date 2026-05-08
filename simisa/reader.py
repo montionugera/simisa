@@ -155,7 +155,7 @@ class BlockReader(ABC):
         Constraints:
         - Only supports text format
         - Does not support compressed data
-        - The first characters may include a UTF-8 BOM, which is stripped
+        - Strips the BOM (Byte Order Mark) if present, which is common in text read from UTF-16 LE files.
 
         Args:
             data (str): Raw SIMISA text payload.
