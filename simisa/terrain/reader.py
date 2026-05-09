@@ -357,10 +357,12 @@ def read_terrain_patchsets(reader: BlockReader) -> List[TerrainPatchset]:
         List[TerrainPatchset]: The parsed terrain patchsets.
     """
     with reader.sub_block(TokenID.terrain_patchsets) as patchsets_block:
-        count = patchsets_block.read_int()
         terrain_patchsets: List[TerrainPatchset] = []
+        count = patchsets_block.read_int()
 
         for patchset_block in patchsets_block:
+            patchset_block.verify_id(TokenID.terrain_patchset)
+
             terrain_patchset_distance: int = 0
             terrain_patchset_npatches: int = 0
             terrain_patchset_patches: List[TerrainPatchsetPatch] = []

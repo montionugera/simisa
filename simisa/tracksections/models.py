@@ -47,9 +47,9 @@ class TrackSection:
 
     def __repr__(self):
         return (
-            f"TrackSection(index={self.section_index}, "
-            f"size={self.section_size}, "
-            f"curve={self.section_curve})"
+            f"TrackSection(section_index={self.section_index}, "
+            f"section_size={self.section_size}, "
+            f"section_curve={self.section_curve})"
         )
 
 
@@ -57,9 +57,9 @@ class TrackSection:
 class RouteTrackSection(TrackSection):
     def __repr__(self):
         return (
-            f"RouteTrackSection(index={self.section_index}, "
-            f"size={self.section_size}, "
-            f"curve={self.section_curve})"
+            f"RouteTrackSection(section_index={self.section_index}, "
+            f"section_size={self.section_size}, "
+            f"section_curve={self.section_curve})"
         )
 
 
@@ -85,7 +85,7 @@ class TrackSections:
     def __repr__(self):
         return (
             f"TrackSections(count={len(self.sections)}, "
-            f"max_index={self.max_section_index})"
+            f"max_section_index={self.max_section_index})"
         )
 
 
@@ -100,8 +100,8 @@ class SectionIdx:
 
     def __repr__(self):
         return (
-            f"SectionIdx(n={self.no_sections}, "
-            f"offset=({self.x}, {self.y}, {self.z}), "
+            f"SectionIdx(no_sections={self.no_sections}, "
+            f"x={self.x}, y={self.y}, z={self.z}), "
             f"a={self.a})"
         )
 
@@ -159,9 +159,6 @@ class TrackShapes:
     shapes: Dict[int, TrackShape] = field(default_factory=dict)
     max_shape_index: Optional[int] = None
 
-    def add(self, shape: TrackShape):
-        self.shapes[shape.shape_index] = shape
-
     def get(self, index: int) -> TrackShape:
         if index not in self.shapes:
             raise ValueError("ShapeIndex not found")
@@ -175,7 +172,7 @@ class TrackShapes:
 
 
 @dataclass
-class TrackSectionsFile:
+class TSection:
     track_sections: Optional[TrackSections] = None
     track_shapes: Optional[TrackShapes] = None
     tsection_idx: Optional[TSectionIdx] = None
