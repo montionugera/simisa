@@ -32,7 +32,7 @@ def load(filepath: str) -> TSection:
     """
     Load and parse a tsection file from disk.
 
-    It opens the file at the given path, validates that it is a supported tracksections
+    It opens the file at the given path, validates that it is a supported tsection
     file based on its subheader, and returns a parsed TSection object.
 
     Args:
@@ -62,7 +62,7 @@ def load(filepath: str) -> TSection:
 
 def loads(tsection_text: str) -> TSection:
     """
-    Parse tracksections from a string containing tracksection data.
+    Parse tracksections from a string containing tsection data.
 
     This function reads tracksections data from the provided string, validates
     that it represents a supported tracksections file based on its subheader, and

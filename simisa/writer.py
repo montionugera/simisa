@@ -37,8 +37,6 @@ class BlockWriterError(Exception):
 class CompressedWriteStream:
     """
     Helper for writing compressed streams.
-
-    Used in `BlockWriter` when the `is_compressed` parameter is set to true.
     """
 
     def __init__(self, file, compressor):
@@ -153,6 +151,7 @@ class BlockWriter(ABC):
     @contextmanager
     def block(self, block_id: TokenID, label: Optional[str] = None):
         self.begin_block(block_id, label)
+
         try:
             yield self
         finally:
@@ -388,40 +387,3 @@ class BlockWriterException(Exception):
         super().__init__(message)
         self.writer = writer
 
-
-"""
-Example usage:
-
-with writer.block(TokenID.vertex):
-
-    writer.write_flags(flags)
-    writer.write_int(ipoint)
-    writer.write_int(inormal)
-    writer.write_flags(color1)
-    writer.write_flags(color2)
-
-    with writer.block(TokenID.vertex_uvs):
-        writer.write_int(len(uvs))
-        for uv in uvs:
-            writer.write_int(uv)
-
-writer.write_list(
-    TokenID.vertex_uvs,
-    uvs,
-    format=UV_LIST
-)
-
-writer.write_list(
-    TokenID.vertices,
-    vertices,
-    format=VERTEX_LIST,
-    item_writer=lambda w, v: (
-        w.begin_block(TokenID.vertex),
-        w.write_int(v.point),
-        w.write_int(v.normal),
-        w.write_flags(v.color),
-        w.end_block()
-    )
-)
-
-"""

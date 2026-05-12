@@ -23,8 +23,37 @@ from dataclasses import dataclass
 
 @dataclass
 class BlockFormat:
-    items_per_line: Optional[int] = None
+    """
+    Parameters for configuring formatting of blocks.
+
+    Used when writing files in text format. Ignored when writing binary files.
+
+    Example:
+        >>> UV_LIST = BlockFormat(
+        ...     max_items_per_line=None,
+        ...     disable_inner_indent=True,
+        ...     newline_after_start=False,
+        ...     newline_after_count=False,
+        ...     newline_before_closing=False
+        ... )
+        >>>
+        >>> with writer.sub_block(TokenID.vertex):
+        ...     writer.write_flags(flags)
+        ...     writer.write_int(ipoint)
+        ...     writer.write_int(inormal)
+        ...     writer.write_flags(color1)
+        ...     writer.write_flags(color2)
+        ...
+        ...     with writer.sub_block(TokenID.vertex_uvs, format=UV_LIST):
+        ...         writer.write_count(len(uvs))
+        ...         for uv in uvs:
+        ...             writer.write_int(uv)
+    """
+    max_items_per_line: Optional[int] = None
     disable_inner_indent: bool = False
+    newline_before_start: bool = True
     newline_after_start: bool = False
+    newline_before_count: bool = False
     newline_after_count: bool = True
     newline_before_closing: bool = True
+    newline_after_closing: bool = True
