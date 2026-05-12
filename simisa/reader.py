@@ -54,7 +54,7 @@ class BlockReaderError(Exception):
 
 class BlockReader(ABC):
     """
-    Structured streaming reader for SIMISA hierarchical block files.
+    Structured streaming reader for SIMISA block files.
 
     Provides a validated view over a SIMISA stream, supporting:
     - Iteration over nested blocks
@@ -62,7 +62,7 @@ class BlockReader(ABC):
     - Validation of block IDs and element counts
 
     Every block must be explicitly closed with either `skip()` or
-    `verify_end_of_block()` to maintain structural integrity.
+    `verify_end_of_block()` to maintain structural integrity of the stream.
 
     Supports input streams that are:
     - Compressed (zlib DEFLATE) or uncompressed
@@ -82,7 +82,7 @@ class BlockReader(ABC):
         - Token offset for binary blocks (based on subheader[5])
 
         It then returns either a `BinaryFileReader` or `TextFileReader` 
-        configured to read the parsed stream.
+        configured to read the stream.
 
         Args:
             filepath (str): Path to a SIMISA file on disk.
@@ -151,17 +151,19 @@ class BlockReader(ABC):
     def from_string(data: str) -> "BlockReader":
         """
         Construct a BlockReader from in-memory SIMISA text data.
+        
+        Strips the BOM (Byte Order Mark) if present, which is common as the first character
+        in text read from UTF-16 LE files using Python's built-in `open` function.
 
         Constraints:
-        - Only supports text format
+        - Does not support binary data
         - Does not support compressed data
-        - Strips the BOM (Byte Order Mark) if present, which is common in text read from UTF-16 LE files.
 
         Args:
             data (str): Raw SIMISA text payload.
 
         Returns:
-            TextFileReader: A reader over the provided string stream.
+            TextFileReader: A reader over the provided string data.
 
         Raises:
             TypeError: If `data` is not a string.
@@ -221,7 +223,7 @@ class BlockReader(ABC):
         self.close()
 
     @contextmanager
-    def sub_block(self, expected_id: TokenID | None = None) -> "BlockReader":
+    def sub_block(self, expected_id: Optional[TokenID] = None) -> "BlockReader":
         """
         Context-scoped access to a single child block.
 
@@ -245,7 +247,7 @@ class BlockReader(ABC):
         finally:
             sub_block.verify_end_of_block()
     
-    def sub_blocks(self, expected_id: TokenID | None = None) -> Iterator["BlockReader"]:
+    def sub_blocks(self, expected_id: Optional[TokenID] = None) -> Iterator["BlockReader"]:
         """
         Iterate over all remaining child blocks.
 
@@ -368,14 +370,14 @@ class BlockReader(ABC):
 
 class TextBlockReader(BlockReader):
     # TODO improve performance, its a bit slow compared to the binary reader
-    _token_table: Dict[str, TokenID] | None = None
+    _token_table: Optional[Dict[str, TokenID]] = None
 
     def __init__(self):
-        self.stf_reader: StfReader | None = None
-        self.at_end_of_block: bool = False
-        self.id: TokenID | None = None
-        self.label: str | None = None
+        self.stf_reader: Optional[StfReader] = None
+        self.id: Optional[TokenID] = None
+        self.label: Optional[str] = None
         self.start_depth: int = 0
+        self.at_end_of_block: bool = False
         self.is_closed: bool = False
 
     @classmethod
@@ -398,7 +400,13 @@ class TextBlockReader(BlockReader):
         if token_id is not None:
             return token_id
 
-        if t in ("skip", "comment") or token.startswith("#"):
+        comment_tokens = (
+            "skip", "_skip",
+            "comment", "_comment",
+            "info", "_info"
+        )
+
+        if t in comment_tokens or token.startswith('#'):
             return TokenID.comment
 
         logger.warning(f"Skipped unknown token {token}")
@@ -410,11 +418,11 @@ class TextBlockReader(BlockReader):
 
         token = self.stf_reader.read_item()
 
-        if token == "":
+        if token == '':
             self.at_end_of_block = True
             return sub_block
 
-        if token == ")":
+        if token == ')':
             self.at_end_of_block = True
             return sub_block
 
@@ -422,14 +430,18 @@ class TextBlockReader(BlockReader):
 
         token = self.stf_reader.read_item()
 
-        if token == ")":
+        if sub_block.id == TokenID.comment:
+            sub_block.skip()
+            return self.read_sub_block()
+
+        if token == ')':
             self.at_end_of_block = True
             return sub_block
 
-        if token != "(":
+        if token != '(':
             sub_block.label = token
             token = self.stf_reader.read_item()
-            if token != "(":
+            if token != '(':
                 raise BlockReaderError(f"Expected '(' after label, but got '{token}'")
 
         sub_block.start_depth = self.stf_reader.depth
@@ -443,7 +455,7 @@ class TextBlockReader(BlockReader):
         while self.stf_reader.depth > self.start_depth:
             token = self.stf_reader.read_item()
 
-            if token == "":
+            if token == '':
                 logger.warning("Unexpected end of file")
                 self.at_end_of_block = True
                 return
@@ -457,13 +469,16 @@ class TextBlockReader(BlockReader):
         next_token = self.stf_reader.peek().value
 
         return (
-            next_token == ")" and
+            next_token == ')' and
             self.stf_reader.depth == self.start_depth
         )
 
     def verify_end_of_block(self):
         next_token = self.stf_reader.peek().value
         
+        if next_token == '':
+            return
+
         if next_token != ')':
             logger.warning(f"Expected end of block, but got '{self.stf_reader.peek().value}'")
         
@@ -503,23 +518,20 @@ class TextFileReader(TextBlockReader):
         encoding: str
     ):
         super().__init__()
-
         self.filepath = filepath
         self.filetype = filetype
         self.fileversion = fileversion
         self.encoding = encoding
         self.stream = stream
-
         self.is_closed = False
         self.at_end_of_block = False
-
         self.stf_reader = StfReader.from_stream(stream)
 
     def skip(self):
         if self.is_closed:
             return
 
-        self.stf_reader.close() if hasattr(self.stf_reader, "close") else None
+        self.stf_reader.close()
         self.is_closed = True
         self.at_end_of_block = True
 
@@ -527,28 +539,21 @@ class TextFileReader(TextBlockReader):
         if self.is_closed:
             return
 
-        s = self.stf_reader.read_item()
-        extra_data = s
+        token = self.stf_reader.read_item()
 
-        if s != "":
-            while s != "":
-                if s != ")":
-                    logger.warning(f"Expected end of file, but got '{s}' in {self.filepath}")
+        if token != '':
+            while token != '':
+                if token != ')':
+                    logger.warning(f"Expected end of file, but got '{token}' in {self.filepath}")
                     return
 
-                s = self.stf_reader.read_item()
+                token = self.stf_reader.read_item()
 
     def end_of_block(self) -> bool:
         if self.is_closed or self.at_end_of_block:
             return True
 
-        if hasattr(self.stf_reader, "peek_past_whitespace"):
-            return self.stf_reader.peek_past_whitespace() == -1
-
-        if hasattr(self.stf_reader, "eof"):
-            return self.stf_reader.eof()
-
-        return False
+        return self.stf_reader.eof()
 
     def close(self):
         if not self.is_closed:
@@ -561,12 +566,12 @@ class BinaryBlockReader(BlockReader):
 
     def __init__(self):
         self.filepath: str = ""
-        self.stream: BinaryIO | None = None
+        self.stream: Optional[BinaryIO] = None
         self.token_offset = 0
         self.remaining_bytes = 0
         self.flags = 0
-        self.id: TokenID | None = None
-        self.label: str | None = None
+        self.id: Optional[TokenID] = None
+        self.label: Optional[str] = None
 
     def _read(self, n: int) -> bytes:
         if self.stream is None:
@@ -667,8 +672,14 @@ class BinaryBlockReader(BlockReader):
 
 class BinaryFileReader(BinaryBlockReader):
 
-    def __init__(self, input_stream: BinaryIO, filepath: str,
-                 filetype: str, fileversion: int, token_offset: int):
+    def __init__(
+        self,
+        input_stream: BinaryIO,
+        filepath: str,
+        filetype: str,
+        fileversion: int,
+        token_offset: int
+    ):
         super().__init__()
         self.filepath = filepath
         self.stream = input_stream

@@ -35,6 +35,12 @@ class BlockWriterError(Exception):
 
 
 class CompressedWriteStream:
+    """
+    Helper for writing compressed streams.
+
+    Used in `BlockWriter` when the `is_compressed` parameter is set to true.
+    """
+
     def __init__(self, file, compressor):
         self.file = file
         self.compressor = compressor
@@ -51,6 +57,14 @@ class CompressedWriteStream:
 
 
 class BlockWriter(ABC):
+    """
+    Structured streaming writer for SIMISA block files.
+
+    Supports writing streams that are:
+    - Compressed (zlib DEFLATE) or uncompressed
+    - UTF-16 LE or ASCII encoded
+    - Binary or text formatted
+    """
 
     @staticmethod
     def open(

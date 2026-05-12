@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 def load(filepath: str) -> TSection:
     """
-    Load and parse a tracksections file from disk.
+    Load and parse a tsection file from disk.
 
     It opens the file at the given path, validates that it is a supported tracksections
     file based on its subheader, and returns a parsed TSection object.
@@ -105,10 +105,12 @@ def read_tsection(reader: BlockReader) -> TSection:
     Returns:
         TSection: The parsed tsection file.
     """
-    # with reader.sub_block(TokenID.terrain) as terrain_block:
-    #     terrain = Terrain()
+    for sub_block in reader:
+        print(sub_block.id)
+        sub_block.skip()
+    #with reader.sub_block(TokenID.terrain) as terrain_block:
+    #    #terrain = Terrain()
 
-    #     for sub_block in terrain_block:
     #         if sub_block.id == TokenID.terrain_errthreshold_scale:
     #             terrain.terrain_errthreshold_scale = sub_block.read_float()
             
