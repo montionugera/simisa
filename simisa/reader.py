@@ -31,21 +31,14 @@ from contextlib import contextmanager
 from typing import Optional, Iterator, BinaryIO, TextIO, Dict
 
 from .header import is_compressed
+from .header import SimisaHeaderError, SimisaSubheaderError
+from .include import has_includes, peek_first_include
+from .include import resolve_includes, UnresolvableIncludeError
 from .token_id import TokenID
 from .stf import StfReader
 
 logger = logging.getLogger(__name__)
 
-# TODO Handle includes
-
-class SimisaHeaderError(Exception):
-    """Raised when a SIMISA header is missing or invalid."""
-    pass
-
-
-class SimisaSubheaderError(Exception):
-    """Raised when a SIMISA subheader is missing or invalid."""
-    pass
 
 
 class BlockReaderError(Exception):
@@ -103,32 +96,33 @@ class BlockReader(ABC):
         compressed = is_compressed(filepath)
 
         if compressed is None:
+            # TODO Resolve includes here, raise if still no valid header.
             raise SimisaHeaderError(f"Unrecognized header in {filepath}")
-
-        f = open(filepath, "rb")
-
-        bom = f.read(2)
-        is_unicode = (bom == codecs.BOM_UTF16_LE)
-        encoding = "utf-16-le" if is_unicode else "ascii"
-
-        if is_unicode:
-            header_bytes = f.read(32)
-            header = header_bytes[:16].decode(encoding)
         else:
-            header_bytes = bom + f.read(14)
-            header = header_bytes[:8].decode(encoding, errors="ignore")
+            f = open(filepath, "rb")
 
-        if compressed:
-            f.read(2)
-            decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
-            stream = io.BytesIO(decompressor.decompress(f.read()))
-        else:
-            if header.startswith("\r\n"):
-                f.read(4 if is_unicode else 2)
-            stream = f
+            bom = f.read(2)
+            is_unicode = (bom == codecs.BOM_UTF16_LE)
+            encoding = "utf-16-le" if is_unicode else "ascii"
 
-        subheader_bytes = stream.read(32 if is_unicode else 16)
-        subheader = subheader_bytes[:16 if is_unicode else 8].decode(encoding, errors="ignore")
+            if is_unicode:
+                header_bytes = f.read(32)
+                header = header_bytes[:16].decode(encoding)
+            else:
+                header_bytes = bom + f.read(14)
+                header = header_bytes[:8].decode(encoding, errors="ignore")
+
+            if compressed:
+                f.read(2)
+                decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
+                stream = io.BytesIO(decompressor.decompress(f.read()))
+            else:
+                if header.startswith("\r\n"):
+                    f.read(4 if is_unicode else 2)
+                stream = f
+
+            subheader_bytes = stream.read(32 if is_unicode else 16)
+            subheader = subheader_bytes[:16 if is_unicode else 8].decode(encoding, errors="ignore")
 
         if len(subheader) < 8:
             raise SimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")
@@ -143,8 +137,9 @@ class BlockReader(ABC):
 
         if fileformat != "t":
             raise SimisaSubheaderError(f"Unrecognized subheader '{subheader}' in {filepath}")
-        
-        text_stream = io.TextIOWrapper(stream, encoding=encoding)
+
+        # TODO Resolve includes here
+        text_stream = io.TextIOWrapper(f, encoding=encoding)
 
         return TextFileReader(text_stream, filepath, filetype, fileversion, encoding)
 
@@ -159,6 +154,7 @@ class BlockReader(ABC):
         Constraints:
         - Does not support binary data
         - Does not support compressed data
+        - Does not support includes
 
         Args:
             data (str): Raw SIMISA text payload.
@@ -175,6 +171,8 @@ class BlockReader(ABC):
             raise TypeError(f"Parameter 'data' must be str, but got {type(data).__name__}")
 
         data = data.lstrip("\ufeff")
+
+        # TODO check if it has includes, raise if it does
 
         stream = io.StringIO(data)
 

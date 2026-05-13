@@ -24,10 +24,11 @@ __all__ = [
     'is_unicode', 'peek_header', 'peek_subheader',
     'is_compressed', 'is_binary', 'is_text',
     'read_filetype', 'read_fileversion',
-    'peek_first_include',
+    'SimisaHeaderError', 'SimisaSubheaderError',
+    'has_includes', 'peek_first_include',
+    'resolve_includes', 'UnresolvableIncludeError',
     'TokenID', 'Units', 'StfReader',
     'BlockReader', 'BlockWriter', 'BlockFormat',
-    'SimisaHeaderError', 'SimisaSubheaderError',
     'BlockReaderError', 'StfReaderError',
     'roaddatabase', 'shape', 'terrain',
     'tracksections', 'trackdatabase',
@@ -39,11 +40,12 @@ __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
 from .header import is_unicode, peek_header, peek_subheader
 from .header import is_compressed, is_binary, is_text
 from .header import read_filetype, read_fileversion
-from .header import peek_first_include
+from .header import SimisaHeaderError, SimisaSubheaderError
+from .include import has_includes, peek_first_include
+from .include import resolve_includes, UnresolvableIncludeError
 from .token_id import TokenID
 from .units import Units
 from .stf import StfReader, StfReaderError
-from .reader import SimisaHeaderError, SimisaSubheaderError
 from .reader import BlockReader, BlockReaderError
 from .writer import BlockWriter
 from .format import BlockFormat
