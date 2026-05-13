@@ -189,3 +189,43 @@ def test_read_fileversion_emptyfile(global_storage):
 def test_read_fileversion_garbagefile(global_storage):
     fileversion = simisa.read_fileversion(global_storage["garbagefile_path"])
     assert fileversion is None
+
+
+def test_peek_first_include_emptyfile(global_storage):
+    first_include = simisa.peek_first_include(global_storage["emptyfile_path"])
+    assert first_include is None
+
+
+def test_peek_first_include_garbagefile(global_storage):
+    first_include = simisa.peek_first_include(global_storage["garbagefile_path"])
+    assert first_include is None
+
+
+def test_peek_first_include_shapefile(global_storage):
+    first_include = simisa.peek_first_include(global_storage["shapefile_path"])
+    assert first_include is None
+
+
+def test_peek_first_include_worldfile_compressed(global_storage):
+    first_include = simisa.peek_first_include(global_storage["worldfile_compressed_path"])
+    assert first_include is None
+
+
+def test_peek_first_include_tsectionext(global_storage):
+    first_include = simisa.peek_first_include(global_storage["tsectionext_path"])
+    assert first_include == "../../../GLOBAL/tsection.dat"
+
+
+def test_peek_first_include_tsectionext_blockbeforeinclude(global_storage):
+    first_include = simisa.peek_first_include(global_storage["tsectionext_blockbeforeinclude_path"])
+    assert first_include is None
+
+
+def test_peek_first_include_tsectionext_commentsbeforeinclude(global_storage):
+    first_include = simisa.peek_first_include(global_storage["tsectionext_commentsbeforeinclude_path"])
+    assert first_include == "../../../GLOBAL/tsection.dat"
+
+
+def test_peek_first_include_tsectionglobal(global_storage):
+    first_include = simisa.peek_first_include(global_storage["tsectionglobal_path"])
+    assert first_include is None

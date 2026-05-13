@@ -30,7 +30,6 @@ from .units import Units
 logger = logging.getLogger(__name__)
 
 # TODO Handle units
-# TODO Handle includes
 
 
 class StfReaderError(Exception):

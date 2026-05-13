@@ -36,6 +36,7 @@ from .stf import StfReader
 
 logger = logging.getLogger(__name__)
 
+# TODO Handle includes
 
 class SimisaHeaderError(Exception):
     """Raised when a SIMISA header is missing or invalid."""
