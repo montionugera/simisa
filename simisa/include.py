@@ -17,10 +17,11 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import codecs
 import os
 import re
+import codecs
 from typing import Optional
+
 
 
 class UnresolvableIncludeError(Exception):
@@ -28,42 +29,21 @@ class UnresolvableIncludeError(Exception):
     pass
 
 
-def has_includes(filepath: str) -> Optional[bool]:
+def has_includes(text: str) -> bool:
     """
-    Determines whether a file contains any include statements.
-
-    The function decodes a small portion of the file (UTF-16 LE if BOM is
-    present, otherwise ASCII) and checks whether any valid include
-    statements are present.
-
-    If the file is binary or cannot be decoded, None is returned.
+    Determines whether text contains any include statements.
 
     Args:
-        filepath: Path to the file to inspect.
+        text: Text to inspect.
 
     Returns:
-        True if the file contains include statements,
-        False if it does not,
-        otherwise None.
+        True if the text contains include statements,
+        otherwise False.
     """
-    if not isinstance(filepath, str):
+    if not isinstance(text, str):
         raise TypeError(
-            f"Parameter 'filepath' must be str, but got {type(filepath).__name__}"
+            f"Parameter 'text' must be str, but got {type(text).__name__}"
         )
-
-    with open(filepath, "rb") as f:
-        bom = f.read(2)
-        is_unicode = (bom == codecs.BOM_UTF16_LE)
-        encoding = "utf-16-le" if is_unicode else "ascii"
-
-        data = f.read(65534)
-
-        buffer = bom + data
-
-        try:
-            text = buffer.decode(encoding)
-        except UnicodeDecodeError:
-            return None
 
     include_re = re.compile(
         r'include\s*\(\s*([\'"])(.*?)\1\s*\)',
@@ -184,8 +164,6 @@ def resolve_includes(text: str, filepath: str) -> str:
 
     while True:
         include_match = include_re.search(text)
-
-        print(include_match)
 
         if not include_match:
             break

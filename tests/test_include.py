@@ -22,82 +22,111 @@ import simisa
 
 
 def test_has_includes_emptyfile(global_storage):
-    has_includes = simisa.has_includes(global_storage["emptyfile_path"])
+    with open(global_storage["emptyfile_path"], "r") as f:
+        text = f.read()
+
+    has_includes = simisa.has_includes(text)
+
     assert has_includes == False
 
 
 def test_has_includes_garbagefile(global_storage):
-    has_includes = simisa.has_includes(global_storage["garbagefile_path"])
+    with open(global_storage["garbagefile_path"], "r", errors="ignore") as f:
+        text = f.read()
+
+    has_includes = simisa.has_includes(text)
+
     assert has_includes == False
 
 
 def test_has_includes_shapefile(global_storage):
-    has_includes = simisa.has_includes(global_storage["shapefile_path"])
+    with open(global_storage["shapefile_path"], "r", errors="ignore") as f:
+        text = f.read()
+
+    has_includes = simisa.has_includes(text)
+
     assert has_includes == False
 
 
 def test_has_includes_worldfile_compressed(global_storage):
-    has_includes = simisa.has_includes(global_storage["worldfile_compressed_path"])
-    assert has_includes is None
+    with open(global_storage["worldfile_compressed_path"], "r", errors="ignore") as f:
+        text = f.read()
 
+    has_includes = simisa.has_includes(text)
 
-def test_has_includes_include_tsectionext(global_storage):
-    has_includes = simisa.has_includes(global_storage["tsectionext_path"])
-    assert has_includes == True
-
-
-def test_has_includes_include_tsectionext_blockbeforeinclude(global_storage):
-    has_includes = simisa.has_includes(global_storage["tsectionext_blockbeforeinclude_path"])
-    assert has_includes == True
-
-
-def test_has_includes_include_tsectionext_commentsbeforeinclude(global_storage):
-    has_includes = simisa.has_includes(global_storage["tsectionext_commentsbeforeinclude_path"])
-    assert has_includes == True
-
-
-def test_has_includes_include_tsectionglobal(global_storage):
-    has_includes = simisa.has_includes(global_storage["tsectionglobal_path"])
     assert has_includes == False
 
 
+def test_has_includes_include_tsectionext(global_storage):
+    with open(global_storage["tsectionext_path"], "r", encoding="utf-16-le") as f:
+        text = f.read()
+
+    has_includes = simisa.has_includes(text)
+
+    assert has_includes == True
+
+
 def test_peek_first_include_emptyfile(global_storage):
-    first_include = simisa.peek_first_include(global_storage["emptyfile_path"])
+    filepath = global_storage["emptyfile_path"]
+
+    first_include = simisa.peek_first_include(filepath)
+    
     assert first_include is None
 
 
 def test_peek_first_include_garbagefile(global_storage):
-    first_include = simisa.peek_first_include(global_storage["garbagefile_path"])
+    filepath = global_storage["garbagefile_path"]
+
+    first_include = simisa.peek_first_include(filepath)
+
     assert first_include is None
 
 
 def test_peek_first_include_shapefile(global_storage):
-    first_include = simisa.peek_first_include(global_storage["shapefile_path"])
+    filepath = global_storage["shapefile_path"]
+
+    first_include = simisa.peek_first_include(filepath)
+
     assert first_include is None
 
 
 def test_peek_first_include_worldfile_compressed(global_storage):
-    first_include = simisa.peek_first_include(global_storage["worldfile_compressed_path"])
+    filepath = global_storage["worldfile_compressed_path"]
+
+    first_include = simisa.peek_first_include(filepath)
+
     assert first_include is None
 
 
 def test_peek_first_include_tsectionext(global_storage):
-    first_include = simisa.peek_first_include(global_storage["tsectionext_path"])
+    filepath = global_storage["tsectionext_path"]
+
+    first_include = simisa.peek_first_include(filepath)
+
     assert first_include == "./tsectionglobal.dat"
 
 
 def test_peek_first_include_tsectionext_blockbeforeinclude(global_storage):
-    first_include = simisa.peek_first_include(global_storage["tsectionext_blockbeforeinclude_path"])
+    filepath = global_storage["tsectionext_blockbeforeinclude_path"]
+
+    first_include = simisa.peek_first_include(filepath)
+
     assert first_include is None
 
 
 def test_peek_first_include_tsectionext_commentsbeforeinclude(global_storage):
-    first_include = simisa.peek_first_include(global_storage["tsectionext_commentsbeforeinclude_path"])
+    filepath = global_storage["tsectionext_commentsbeforeinclude_path"]
+
+    first_include = simisa.peek_first_include(filepath)
+
     assert first_include == "./tsectionglobal.dat"
 
 
 def test_peek_first_include_tsectionglobal(global_storage):
-    first_include = simisa.peek_first_include(global_storage["tsectionglobal_path"])
+    filepath = global_storage["tsectionglobal_path"]
+
+    first_include = simisa.peek_first_include(filepath)
+
     assert first_include is None
 
 

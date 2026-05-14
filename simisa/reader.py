@@ -88,6 +88,7 @@ class BlockReader(ABC):
             TypeError: If `filepath` is not a string.
             SimisaHeaderError: If the file header is missing or unrecognized.
             SimisaSubheaderError: If the subheader is invalid or unsupported.
+            UnresolvableIncludeError: If includes within the file cannot be resolved.
             OSError: If the file cannot be opened.
         """
         if not isinstance(filepath, str):
@@ -96,8 +97,27 @@ class BlockReader(ABC):
         compressed = is_compressed(filepath)
 
         if compressed is None:
-            # TODO Resolve includes here, raise if still no valid header.
-            raise SimisaHeaderError(f"Unrecognized header in {filepath}")
+            first_include_path = peek_first_include(filepath)
+
+            if first_include_path is None:
+                raise SimisaHeaderError(f"Unrecognized header in {filepath}")
+            
+            with open(filepath, "rb") as f:
+                bom = f.read(2)
+                is_unicode = (bom == codecs.BOM_UTF16_LE)
+                encoding = "utf-16-le" if is_unicode else "ascii"
+
+                buffer = f.read()
+
+                try:
+                    text = buffer.decode(encoding)
+                except UnicodeDecodeError:
+                    raise SimisaHeaderError(f"Unrecognized header in {filepath}")
+
+            text = resolve_includes(text, filepath)
+
+            return BlockReader.from_string(text)
+        
         else:
             f = open(filepath, "rb")
 
@@ -138,10 +158,14 @@ class BlockReader(ABC):
         if fileformat != "t":
             raise SimisaSubheaderError(f"Unrecognized subheader '{subheader}' in {filepath}")
 
-        # TODO Resolve includes here
-        text_stream = io.TextIOWrapper(f, encoding=encoding)
+        buffer = stream.read()
+        text = buffer.decode(encoding)
 
-        return TextFileReader(text_stream, filepath, filetype, fileversion, encoding)
+        text = resolve_includes(text, filepath)
+
+        stream = io.StringIO(text)
+
+        return TextFileReader(stream, filepath, filetype, fileversion, encoding)
 
     @staticmethod
     def from_string(data: str) -> "BlockReader":
@@ -154,7 +178,7 @@ class BlockReader(ABC):
         Constraints:
         - Does not support binary data
         - Does not support compressed data
-        - Does not support includes
+        - Does not support includes (resolve them yourself beforehand using `resolve_includes`)
 
         Args:
             data (str): Raw SIMISA text payload.
@@ -166,13 +190,18 @@ class BlockReader(ABC):
             TypeError: If `data` is not a string.
             SimisaHeaderError: If the string does not start with a recognized header.
             SimisaSubheaderError: If the subheader is missing, too short, or binary.
+            UnresolvableIncludeError: If `data` contains unresolved includes.
         """
         if not isinstance(data, str):
             raise TypeError(f"Parameter 'data' must be str, but got {type(data).__name__}")
 
-        data = data.lstrip("\ufeff")
+        data = data.lstrip("\ufeff\r\n\t ")
 
-        # TODO check if it has includes, raise if it does
+        if has_includes(data):
+            raise UnresolvableIncludeError(
+                "Includes are not supported with 'from_string', "
+                "use the `resolve_includes` function beforehand."
+            )
 
         stream = io.StringIO(data)
 
