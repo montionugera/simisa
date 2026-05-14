@@ -80,7 +80,9 @@ def peek_first_include(filepath: str) -> Optional[str]:
         is_unicode = (bom == codecs.BOM_UTF16_LE)
         encoding = "utf-16-le" if is_unicode else "ascii"
 
-        data = f.read(16384)
+        # Assumption: First include is within the first 2kB of the file
+        # This might not be true if there is a very long comment beforehand.
+        data = f.read(2048)
 
         buffer = bom + data
 

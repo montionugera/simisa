@@ -96,10 +96,11 @@ class BlockReader(ABC):
     
         compressed = is_compressed(filepath)
 
+        # Either there is no valid header or it's hidden inside the first include.
         if compressed is None:
             first_include_path = peek_first_include(filepath)
 
-            if first_include_path is None:
+            if first_include_path is None: # No first include found, so there is no valid header.
                 raise SimisaHeaderError(f"Unrecognized header in {filepath}")
             
             with open(filepath, "rb") as f:
@@ -118,31 +119,31 @@ class BlockReader(ABC):
 
             return BlockReader.from_string(text)
         
+        # Valid header found.
+        f = open(filepath, "rb")
+
+        bom = f.read(2)
+        is_unicode = (bom == codecs.BOM_UTF16_LE)
+        encoding = "utf-16-le" if is_unicode else "ascii"
+
+        if is_unicode:
+            header_bytes = f.read(32)
+            header = header_bytes[:16].decode(encoding)
         else:
-            f = open(filepath, "rb")
+            header_bytes = bom + f.read(14)
+            header = header_bytes[:8].decode(encoding, errors="ignore")
 
-            bom = f.read(2)
-            is_unicode = (bom == codecs.BOM_UTF16_LE)
-            encoding = "utf-16-le" if is_unicode else "ascii"
+        if compressed:
+            f.read(2)
+            decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
+            stream = io.BytesIO(decompressor.decompress(f.read()))
+        else:
+            if header.startswith("\r\n"):
+                f.read(4 if is_unicode else 2)
+            stream = f
 
-            if is_unicode:
-                header_bytes = f.read(32)
-                header = header_bytes[:16].decode(encoding)
-            else:
-                header_bytes = bom + f.read(14)
-                header = header_bytes[:8].decode(encoding, errors="ignore")
-
-            if compressed:
-                f.read(2)
-                decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
-                stream = io.BytesIO(decompressor.decompress(f.read()))
-            else:
-                if header.startswith("\r\n"):
-                    f.read(4 if is_unicode else 2)
-                stream = f
-
-            subheader_bytes = stream.read(32 if is_unicode else 16)
-            subheader = subheader_bytes[:16 if is_unicode else 8].decode(encoding, errors="ignore")
+        subheader_bytes = stream.read(32 if is_unicode else 16)
+        subheader = subheader_bytes[:16 if is_unicode else 8].decode(encoding, errors="ignore")
 
         if len(subheader) < 8:
             raise SimisaSubheaderError(f"Subheader '{subheader}' too short in {filepath}")

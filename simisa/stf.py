@@ -146,12 +146,6 @@ class StfTokenStream:
         return self.buffer.is_eof
 
 
-class StfUnitsReader:
-    def __init__(self, include_resolver, unit_parser):
-        self.includes = include_resolver
-        self.units = unit_parser
-
-
 class StfReader:
 
     @classmethod
@@ -161,20 +155,11 @@ class StfReader:
 
         return cls(token_stream)
     
-    def __init__(
-        self,
-        stream: StfTokenStream,
-        parent: Optional["StfReader"] = None
-    ):
+    def __init__(self, stream: StfTokenStream):
         self.stream = stream
-        self.parent = parent
-
-        #self.ctx = context
-
         self.id = None
         self.label = None
         self.depth = 0
-
         self._ended = False
 
     def next(self) -> StfToken:
@@ -187,25 +172,6 @@ class StfReader:
         t = self.next()
         if t.value.lower() != value.lower():
             raise StfReaderError(f"Expected {value}, but got {t.value}")
-
-    def _handle_include(self):
-        # self.expect("(")
-        # name = self.read_word()
-        # self.expect(")")
-
-        # stream = self.ctx.includes.open(name)
-
-        # lexer = StfLexer(stream, name)
-        # token_stream = StfTokenStream(lexer)
-
-        # subreader = StfReader(token_stream, self.ctx)
-        pass
-
-    def peek_past_whitespace(self):
-        t = self.peek()
-        if t.is_eof:
-            return ""
-        return t.value
 
     def eof(self):
         return self.stream.eof()
