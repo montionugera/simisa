@@ -43,6 +43,7 @@ def global_storage():
         "shapefile_path": "./tests/data/DK10f_A1tPnt5dLft.s",
         "shapefile_compressed_path": "./tests/data/DK10f_A1tPnt5dLft_compressed.s",
         "tsectionext_path": "./tests/data/tsectionext.dat",
+        "tsectionext_nested_path": "./tests/data/tsectionext_nested.dat",
         "tsectionext_blockbeforeinclude_path": "./tests/data/tsectionext_blockbeforeinclude.dat",
         "tsectionext_commentsbeforeinclude_path": "./tests/data/tsectionext_commentsbeforeinclude.dat",
         "tsectionglobal_path": "./tests/data/tsectionglobal.dat",
