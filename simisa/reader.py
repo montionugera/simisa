@@ -46,9 +46,9 @@ class BlockReaderError(Exception):
     pass
 
 
-class CompressedStreamReader:
+class CompressedStreamReader(io.RawIOBase):
     """
-    Streaming wrapper around a compressed binary file.
+    Streaming wrapper around a zlib DEFLATE compressed file.
     """
     def __init__(self, fileobj):
         self.fileobj = fileobj
@@ -83,6 +83,9 @@ class CompressedStreamReader:
             self.buffer += self.decompressor.decompress(raw)
 
         return b"".join(chunks)
+    
+    def readable(self):
+        return True
 
     def close(self):
         self.fileobj.close()
@@ -217,7 +220,7 @@ class BlockReader(ABC):
         Constraints:
         - Does not support binary data
         - Does not support compressed data
-        - Does not support includes (resolve them yourself beforehand using `resolve_includes`)
+        - Does not support includes (resolve them using `resolve_includes` before using this function)
 
         Args:
             data (str): Raw SIMISA text payload.
@@ -239,7 +242,7 @@ class BlockReader(ABC):
         if has_includes(data):
             raise UnresolvableIncludeError(
                 "Includes are not supported with 'from_string', "
-                "use the `resolve_includes` function beforehand."
+                "use the 'resolve_includes' function beforehand."
             )
 
         stream = io.StringIO(data)
@@ -634,12 +637,24 @@ class BinaryBlockReader(BlockReader):
         self.flags = 0
         self.id: Optional[TokenID] = None
         self.label: Optional[str] = None
+        self._buffer: Optional[bytes] = None
 
     def _read(self, n: int) -> bytes:
         if self.stream is None:
             raise RuntimeError("Stream is not initialized")
 
-        data = self.stream.read(n)
+        if n == 0:
+            return b""
+        
+        if self._buffer is not None:
+            data = self._buffer
+            self._buffer = None
+
+            if n > 1:
+                data += self.stream.read(n - 1)
+        else:
+            data = self.stream.read(n)
+
         if len(data) != n:
             raise BlockReaderError("Unexpected EOF in block")
 
@@ -754,8 +769,10 @@ class BinaryFileReader(BinaryBlockReader):
         if self.stream is None:
             return
 
-        while self.stream.read(1):
-            pass
+        while True:
+            chunk = self.stream.read(65536)
+            if not chunk:
+                break
 
         self.remaining_bytes = 0
     
@@ -763,11 +780,12 @@ class BinaryFileReader(BinaryBlockReader):
         if self.stream is None:
             return True
 
-        pos = self.stream.tell()
-        byte = self.stream.read(1)
-        self.stream.seek(pos)
+        if self._buffer is not None:
+            return False
 
-        return byte == b""
+        self._buffer = self.stream.read(1)
+
+        return self._buffer == b""
     
     def verify_end_of_block(self):
         if not self.end_of_block():
