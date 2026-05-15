@@ -42,7 +42,8 @@ from .header import is_compressed, is_binary, is_text
 from .header import read_filetype, read_fileversion
 from .header import SimisaHeaderError, SimisaSubheaderError
 from .include import has_includes, peek_first_include
-from .include import resolve_includes, UnresolvableIncludeError
+from .include import resolve_include, resolve_includes
+from .include import UnresolvableIncludeError
 from .token_id import TokenID
 from .units import Units
 from .stf import StfReader, StfReaderError

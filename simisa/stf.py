@@ -25,6 +25,7 @@ import logging
 from dataclasses import dataclass
 from typing import Optional
 
+from .include import resolve_include
 from .units import Units
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 
 class StfReaderError(Exception):
-    """Raised when an stf reader encounters an error or malformed data."""
+    """Raised when an STF reader encounters an error or malformed data."""
     pass
 
 
@@ -83,13 +84,28 @@ class StfLexer:
         if c == '"':
             return self._read_string()
 
-        return self._read_word()
+        token = self._read_word()
+        token_value = token.value.lower()
+
+        COMMENT_KEYWORDS = [
+            "_skip",
+            "_info",
+            "info"
+        ]   
+
+        if token_value in COMMENT_KEYWORDS:
+            self._consume_comment()
+            return self.next_token()
+
+        return token
 
     def _read(self):
         c = self._buffer
         self._buffer = self.stream.read(1)
+
         if c == "\n":
             self.line += 1
+
         return c
     
     def _peek(self):
@@ -98,9 +114,33 @@ class StfLexer:
     def _skip_whitespace(self):
         while True:
             c = self._peek()
+
             if c == "" or c > " ":
                 return
+
             self._read()
+
+    def _consume_comment(self):
+        self._skip_whitespace()
+
+        if self._peek() != "(":
+            raise StfReaderError("Expected '(' after comment keyword")
+
+        self._read() # opening parenthesis
+
+        depth = 1
+
+        while depth > 0:
+            c = self._read()
+
+            if c == "":
+                raise StfReaderError("Unterminated comment")
+
+            if c == "(":
+                depth += 1
+            
+            elif c == ")":
+                depth -= 1
 
     def _read_word(self) -> StfToken:
         start_line = self.line
@@ -108,8 +148,10 @@ class StfLexer:
 
         while True:
             c = self._peek()
+
             if c == "" or c.isspace() or c in "()":
                 break
+
             buf.append(self._read())
 
         return StfToken("word", "".join(buf), start_line, self.source)
@@ -121,12 +163,13 @@ class StfLexer:
 
         while True:
             c = self._read()
+
             if c == "" or c == '"':
                 break
+
             buf.append(c)
 
         return StfToken("string", "".join(buf), start_line, self.source)
-
 
 class StfTokenStream:
     def __init__(self, lexer: StfLexer):
@@ -157,24 +200,66 @@ class StfReader:
     
     def __init__(self, stream: StfTokenStream):
         self.stream = stream
+        self.injected: Optional["StfReader"] = None
         self.id = None
         self.label = None
         self.depth = 0
         self._ended = False
 
     def next(self) -> StfToken:
-        return self.stream.next()
+        while self.injected is not None:
+            if self.injected.eof():
+                self.injected = None
+                continue
+            return self.injected.next()
+
+        token = self.stream.next()
+
+        if token.kind == "word" and token.value == "include":
+            return self._handle_include()
+
+        return token
 
     def peek(self) -> StfToken:
+        while self.injected is not None:
+            if self.injected.eof():
+                self.injected = None
+                continue
+
+            return self.injected.peek()
+
         return self.stream.peek()
+
+    def inject(self, reader: "StfReader"):
+        if self.injected is not None:
+            reader.inject(self.injected)
+
+        self.injected = reader
 
     def _expect(self, value: str):
         t = self.next()
         if t.value.lower() != value.lower():
             raise StfReaderError(f"Expected {value}, but got {t.value}")
+    
+    def _handle_include(self) -> StfToken:
+        self._expect("(")
+
+        include_path = self.next()
+
+        if path.kind != "string":
+            raise StfReaderError("include expects string path")
+
+        self._expect(")")
+
+        include_text = resolve_include(include_path)
+        sub_reader = StfReader.from_stream(io.StringIO(include_text), include_path)
+
+        self.inject(sub_reader)
+
+        return self.next()
 
     def eof(self):
-        return self.stream.eof()
+        return self.injected is None and self.stream.eof()
 
     def read_item(self):
         token = self.next()

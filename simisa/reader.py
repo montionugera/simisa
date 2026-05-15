@@ -465,15 +465,6 @@ class TextBlockReader(BlockReader):
         if token_id is not None:
             return token_id
 
-        comment_tokens = (
-            "skip", "_skip",
-            "comment", "_comment",
-            "info", "_info"
-        )
-
-        if t in comment_tokens or token.startswith('#'):
-            return TokenID.comment
-
         logger.warning(f"Skipped unknown token {token}")
         return TokenID.comment
 
@@ -679,7 +670,13 @@ class BinaryBlockReader(BlockReader):
         sub_block.filetype = self.filetype
         sub_block.fileversion = self.fileversion
 
-        sub_block.id = TokenID(raw_id + self.token_offset)
+        token_id = raw_id + self.token_offset
+
+        try:
+            sub_block.id = TokenID(token_id)
+        except ValueError:
+            raise BlockReaderError(f"Token ID '{token_id}' is not defined.")
+            
         sub_block.flags = raw_flags
         sub_block.remaining_bytes = size
 

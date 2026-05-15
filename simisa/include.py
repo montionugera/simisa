@@ -128,6 +128,60 @@ def peek_first_include(filepath: str) -> Optional[str]:
     return include_match.group(2)
 
 
+def resolve_include(include_path: str, filepath: str) -> str:
+    """
+    Resolves a single include (by path relative to `filepath`)
+    and returns its fully expanded content (including nested includes).
+
+    Args:
+        include_path: Path of the include to resolve (relative to `filepath`).
+        filepath: Base file path used to resolve the include path.
+
+    Returns:
+        Fully expanded content of the included file.
+
+    Raises:
+        UnresolvableIncludeError: If the include cannot be found or decoded.
+    """
+    if not isinstance(include_path, str):
+        raise TypeError(
+            f"Parameter 'include_path' must be str, but got {type(include_path).__name__}"
+        )
+
+    if not isinstance(filepath, str):
+        raise TypeError(
+            f"Parameter 'filepath' must be str, but got {type(filepath).__name__}"
+        )
+
+    base_dir = os.path.dirname(filepath)
+
+    include_filepath = os.path.normpath(
+        os.path.join(base_dir, include_path)
+    )
+
+    if not os.path.isfile(include_filepath):
+        raise UnresolvableIncludeError(
+            f"Could not resolve include '{include_path}' from '{filepath}'"
+        )
+
+    with open(include_filepath, "rb") as f:
+        bom = f.read(2)
+        is_unicode = (bom == codecs.BOM_UTF16_LE)
+        encoding = "utf-16-le" if is_unicode else "ascii"
+
+        data = f.read()
+        buffer = bom + data
+
+        try:
+            include_text = buffer.decode(encoding)
+        except UnicodeDecodeError as e:
+            raise UnresolvableIncludeError(
+                f"Could not decode include '{include_filepath}'"
+            ) from e
+
+    return resolve_includes(include_text, include_filepath)
+
+
 def resolve_includes(text: str, filepath: str) -> str:
     """
     Resolves all include statements recursively and returns the fully
