@@ -171,6 +171,7 @@ class StfLexer:
 
         return StfToken("string", "".join(buf), start_line, self.source)
 
+
 class StfTokenStream:
     def __init__(self, lexer: StfLexer):
         self.lexer = lexer
@@ -247,7 +248,7 @@ class StfReader:
         include_path = self.next()
 
         if path.kind != "string":
-            raise StfReaderError("include expects string path")
+            raise StfReaderError(f"Expected string path in include, but got {include_path}")
 
         self._expect(")")
 

@@ -46,10 +46,12 @@ def test_tracksections_load_tsectionglobal(global_storage):
     print(t)
     assert False
 
+
 def test_tracksections_load_tsectionext(global_storage):
-    t = tracksections.load(global_storage["tsectionext_path"])
+    t = tracksections.load(global_storage["tsectionext_nested_path"])
     print(t)
     assert False
+
 
 # def test_tracksections_load_compare(global_storage):
 #     expected = tracksections.load(global_storage["tracksectionsfile_path"])

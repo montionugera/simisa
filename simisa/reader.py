@@ -148,6 +148,8 @@ class BlockReader(ABC):
             if first_include_path is None: # No include was present, therefore invalid.
                 raise SimisaHeaderError(f"Unrecognized header in {filepath}")
 
+            # Fallback path, resolve all includes to make sure the header is present.
+            # Then use 'from_string' to re-do all header checks and return the configured reader.
             with open(filepath, "rb") as f:
                 bom = f.read(2)
                 encoding = "utf-16-le" if bom == codecs.BOM_UTF16_LE else "ascii"
@@ -161,7 +163,7 @@ class BlockReader(ABC):
             text = resolve_includes(text, filepath)
             return BlockReader.from_string(text)
 
-        # Found a valid header, proceed to read normally.
+        # Found the beginning of a valid header in the file, proceed to read normally.
         f = open(filepath, "rb")
 
         try:
@@ -630,26 +632,26 @@ class BinaryBlockReader(BlockReader):
         self.label: Optional[str] = None
         self._buffer: Optional[bytes] = None
 
-    def _read(self, n: int) -> bytes:
+    def _read(self, num_bytes: int) -> bytes:
         if self.stream is None:
             raise RuntimeError("Stream is not initialized")
 
-        if n == 0:
+        if num_bytes == 0:
             return b""
         
         if self._buffer is not None:
             data = self._buffer
             self._buffer = None
 
-            if n > 1:
-                data += self.stream.read(n - 1)
+            if num_bytes > 1:
+                data += self.stream.read(num_bytes - 1)
         else:
-            data = self.stream.read(n)
+            data = self.stream.read(num_bytes)
 
-        if len(data) != n:
+        if len(data) != num_bytes:
             raise BlockReaderError("Unexpected EOF in block")
 
-        self.remaining_bytes -= n
+        self.remaining_bytes -= num_bytes
         return data
 
     def read_sub_block(self) -> "BlockReader":
@@ -675,7 +677,7 @@ class BinaryBlockReader(BlockReader):
         try:
             sub_block.id = TokenID(token_id)
         except ValueError:
-            raise BlockReaderError(f"Token ID '{token_id}' is not defined.")
+            raise BlockReaderError(f"Token ID {token_id} is not defined.")
             
         sub_block.flags = raw_flags
         sub_block.remaining_bytes = size
