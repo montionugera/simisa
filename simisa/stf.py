@@ -38,23 +38,25 @@ class StfReaderError(Exception):
     pass
 
 
-@dataclass(frozen=True)
 class StfToken:
-    kind: str # "word", "string", "(", ")", "eof"
-    value: str
-    line: int
-    source: str
+    __slots__ = ("kind", "value", "line", "source")
+
+    def __init__(self, kind, value, line, source):
+        self.kind = kind
+        self.value = value
+        self.line = line
+        self.source = source
 
     @property
-    def is_eof(self) -> bool:
+    def is_eof(self):
         return self.kind == "eof"
 
     @property
-    def is_block_start(self) -> bool:
+    def is_block_start(self):
         return self.kind == "("
 
     @property
-    def is_block_end(self) -> bool:
+    def is_block_end(self):
         return self.kind == ")"
 
 
@@ -87,12 +89,12 @@ class StfLexer:
         token = self._read_word()
         token_value = token.value.lower()
 
-        COMMENT_KEYWORDS = [
+        COMMENT_KEYWORDS = {
             "skip",
             "_skip",
             "info",
             "_info"
-        ]
+        }
 
         if token_value in COMMENT_KEYWORDS:
             self._consume_comment()
@@ -116,7 +118,7 @@ class StfLexer:
         while True:
             c = self._peek()
 
-            if c == "" or c > " ":
+            if c == "" or not c.isspace():
                 return
 
             self._read()
@@ -248,7 +250,7 @@ class StfReader:
 
         include_path = self.next()
 
-        if path.kind != "string":
+        if include_path.kind != "string":
             raise StfReaderError(f"Expected string path in include, but got {include_path}")
 
         self._expect(")")
