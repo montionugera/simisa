@@ -56,6 +56,14 @@ class StfToken:
     @property
     def is_block_end(self):
         return self.kind == ")"
+    
+    @property
+    def is_word(self):
+        return self.kind == "word"
+    
+    @property
+    def is_string(self):
+        return self.kind == "string"
 
 
 class StfLexer:
@@ -306,7 +314,7 @@ class StfReader:
 
         token = self.stream.next()
 
-        if token.kind == "word" and token.value == "include":
+        if token.is_word and token.value == "include":
             return self._handle_include()
 
         return token
@@ -329,21 +337,22 @@ class StfReader:
 
     def _expect(self, value: str):
         t = self.next()
+        
         if t.value.lower() != value.lower():
             raise StfReaderError(f"Expected {value}, but got {t.value}")
     
     def _handle_include(self) -> StfToken:
         self._expect("(")
 
-        include_path = self.next()
+        include_path_token = self.next()
 
-        if include_path.kind != "string":
-            raise StfReaderError(f"Expected string path in include, but got {include_path}")
+        if include_path_token.is_string:
+            raise StfReaderError(f"Expected string path in include, but got {include_path_token}")
 
         self._expect(")")
 
-        include_text = resolve_include(include_path)
-        sub_reader = StfReader.from_stream(io.StringIO(include_text), include_path)
+        include_text = resolve_include(include_path_token.value)
+        sub_reader = StfReader.from_stream(io.StringIO(include_text))
 
         self.inject(sub_reader)
 
