@@ -219,6 +219,7 @@ class StfLexer:
                 buffer = self._buffer
                 position = self._position
                 length = len(buffer)
+
                 if not buffer:
                     break
 
@@ -310,6 +311,7 @@ class StfReader:
             if self.injected.eof():
                 self.injected = None
                 continue
+            
             return self.injected.next()
 
         token = self.stream.next()
@@ -337,7 +339,7 @@ class StfReader:
 
     def _expect(self, value: str):
         t = self.next()
-        
+
         if t.value.lower() != value.lower():
             raise StfReaderError(f"Expected {value}, but got {t.value}")
     

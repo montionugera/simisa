@@ -442,8 +442,17 @@ class BlockReader(ABC):
 
 
 class TextBlockReader(BlockReader):
-    # TODO improve performance, its a tad slow compared to the binary reader
-    _token_table: Optional[Dict[str, TokenID]] = None
+    _TOKEN_TABLE: Optional[Dict[str, TokenID]] = None
+
+    @classmethod
+    def _init_token_table(cls):
+        if cls._TOKEN_TABLE is not None:
+            return
+
+        cls._TOKEN_TABLE = {
+            name.lower(): token
+            for name, token in TokenID.__members__.items()
+        }
 
     def __init__(self):
         self.stf_reader: Optional[StfReader] = None
@@ -453,23 +462,14 @@ class TextBlockReader(BlockReader):
         self.at_end_of_block: bool = False
         self.is_closed: bool = False
 
-    @classmethod
-    def _init_token_table(cls):
-        if cls._token_table is not None:
-            return
-
-        cls._token_table = {
-            name.lower(): token
-            for name, token in TokenID.__members__.items()
-        }
-
     def _get_token_id(self, token: str) -> TokenID:
-        if self._token_table is None:
+        if self._TOKEN_TABLE is None:
             self._init_token_table()
 
         t = token.lower()
 
-        token_id = self._token_table.get(t)
+        token_id = self._TOKEN_TABLE.get(t)
+
         if token_id is not None:
             return token_id
 
