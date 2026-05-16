@@ -48,6 +48,7 @@ def load(filepath: str) -> Shape:
         SimisaSubheaderError: If the data has an invalid or unrecognized SIMISA subheader.
         BlockReaderError: If the block reader encounters an error or malformed data.
         StfReaderError: If the STF reader encounters an error or malformed data.
+        UnresolvableIncludeError: If includes within the file cannot be resolved.
         OSError: If the file cannot be opened.
     """
     if not isinstance(filepath, str):
@@ -81,6 +82,7 @@ def loads(shape_text: str) -> Shape:
         SimisaSubheaderError: If the data has an invalid or unrecognized SIMISA subheader.
         BlockReaderError: If the block reader encounters an error or malformed data.
         StfReaderError: If the STF reader encounters an error or malformed data.
+        UnresolvableIncludeError: If includes within the file cannot be resolved.
     """
     if not isinstance(shape_text, str):
         raise TypeError(f"Parameter 'shape_text' must be str, but got {type(shape_text).__name__}")

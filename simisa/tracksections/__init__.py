@@ -23,6 +23,17 @@ from .models import *
 __all__ = [
     "load",
     "loads",
+    "SectionCurve",
+    "SectionSize",
+    "SectionSkew",
+    "TrackSection",
+    "RouteTrackSection",
+    "TrackSections",
+    "SectionIdx",
+    "TrackPath",
+    "TSectionIdx",
+    "TrackShape",
+    "TrackShapes",
     "TSection"
 ]
 

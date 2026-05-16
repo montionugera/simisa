@@ -40,16 +40,28 @@ class SectionSize:
 
 
 @dataclass
+class SectionSkew:
+    angle: float = 0.0
+
+    def __repr__(self):
+        return f"SectionSkew(angle={self.angle})"
+
+
+@dataclass
 class TrackSection:
     section_index: int
     section_size: Optional[SectionSize] = None
     section_curve: Optional[SectionCurve] = None
+    section_skew: Optional[SectionSkew] = None
+    water_scoop: bool = None
 
     def __repr__(self):
         return (
             f"TrackSection(section_index={self.section_index}, "
             f"section_size={self.section_size}, "
-            f"section_curve={self.section_curve})"
+            f"section_curve={self.section_curve}, "
+            f"section_skew={self.section_skew}, "
+            f"water_scoop={self.water_scoop})"
         )
 
 
@@ -59,39 +71,50 @@ class RouteTrackSection(TrackSection):
         return (
             f"RouteTrackSection(section_index={self.section_index}, "
             f"section_size={self.section_size}, "
-            f"section_curve={self.section_curve})"
+            f"section_curve={self.section_curve}, "
+            f"section_skew={self.section_skew}, "
+            f"water_scoop={self.water_scoop})"
         )
 
 
 @dataclass
 class TrackSections:
-    sections: Dict[int, TrackSection] = field(default_factory=dict)
+    track_sections: Dict[int, TrackSection] = field(default_factory=dict)
     max_section_index: Optional[int] = None
-    missing_track_section_warnings: int = 0
 
-    def add_section(self, section: TrackSection):
-        self.sections[section.section_index] = section
-
+    def add(self, section: TrackSection):
+        self.track_sections[section.section_index] = section
+    
     def get(self, index: int) -> Optional[TrackSection]:
-        if index in self.sections:
-            return self.sections[index]
-
-        if self.missing_track_section_warnings < 5:
-            print(f"Warning: missing TrackSection {index}")
-            self.missing_track_section_warnings += 1
-
+        if index in self.track_sections:
+            return self.track_sections[index]
+        
         return None
+    
+    def __add__(self, other):
+        if not isinstance(other, TrackSections):
+            raise TypeError(f"Cannot add TrackSections with {type(other).__name__}")
+
+        merged_sections = {**self.track_sections, **other.track_sections}
+        max_index = max(
+            (v for v in [self.max_section_index, other.max_section_index] if v is not None),
+            default=None,
+        )
+
+        return TrackSections(
+            track_sections=merged_sections,
+            max_section_index=max_index,
+        )
 
     def __repr__(self):
         return (
-            f"TrackSections(count={len(self.sections)}, "
-            f"max_section_index={self.max_section_index})"
+            f"TrackSections(max_section_index={self.max_section_index}, "
+            f"track_sections (len={len(self.track_sections)}))"
         )
 
 
 @dataclass
 class SectionIdx:
-    no_sections: int
     x: float
     y: float
     z: float
@@ -100,37 +123,47 @@ class SectionIdx:
 
     def __repr__(self):
         return (
-            f"SectionIdx(no_sections={self.no_sections}, "
-            f"x={self.x}, y={self.y}, z={self.z}), "
-            f"a={self.a})"
+            f"SectionIdx("
+            f"x={self.x}, "
+            f"y={self.y}, "
+            f"z={self.z}, "
+            f"a={self.a}, "
+            f"track_sections (len={len(self.a)}))"
         )
 
 
 @dataclass
 class TrackPath:
-    dynamic_section_index: int
-    no_sections: int
+    section_index: int
     track_sections: List[int]
 
     def __repr__(self):
         return (
-            f"TrackPath(index={self.dynamic_section_index}, "
-            f"n={self.no_sections})"
+            f"TrackPath(section_index={self.section_index}, "
+            f"track_sections (len={len(self.track_sections)}))"
         )
 
 
 @dataclass
 class TSectionIdx:
-    no_sections: int
     track_paths: Dict[int, TrackPath] = field(default_factory=dict)
 
-    def add_path(self, path: TrackPath):
-        self.track_paths[path.dynamic_section_index] = path
+    def add(self, path: TrackPath):
+        self.track_paths[path.section_index] = path
+
+    def __add__(self, other):
+        if not isinstance(other, TSectionIdx):
+            raise TypeError(f"Cannot add TSectionIdx with {type(other).__name__}")
+
+        merged_paths = {**self.track_paths, **other.track_paths}
+
+        return TSectionIdx(
+            track_paths=merged_paths,
+        )
 
     def __repr__(self):
         return (
-            f"TSectionIdx(n={self.no_sections}, "
-            f"paths={len(self.track_paths)})"
+            f"TSectionIdx(track_paths (len={len(self.track_paths)}))"
         )
 
 
@@ -144,42 +177,66 @@ class TrackShape:
     section_idxs: Optional[List[SectionIdx]] = None
     tunnel_shape: bool = False
     road_shape: bool = False
-    rack_shape: bool = False
 
     def __repr__(self):
         return (
-            f"TrackShape(index={self.shape_index}, "
-            f"paths={self.num_paths}, "
-            f"file='{self.file_name}')"
+            f"TrackShape(shape_index={self.shape_index}, "
+            f"file_name={self.file_name}, "
+            f"num_paths={self.num_paths}, "
+            f"main_route={self.main_route}, "
+            f"clearance_distance={self.clearance_distance}, "
+            f"section_idxs (len={len(self.section_idxs)}), "
+            f"tunnel_shape={self.tunnel_shape}, "
+            f"road_shape={self.road_shape})"
         )
 
 
 @dataclass
 class TrackShapes:
-    shapes: Dict[int, TrackShape] = field(default_factory=dict)
+    track_shapes: Dict[int, TrackShape] = field(default_factory=dict)
     max_shape_index: Optional[int] = None
 
+    def add(self, shape: TrackShape):
+        self.track_shapes[shape.shape_index] = shape
+
     def get(self, index: int) -> TrackShape:
-        if index not in self.shapes:
+        if index not in self.track_shapes:
             raise ValueError("ShapeIndex not found")
-        return self.shapes[index]
+        
+        return self.track_shapes[index]
+    
+    def __add__(self, other):
+        if not isinstance(other, TrackShapes):
+            raise TypeError(f"Cannot add TrackShapes with {type(other).__name__}")
+        
+        merged_shapes = {**self.track_shapes, **other.track_shapes}
+        max_index = max(
+            (v for v in [self.max_shape_index, other.max_shape_index] if v is not None),
+            default=None,
+        )
+
+        return TrackShapes(
+            track_shapes=merged_shapes,
+            max_shape_index=max_index,
+        )
 
     def __repr__(self):
         return (
-            f"TrackShapes(count={len(self.shapes)}, "
-            f"max_index={self.max_shape_index})"
+            f"TrackShapes(max_shape_index={self.max_shape_index}, "
+            f"track_shapes (len={len(self.track_shapes)}))"
         )
 
 
 @dataclass
 class TSection:
-    track_sections: Optional[TrackSections] = None
-    track_shapes: Optional[TrackShapes] = None
-    tsection_idx: Optional[TSectionIdx] = None
+    tracksections: Optional[TrackSections] = None
+    trackshapes: Optional[TrackShapes] = None
+    sectionidx: Optional[TSectionIdx] = None
 
     def __repr__(self):
         return (
-            "TrackSectionsFile("
-            f"sections={self.track_sections}, "
-            f"shapes={self.track_shapes})"
+            "TSection("
+            f"tracksections={self.tracksections}, "
+            f"trackshapes={self.trackshapes}, "
+            f"sectionidx={self.sectionidx})"
         )

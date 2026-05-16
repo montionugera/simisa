@@ -145,7 +145,7 @@ class BlockReader(ABC):
         if compressed is None:
             first_include_path = peek_first_include(filepath)
 
-            if first_include_path is None: # No include was present, therefore invalid.
+            if first_include_path is None: # No include was present, therefore the header is missing or invalid.
                 raise SimisaHeaderError(f"Unrecognized header in {filepath}")
 
             # Fallback path, resolve all includes to make sure the header can be found if inside an include.
