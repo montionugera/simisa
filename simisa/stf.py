@@ -103,12 +103,6 @@ class StfLexer:
 
             return token
 
-    def _ascii_lower(self, s: str) -> str:
-        return "".join(
-            chr(ord(c) | 0x20) if "A" <= c <= "Z" else c
-            for c in s
-        )
-
     def _refill(self):
         self._buffer = self.stream.read(8192)
         self._position = 0
