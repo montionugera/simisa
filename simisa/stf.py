@@ -39,13 +39,11 @@ class StfReaderError(Exception):
 
 
 class StfToken:
-    __slots__ = ("kind", "value", "line", "source")
+    __slots__ = ("kind", "value")
 
-    def __init__(self, kind, value, line, source):
+    def __init__(self, kind, value):
         self.kind = kind
         self.value = value
-        self.line = line
-        self.source = source
 
     @property
     def is_eof(self):
@@ -61,17 +59,19 @@ class StfToken:
 
 
 class StfLexer:
+    _EOF_TOKEN = StfToken("eof", "")
+    _LEFT_PARENTHESIS_TOKEN = StfToken("(", "(")
+    _RIGHT_PARENTHESIS_TOKEN = StfToken(")", ")")
+
     _COMMENT_KEYWORDS = frozenset({
-        "skip",
-        "_skip",
-        "info",
-        "_info"
+        "skip", "SKIP", "Skip", "sKiP", "skIp", "skiP", "SKiP", "SkIp",
+        "_skip", "_SKIP", "_Skip", "_sKiP", "_skIp", "_skiP", "_SKiP", "_SkIp",
+        "info", "INFO", "Info", "iNfO", "inFo", "infO", "INfO", "InFo",
+        "_info", "_INFO", "_Info", "_iNfO", "_inFo", "_infO", "_INfO", "_InFo",
     })
     
-    def __init__(self, stream, source_name: str):
+    def __init__(self, stream):
         self.stream = stream
-        self.source = source_name
-        self.line = 1
         self._buffer = self.stream.read(8192)
         self._position = 0
 
@@ -82,26 +82,32 @@ class StfLexer:
             c = self._peek()
 
             if c == "":
-                return StfToken("eof", "", self.line, self.source)
+                return self._EOF_TOKEN
 
             if c == "(":
                 self._read()
-                return StfToken("(", "(", self.line, self.source)
+                return self._LEFT_PARENTHESIS_TOKEN
 
             if c == ")":
                 self._read()
-                return StfToken(")", ")", self.line, self.source)
+                return self._RIGHT_PARENTHESIS_TOKEN
 
             if c == '"':
                 return self._read_string()
 
             token = self._read_word()
 
-            if token.value.casefold() in self._COMMENT_KEYWORDS:
+            if token.value in self._COMMENT_KEYWORDS:
                 self._consume_comment()
                 continue
 
             return token
+
+    def _ascii_lower(self, s: str) -> str:
+        return "".join(
+            chr(ord(c) | 0x20) if "A" <= c <= "Z" else c
+            for c in s
+        )
 
     def _refill(self):
         self._buffer = self.stream.read(8192)
@@ -116,9 +122,6 @@ class StfLexer:
 
         c = self._buffer[self._position]
         self._position += 1
-
-        if c == "\n":
-            self.line += 1
 
         return c
     
@@ -190,9 +193,6 @@ class StfLexer:
             c = buffer[position]
             position += 1
 
-            if c == "\n":
-                self.line += 1
-
             if c == "(":
                 depth += 1
 
@@ -202,13 +202,12 @@ class StfLexer:
         self._position = position
 
     def _read_word(self):
-        start_line = self.line
         buffer = self._buffer
         position = self._position
         length = len(buffer)
 
-        parts_append = []
-        append = parts_append.append
+        parts = []
+        append = parts.append
 
         while True:
             if position >= length:
@@ -230,11 +229,9 @@ class StfLexer:
             position += 1
         
         self._position = position
-        return StfToken("word", "".join(parts_append), start_line, self.source)
+        return StfToken("word", "".join(parts))
 
     def _read_string(self):
-        start_line = self.line
-
         buffer = self._buffer
         position = self._position
         length = len(buffer)
@@ -263,15 +260,12 @@ class StfLexer:
                 position += 1
                 break
 
-            if c == "\n":
-                self.line += 1
-
             append(c)
             position += 1
 
         self._position = position
 
-        return StfToken("string", "".join(parts), start_line, self.source)
+        return StfToken("string", "".join(parts))
 
 
 class StfTokenStream:
@@ -295,8 +289,8 @@ class StfTokenStream:
 class StfReader:
 
     @classmethod
-    def from_stream(cls, stream, source_name="<stream>"):
-        lexer = StfLexer(stream, source_name)
+    def from_stream(cls, stream):
+        lexer = StfLexer(stream)
         token_stream = StfTokenStream(lexer)
 
         return cls(token_stream)
