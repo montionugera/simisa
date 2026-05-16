@@ -132,13 +132,26 @@ class StfLexer:
         return self._buffer[self._position]
 
     def _skip_whitespace(self):
+        buf = self._buffer
+        pos = self._position
+
         while True:
-            c = self._peek()
+            if pos >= len(buf):
+                self._buffer = buf[pos:]
+                self._position = 0
+                self._refill()
+                buf = self._buffer
+                pos = self._position
+                if not buf:
+                    return
+
+            c = buf[pos]
 
             if c == "" or c > " ":
+                self._position = pos
                 return
 
-            self._read()
+            pos += 1
 
     def _consume_comment(self):
         self._skip_whitespace()
@@ -164,23 +177,34 @@ class StfLexer:
 
     def _read_word(self):
         start_line = self.line
-        parts = []
+        buf = self._buffer
+        pos = self._position
+        length = len(buf)
+
+        parts_append = []
+        append = parts_append.append
 
         while True:
-            if self._position >= len(self._buffer):
+            if pos >= length:
+                self._buffer = buf[pos:]
+                self._position = 0
                 self._refill()
-                if not self._buffer:
+                buf = self._buffer
+                pos = self._position
+                length = len(buf)
+                if not buf:
                     break
 
-            c = self._buffer[self._position]
+            c = buf[pos]
 
-            if c <= " " or c in "()":
+            if c <= " " or c == "(" or c == ")":
                 break
 
-            parts.append(c)
-            self._position += 1
-
-        return StfToken("word", "".join(parts), start_line, self.source)
+            append(c)
+            pos += 1
+        
+        self._position = pos
+        return StfToken("word", "".join(parts_append), start_line, self.source)
 
     def _read_string(self):
         start_line = self.line
