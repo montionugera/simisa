@@ -132,101 +132,144 @@ class StfLexer:
         return self._buffer[self._position]
 
     def _skip_whitespace(self):
-        buf = self._buffer
-        pos = self._position
+        buffer = self._buffer
+        position = self._position
 
         while True:
-            if pos >= len(buf):
-                self._buffer = buf[pos:]
+            if position >= len(buffer):
+                self._buffer = buffer[position:]
                 self._position = 0
                 self._refill()
-                buf = self._buffer
-                pos = self._position
-                if not buf:
+                buffer = self._buffer
+                position = self._position
+
+                if not buffer:
                     return
 
-            c = buf[pos]
+            c = buffer[position]
 
             if c == "" or c > " ":
-                self._position = pos
+                self._position = position
                 return
 
-            pos += 1
+            position += 1
 
     def _consume_comment(self):
         self._skip_whitespace()
 
-        if self._peek() != "(":
+        buffer = self._buffer
+        position = self._position
+        length = len(buffer)
+
+        if position >= length:
+            self._buffer = buffer[position:]
+            self._position = 0
+            self._refill()
+            buffer = self._buffer
+            position = self._position
+            length = len(buffer)
+
+        if not buffer or buffer[position] != "(":
             raise StfReaderError("Expected '(' after comment keyword")
 
-        self._read() # opening parenthesis
-
+        position += 1 # consume opening parenthesis
         depth = 1
 
         while depth > 0:
-            c = self._read()
+            if position >= length:
+                self._buffer = buffer[position:]
+                self._position = 0
+                self._refill()
+                buffer = self._buffer
+                position = self._position
+                length = len(buffer)
 
-            if c == "":
-                raise StfReaderError("Unterminated comment")
+                if not buffer:
+                    raise StfReaderError("Unterminated comment")
+
+            c = buffer[position]
+            position += 1
+
+            if c == "\n":
+                self.line += 1
 
             if c == "(":
                 depth += 1
-            
+
             elif c == ")":
                 depth -= 1
 
+        self._position = position
+
     def _read_word(self):
         start_line = self.line
-        buf = self._buffer
-        pos = self._position
-        length = len(buf)
+        buffer = self._buffer
+        position = self._position
+        length = len(buffer)
 
         parts_append = []
         append = parts_append.append
 
         while True:
-            if pos >= length:
-                self._buffer = buf[pos:]
+            if position >= length:
+                self._buffer = buffer[position:]
                 self._position = 0
                 self._refill()
-                buf = self._buffer
-                pos = self._position
-                length = len(buf)
-                if not buf:
+                buffer = self._buffer
+                position = self._position
+                length = len(buffer)
+                if not buffer:
                     break
 
-            c = buf[pos]
+            c = buffer[position]
 
             if c <= " " or c == "(" or c == ")":
                 break
 
             append(c)
-            pos += 1
+            position += 1
         
-        self._position = pos
+        self._position = position
         return StfToken("word", "".join(parts_append), start_line, self.source)
 
     def _read_string(self):
         start_line = self.line
-        self._read() # opening quote
+
+        buffer = self._buffer
+        position = self._position
+        length = len(buffer)
+
+        position += 1 # consume opening quote
 
         parts = []
+        append = parts.append
 
         while True:
-            if self._position >= len(self._buffer):
+            if position >= length:
+                self._buffer = buffer[position:]
+                self._position = 0
                 self._refill()
 
-                if not self._buffer:
+                buffer = self._buffer
+                position = self._position
+                length = len(buffer)
+
+                if not buffer:
                     raise StfReaderError("Unterminated string")
 
-            c = self._buffer[self._position]
+            c = buffer[position]
 
             if c == '"':
-                self._position += 1 # consume closing quote
+                position += 1
                 break
 
-            parts.append(c)
-            self._position += 1
+            if c == "\n":
+                self.line += 1
+
+            append(c)
+            position += 1
+
+        self._position = position
 
         return StfToken("string", "".join(parts), start_line, self.source)
 
