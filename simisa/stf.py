@@ -61,50 +61,61 @@ class StfToken:
 
 
 class StfLexer:
+    _COMMENT_KEYWORDS = frozenset({
+        "skip",
+        "_skip",
+        "info",
+        "_info"
+    })
+    
     def __init__(self, stream, source_name: str):
         self.stream = stream
         self.source = source_name
         self.line = 1
-        self._buffer = self.stream.read(1)
+        self._buffer = self.stream.read(8192)
+        self._position = 0
 
-    def next_token(self) -> StfToken:
-        self._skip_whitespace()
+    def next_token(self):
+        while True:
+            self._skip_whitespace()
 
-        c = self._peek()
+            c = self._peek()
 
-        if c == "":
-            return StfToken("eof", "", self.line, self.source)
+            if c == "":
+                return StfToken("eof", "", self.line, self.source)
 
-        if c == "(":
-            self._read()
-            return StfToken("(", "(", self.line, self.source)
+            if c == "(":
+                self._read()
+                return StfToken("(", "(", self.line, self.source)
 
-        if c == ")":
-            self._read()
-            return StfToken(")", ")", self.line, self.source)
+            if c == ")":
+                self._read()
+                return StfToken(")", ")", self.line, self.source)
 
-        if c == '"':
-            return self._read_string()
+            if c == '"':
+                return self._read_string()
 
-        token = self._read_word()
-        token_value = token.value.lower()
+            token = self._read_word()
 
-        COMMENT_KEYWORDS = {
-            "skip",
-            "_skip",
-            "info",
-            "_info"
-        }
+            if token.value.casefold() in self._COMMENT_KEYWORDS:
+                self._consume_comment()
+                continue
 
-        if token_value in COMMENT_KEYWORDS:
-            self._consume_comment()
-            return self.next_token()
+            return token
 
-        return token
+    def _refill(self):
+        self._buffer = self.stream.read(8192)
+        self._position = 0
 
     def _read(self):
-        c = self._buffer
-        self._buffer = self.stream.read(1)
+        if self._position >= len(self._buffer):
+            self._refill()
+
+            if not self._buffer:
+                return ""
+
+        c = self._buffer[self._position]
+        self._position += 1
 
         if c == "\n":
             self.line += 1
@@ -112,13 +123,19 @@ class StfLexer:
         return c
     
     def _peek(self):
-        return self._buffer
+        if self._position >= len(self._buffer):
+            self._refill()
+
+            if not self._buffer:
+                return ""
+            
+        return self._buffer[self._position]
 
     def _skip_whitespace(self):
         while True:
             c = self._peek()
 
-            if c == "" or not c.isspace():
+            if c == "" or c > " ":
                 return
 
             self._read()
@@ -145,34 +162,49 @@ class StfLexer:
             elif c == ")":
                 depth -= 1
 
-    def _read_word(self) -> StfToken:
+    def _read_word(self):
         start_line = self.line
-        buf = []
+        parts = []
 
         while True:
-            c = self._peek()
+            if self._position >= len(self._buffer):
+                self._refill()
+                if not self._buffer:
+                    break
 
-            if c == "" or c.isspace() or c in "()":
+            c = self._buffer[self._position]
+
+            if c <= " " or c in "()":
                 break
 
-            buf.append(self._read())
+            parts.append(c)
+            self._position += 1
 
-        return StfToken("word", "".join(buf), start_line, self.source)
+        return StfToken("word", "".join(parts), start_line, self.source)
 
-    def _read_string(self) -> StfToken:
+    def _read_string(self):
         start_line = self.line
         self._read() # opening quote
-        buf = []
+
+        parts = []
 
         while True:
-            c = self._read()
+            if self._position >= len(self._buffer):
+                self._refill()
 
-            if c == "" or c == '"':
+                if not self._buffer:
+                    raise StfReaderError("Unterminated string")
+
+            c = self._buffer[self._position]
+
+            if c == '"':
+                self._position += 1 # consume closing quote
                 break
 
-            buf.append(c)
+            parts.append(c)
+            self._position += 1
 
-        return StfToken("string", "".join(buf), start_line, self.source)
+        return StfToken("string", "".join(parts), start_line, self.source)
 
 
 class StfTokenStream:
