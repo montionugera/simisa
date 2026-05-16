@@ -88,10 +88,11 @@ class StfLexer:
         token_value = token.value.lower()
 
         COMMENT_KEYWORDS = [
+            "skip",
             "_skip",
-            "_info",
-            "info"
-        ]   
+            "info",
+            "_info"
+        ]
 
         if token_value in COMMENT_KEYWORDS:
             self._consume_comment()

@@ -148,8 +148,8 @@ class BlockReader(ABC):
             if first_include_path is None: # No include was present, therefore invalid.
                 raise SimisaHeaderError(f"Unrecognized header in {filepath}")
 
-            # Fallback path, resolve all includes to make sure the header is present.
-            # Then use 'from_string' to re-do all header checks and return the configured reader.
+            # Fallback path, resolve all includes to make sure the header can be found if inside an include.
+            # Then use 'from_string' to re-do all checks and return the configured reader if header was valid.
             with open(filepath, "rb") as f:
                 bom = f.read(2)
                 encoding = "utf-16-le" if bom == codecs.BOM_UTF16_LE else "ascii"
@@ -306,6 +306,9 @@ class BlockReader(ABC):
         """
         sub_block = self.read_sub_block()
 
+        if sub_block is None:
+            return
+
         if expected_id is not None:
             sub_block.verify_id(expected_id)
 
@@ -319,8 +322,8 @@ class BlockReader(ABC):
         Iterate over all remaining child blocks.
 
         Guarantees:
-        - Sequential consumption until end_of_block()
-        - Each block is finalized via verify_end_of_block()
+        - Sequential consumption until `end_of_block()`
+        - Each block is finalized via `verify_end_of_block()`
 
         Args:
             expected_id: Optional TokenID to validate each block.
@@ -331,9 +334,12 @@ class BlockReader(ABC):
         while not self.end_of_block():
             sub_block = self.read_sub_block()
 
+            if sub_block is None:
+                continue
+
             if expected_id is not None:
                 sub_block.verify_id(expected_id)
-
+            
             try:
                 yield sub_block
             finally:
@@ -470,7 +476,7 @@ class TextBlockReader(BlockReader):
         logger.warning(f"Skipped unknown token {token}")
         return TokenID.comment
 
-    def read_sub_block(self) -> BlockReader:
+    def read_sub_block(self) -> Optional[BlockReader]:
         sub_block = TextBlockReader()
         sub_block.stf_reader = self.stf_reader
 
@@ -478,11 +484,11 @@ class TextBlockReader(BlockReader):
 
         if token == '':
             self.at_end_of_block = True
-            return sub_block
+            return None
 
         if token == ')':
             self.at_end_of_block = True
-            return sub_block
+            return None
 
         sub_block.id = self._get_token_id(token)
 
@@ -494,7 +500,7 @@ class TextBlockReader(BlockReader):
 
         if token == ')':
             self.at_end_of_block = True
-            return sub_block
+            return None
 
         if token != '(':
             sub_block.label = token
@@ -510,7 +516,7 @@ class TextBlockReader(BlockReader):
         if self.at_end_of_block:
             return
 
-        while self.stf_reader.depth > self.start_depth:
+        while not self.end_of_block():
             token = self.stf_reader.read_item()
 
             if token == '':
@@ -654,7 +660,7 @@ class BinaryBlockReader(BlockReader):
         self.remaining_bytes -= num_bytes
         return data
 
-    def read_sub_block(self) -> "BlockReader":
+    def read_sub_block(self) -> Optional[BlockReader]:
         if self.stream is None:
             raise RuntimeError("Stream is not initialized")
 
@@ -750,7 +756,7 @@ class BinaryFileReader(BinaryBlockReader):
 
     def __init__(
         self,
-        input_stream: BinaryIO,
+        stream: BinaryIO,
         filepath: str,
         filetype: str,
         fileversion: int,
@@ -758,7 +764,7 @@ class BinaryFileReader(BinaryBlockReader):
     ):
         super().__init__()
         self.filepath = filepath
-        self.stream = input_stream
+        self.stream = stream
         self.filetype = filetype
         self.fileversion = fileversion
         self.token_offset = token_offset
