@@ -311,7 +311,7 @@ class StfReader:
             if self.injected.eof():
                 self.injected = None
                 continue
-            
+
             return self.injected.next()
 
         token = self.stream.next()
@@ -369,10 +369,10 @@ class StfReader:
         if token.is_eof:
             return ""
 
-        if token.value == "(":
+        if token.is_block_start:
             self.depth += 1
 
-        elif token.value == ")":
+        elif token.is_block_end:
             self.depth -= 1
             if self.depth < 0:
                 raise StfReaderError("Unbalanced ')' detected")

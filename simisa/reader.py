@@ -48,47 +48,85 @@ class BlockReaderError(Exception):
 
 class CompressedStreamReader(io.RawIOBase):
     """
-    Streaming wrapper around a zlib DEFLATE compressed file.
+    Streaming wrapper around a raw zlib DEFLATE stream.
     """
+    CHUNK_SIZE = 65536
+
     def __init__(self, fileobj):
         self.fileobj = fileobj
         self.decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
-        self.buffer = b""
+        self.buffer = bytearray()
         self.eof = False
 
     def read(self, size=-1):
-        if self.eof:
+        if size == 0:
             return b""
 
+        if self.eof and not self.buffer:
+            return b""
+
+        if size < 0:
+            chunks = [bytes(self.buffer)]
+            self.buffer.clear()
+
+            while not self.eof:
+                raw = self.fileobj.read(self.CHUNK_SIZE)
+
+                if not raw:
+                    chunks.append(self.decompressor.flush())
+                    self.eof = True
+                    break
+
+                chunks.append(self.decompressor.decompress(raw))
+
+            return b"".join(chunks)
+
+        if len(self.buffer) >= size:
+            out = bytes(self.buffer[:size])
+            del self.buffer[:size]
+            return out
+
         chunks = []
+        remaining = size
 
-        while size < 0 or sum(map(len, chunks)) < size:
-            if self.buffer:
-                if size > 0:
-                    take = self.buffer[:size - sum(map(len, chunks))]
-                    chunks.append(take)
-                    self.buffer = self.buffer[len(take):]
-                    continue
-                else:
-                    chunks.append(self.buffer)
-                    self.buffer = b""
-                    continue
+        if self.buffer:
+            chunks.append(bytes(self.buffer))
+            remaining -= len(self.buffer)
+            self.buffer.clear()
 
-            raw = self.fileobj.read(65536)
+        while remaining > 0 and not self.eof:
+            raw = self.fileobj.read(self.CHUNK_SIZE)
+
             if not raw:
-                self.buffer = self.decompressor.flush()
+                tail = self.decompressor.flush()
                 self.eof = True
+
+                if tail:
+                    self.buffer.extend(tail)
+
                 break
 
-            self.buffer += self.decompressor.decompress(raw)
+            data = self.decompressor.decompress(raw)
+
+            if not data:
+                continue
+
+            if len(data) <= remaining:
+                chunks.append(data)
+                remaining -= len(data)
+            else:
+                chunks.append(data[:remaining])
+                self.buffer.extend(data[remaining:])
+                remaining = 0
 
         return b"".join(chunks)
-    
+
     def readable(self):
         return True
 
     def close(self):
         self.fileobj.close()
+        super().close()
 
 
 class BlockReader(ABC):
@@ -627,6 +665,11 @@ class TextFileReader(TextBlockReader):
 
 
 class BinaryBlockReader(BlockReader):
+    _UINT32 = struct.Struct("<I")
+    _INT32 = struct.Struct("<i")
+    _UINT16 = struct.Struct("<H")
+    _FLOAT32 = struct.Struct("<f")
+    _BLOCK_HEADER = struct.Struct("<HHI")
 
     def __init__(self):
         self.filepath: str = ""
@@ -667,9 +710,7 @@ class BinaryBlockReader(BlockReader):
         if self.remaining_bytes < 8:
             raise BlockReaderError("Not enough bytes for sub-block header")
 
-        raw_id = int.from_bytes(self._read(2), "little")
-        raw_flags = int.from_bytes(self._read(2), "little")
-        size = int.from_bytes(self._read(4), "little")
+        raw_id, raw_flags, size = self._BLOCK_HEADER.unpack(self._read(8))
 
         sub_block = BinaryBlockReader()
         sub_block.stream = self.stream
@@ -691,7 +732,7 @@ class BinaryBlockReader(BlockReader):
         self.remaining_bytes -= size
 
         if sub_block.remaining_bytes > 0:
-            label_length = int.from_bytes(sub_block._read(1), "little")
+            label_length = sub_block._read(1)[0]
 
             if label_length > 0:
                 raw_label = sub_block._read(label_length * 2)
@@ -700,19 +741,20 @@ class BinaryBlockReader(BlockReader):
         return sub_block
 
     def read_flags(self) -> int:
-        return int.from_bytes(self._read(4), "little")
+        return self._UINT32.unpack(self._read(4))[0]
 
     def read_int(self) -> int:
-        return int.from_bytes(self._read(4), "little", signed=True)
+        return self._INT32.unpack(self._read(4))[0]
 
     def read_uint(self) -> int:
-        return int.from_bytes(self._read(4), "little", signed=False)
+        return self._UINT32.unpack(self._read(4))[0]
 
     def read_float(self) -> float:
-        return struct.unpack("<f", self._read(4))[0]
+        return self._FLOAT32.unpack(self._read(4))[0]
 
     def read_string(self) -> str:
-        length = int.from_bytes(self._read(2), "little")
+        length = self._UINT16.unpack(self._read(2))[0]
+
         if length == 0:
             return ""
 
