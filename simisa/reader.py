@@ -48,62 +48,72 @@ class BlockReaderError(Exception):
 
 class CompressedStreamReader(io.RawIOBase):
     """
-    Streaming wrapper around a raw zlib DEFLATE stream.
+    Wrapper to read from a raw zlib DEFLATE-compressed stream.
+
+    Provides a file-like interface that decompresses data on-the-fly.
+    Compatible with Python IO wrappers such as `TextIOWrapper` and `BufferedReader`.
     """
     CHUNK_SIZE = 65536
 
     def __init__(self, fileobj):
         self.fileobj = fileobj
         self.decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
-        self.buffer = bytearray()
-        self.eof = False
+        self._buffer = bytearray()
+        self._eof = False
+
+    def readable(self):
+        return True
+
+    def closed(self):
+        return self.fileobj is None
 
     def read(self, size=-1):
         if size == 0:
             return b""
 
-        if self.eof and not self.buffer:
+        if self._eof and not self._buffer:
             return b""
 
-        if size < 0:
-            chunks = [bytes(self.buffer)]
-            self.buffer.clear()
+        if size is None or size < 0:
+            return self._read_all()
 
-            while not self.eof:
-                raw = self.fileobj.read(self.CHUNK_SIZE)
+        return self._read_exact(size)
 
-                if not raw:
-                    chunks.append(self.decompressor.flush())
-                    self.eof = True
-                    break
-
-                chunks.append(self.decompressor.decompress(raw))
-
-            return b"".join(chunks)
-
-        if len(self.buffer) >= size:
-            out = bytes(self.buffer[:size])
-            del self.buffer[:size]
-            return out
-
+    def _read_all(self):
         chunks = []
-        remaining = size
 
-        if self.buffer:
-            chunks.append(bytes(self.buffer))
-            remaining -= len(self.buffer)
-            self.buffer.clear()
+        if self._buffer:
+            chunks.append(bytes(self._buffer))
+            self._buffer.clear()
 
-        while remaining > 0 and not self.eof:
+        while not self._eof:
+            raw = self.fileobj.read(self.CHUNK_SIZE)
+
+            if not raw:
+                chunks.append(self.decompressor.flush())
+                self._eof = True
+                break
+
+            chunks.append(self.decompressor.decompress(raw))
+
+        return b"".join(chunks)
+
+    def _read_exact(self, size):
+        out = bytearray()
+
+        if self._buffer:
+            take = min(size, len(self._buffer))
+            out += self._buffer[:take]
+            del self._buffer[:take]
+            size -= take
+
+        while size > 0 and not self._eof:
             raw = self.fileobj.read(self.CHUNK_SIZE)
 
             if not raw:
                 tail = self.decompressor.flush()
-                self.eof = True
-
-                if tail:
-                    self.buffer.extend(tail)
-
+                self._buffer.extend(tail)
+                self._eof = True
                 break
 
             data = self.decompressor.decompress(raw)
@@ -111,21 +121,38 @@ class CompressedStreamReader(io.RawIOBase):
             if not data:
                 continue
 
-            if len(data) <= remaining:
-                chunks.append(data)
-                remaining -= len(data)
+            if len(data) <= size:
+                out += data
+                size -= len(data)
             else:
-                chunks.append(data[:remaining])
-                self.buffer.extend(data[remaining:])
-                remaining = 0
+                out += data[:size]
+                self._buffer.extend(data[size:])
+                size = 0
 
-        return b"".join(chunks)
+        return bytes(out)
 
-    def readable(self):
-        return True
+    def readinto(self, buffer: bytearray) -> int:
+        if buffer is None:
+            raise TypeError("Parameter 'buffer' must be a writable buffer")
+
+        requested_size = len(buffer)
+        data = self.read(requested_size)
+
+        bytes_read = len(data)
+        buffer[:bytes_read] = data
+
+        return bytes_read
 
     def close(self):
-        self.fileobj.close()
+        if self.fileobj is not None:
+            try:
+                self.fileobj.close()
+            finally:
+                self.fileobj = None
+                self.decompressor = None
+                self._buffer.clear()
+                self._eof = True
+
         super().close()
 
 
@@ -133,16 +160,20 @@ class BlockReader(ABC):
     """
     Structured streaming reader for SIMISA block files.
 
-    Provides a validated view over a SIMISA stream, supporting:
+    Provides validated access to a SIMISA stream with support for:
     - Iteration over nested blocks
     - Context-managed sub-block access
     - Validation of block IDs and element counts
 
-    Every block must be explicitly closed with either `skip()` or
-    `verify_end_of_block()` to maintain structural integrity of the stream.
+    To preserve stream integrity, all data within a block must be either
+    read or skipped using `skip()`. Every block must also be explicitly
+    closed with `verify_end_of_block()`.
+
+    Calls to `verify_end_of_block()` are performed automatically when using
+    the `sub_block()` context manager or any iterator exposed by the reader.
 
     Supports input streams that are:
-    - Compressed (zlib DEFLATE) or uncompressed
+    - Compressed (raw zlib DEFLATE) or uncompressed
     - UTF-16 LE or ASCII encoded
     - Binary or text formatted
     """
@@ -152,7 +183,7 @@ class BlockReader(ABC):
         """
         Open a SIMISA file and construct an appropriate BlockReader.
 
-        This method reads the file header and subheader to determine:
+        This method inspects the SIMISA header to determine:
         - Compression (SIMISA@F = compressed, SIMISA@@ = uncompressed)
         - Encoding (UTF-16 LE via BOM, otherwise ASCII)
         - Format type (binary or text)
@@ -253,20 +284,15 @@ class BlockReader(ABC):
     def from_string(data: str) -> "BlockReader":
         """
         Construct a BlockReader from in-memory SIMISA text data.
-        
-        Strips the BOM (Byte Order Mark) if present, which is common as the first character
-        in text read from UTF-16 LE files using Python's built-in `open` function.
 
-        Constraints:
-        - Does not support binary data
-        - Does not support compressed data
-        - Does not support includes (resolve them using `resolve_includes` before using this function)
+        Unlike `open()`, this method only supports uncompressed text streams.
+        Any includes must be resolved before calling this method.
 
         Args:
             data (str): Raw SIMISA text payload.
 
         Returns:
-            TextFileReader: A reader over the provided string data.
+            BlockReader: Instance of `TextFileReader` over the provided string data.
 
         Raises:
             TypeError: If `data` is not a string.

@@ -104,8 +104,7 @@ class Matrix:
 
     def __repr__(self):
         return (
-            "Matrix(\n"
-            f"  name='{self.name}',\n"
+            f"Matrix(name='{self.name}',\n"
             f"  ax={self.ax}, ay={self.ay}, az={self.az},\n"
             f"  bx={self.bx}, by={self.by}, bz={self.bz},\n"
             f"  cx={self.cx}, cy={self.cy}, cz={self.cz},\n"
