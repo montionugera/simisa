@@ -168,9 +168,10 @@ def peek_subheader(filepath: str) -> Optional[str]:
             header = header_bytes[:8].decode(encoding, errors="ignore")
 
         if compressed:
-            f.read(2)
-            decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
-            stream = io.BytesIO(decompressor.decompress(f.read()))
+            from .reader import CompressedStreamReader
+
+            f.read(2) # skip compression marker
+            stream = CompressedStreamReader(f)
         else:
             if header.startswith("\r\n"):
                 f.read(4 if is_unicode else 2)
