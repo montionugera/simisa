@@ -205,7 +205,7 @@ def read_global_tracksections(reader: BlockReader) -> TrackSections:
             section_skew=section_skew,
             water_scoop=water_scoop
         )
-        tracksections.add(tracksection)
+        tracksections.add_section(tracksection)
         
     return tracksections
 
@@ -252,7 +252,7 @@ def read_local_tracksections(reader: BlockReader) -> TrackSections:
                 section_size=None
             )
         
-        tracksections.add(tracksection)
+        tracksections.add_section(tracksection)
         
     return tracksections
 
@@ -402,7 +402,7 @@ def read_trackshapes(reader: BlockReader) -> TrackShapes:
             crossover_shape=crossover_shape,
             manual_junction_shape=manual_junction_shape
         )
-        trackshapes.add(trackshape)
+        trackshapes.add_shape(trackshape)
         
     return trackshapes
 
@@ -509,7 +509,7 @@ def read_tsectionidx(reader: BlockReader) -> TSectionIdx:
             section_index=section_index,
             track_sections=track_sections
         )
-        tsectionidx.add(trackpath)
+        tsectionidx.add_path(trackpath)
     
     reader.verify_count(count, len(tsectionidx.track_paths))
 

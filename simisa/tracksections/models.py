@@ -82,10 +82,10 @@ class TrackSections:
     track_sections: Dict[int, TrackSection] = field(default_factory=dict)
     max_section_index: Optional[int] = None
 
-    def add(self, section: TrackSection):
+    def add_section(self, section: TrackSection):
         self.track_sections[section.section_index] = section
     
-    def get(self, index: int) -> Optional[TrackSection]:
+    def get_section(self, index: int) -> Optional[TrackSection]:
         if index in self.track_sections:
             return self.track_sections[index]
         
@@ -148,7 +148,7 @@ class TrackPath:
 class TSectionIdx:
     track_paths: Dict[int, TrackPath] = field(default_factory=dict)
 
-    def add(self, path: TrackPath):
+    def add_path(self, path: TrackPath):
         self.track_paths[path.section_index] = path
 
     def __add__(self, other):
@@ -212,10 +212,10 @@ class TrackShapes:
     track_shapes: Dict[int, TrackShape] = field(default_factory=dict)
     max_shape_index: Optional[int] = None
 
-    def add(self, shape: TrackShape):
+    def add_shape(self, shape: TrackShape):
         self.track_shapes[shape.shape_index] = shape
 
-    def get(self, index: int) -> TrackShape:
+    def get_shape(self, index: int) -> TrackShape:
         if index not in self.track_shapes:
             raise ValueError("ShapeIndex not found")
         
