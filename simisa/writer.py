@@ -18,6 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import io
+import zlib
 import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
@@ -29,29 +30,72 @@ from .token_id import TokenID
 logger = logging.getLogger(__name__)
 
 
+
 class BlockWriterError(Exception):
     """Raised when a block writer encounters an error or malformed data."""
     pass
 
 
-class CompressedWriteStream:
+class CompressedStreamWriter(io.RawIOBase):
     """
-    Helper for writing compressed streams.
-    """
+    Wrapper to write to a raw zlib DEFLATE-compressed stream.
 
-    def __init__(self, file, compressor):
-        self.file = file
-        self.compressor = compressor
+    Provides a file-like interface that compresses data on-the-fly.
+    Compatible with Python IO wrappers such as `TextIOWrapper` and `BufferedWriter`.
+    """
+    CHUNK_SIZE = 65536
+
+    def __init__(self, fileobj, level=6):
+        self.fileobj = fileobj
+        self.compressor = zlib.compressobj(level=level, wbits=-zlib.MAX_WBITS)
+        self._closed = False
+
+    def writable(self):
+        return True
+
+    def closed(self):
+        return self._closed
 
     def write(self, data: bytes):
-        chunk = self.compressor.compress(data)
-        if chunk:
-            self.file.write(chunk)
+        if self._closed:
+            raise ValueError("write to closed file")
+
+        if not data:
+            return 0
+
+        compressed = self.compressor.compress(data)
+
+        if compressed:
+            self.fileobj.write(compressed)
+        
+        return len(data)
 
     def flush(self):
-        chunk = self.compressor.flush()
-        if chunk:
-            self.file.write(chunk)
+        if self._closed:
+            return
+
+        tail = self.compressor.flush(zlib.Z_SYNC_FLUSH)
+
+        if tail:
+            self.fileobj.write(tail)
+        
+        self.fileobj.flush()
+
+    def close(self):
+        if not self._closed:
+            try:
+                tail = self.compressor.flush(zlib.Z_FINISH)
+
+                if tail:
+                    self.fileobj.write(tail)
+                
+                self.fileobj.flush()
+            finally:
+                self.fileobj.close()
+                self.compressor = None
+                self._closed = True
+        
+        super().close()
 
 
 class BlockWriter(ABC):
@@ -103,7 +147,7 @@ class BlockWriter(ABC):
             f.write(b"\x97\x86\r\x00")
             f.write(b"@@@@")
             compressor = zlib.compressobj(wbits=-zlib.MAX_WBITS)
-            stream = CompressedWriteStream(f, compressor)
+            stream = CompressedStreamWriter(f, compressor)
         else:
             if is_unicode:
                 f.write(codecs.BOM_UTF16_LE)
