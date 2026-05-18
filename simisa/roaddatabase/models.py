@@ -17,4 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-# TODO
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional, List
+
+from ..trackdatabase.models import TrackNode, TrItem
+
+
+
+@dataclass
+class RoadDB:
+    serial: int = 0
+    track_nodes: List[TrackNode] = field(default_factory=list)
+    tr_item_table: List[TrItem] = field(default_factory=list)
+

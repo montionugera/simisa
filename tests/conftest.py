@@ -40,8 +40,11 @@ def global_storage():
     data = {
         "emptyfile_path": "./tests/data/empty.txt",
         "garbagefile_path": "./tests/data/garbage.txt",
+        "roaddatabase_path": "./tests/data/DK24.rdb",
+        "roaddatabase_empty_path": "./tests/data/DK24TEST.rdb",
         "shapefile_path": "./tests/data/DK10f_A1tPnt5dLft.s",
         "shapefile_compressed_path": "./tests/data/DK10f_A1tPnt5dLft_compressed.s",
+        "trackdatabase_path": "./tests/data/DK24TEST.tdb",
         "tsectionext_path": "./tests/data/tsectionext.dat",
         "tsectionext_nested_path": "./tests/data/tsectionext_nested.dat",
         "tsectionext_blockbeforeinclude_path": "./tests/data/tsectionext_blockbeforeinclude.dat",

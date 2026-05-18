@@ -37,17 +37,17 @@ class BlockFormat:
         ...     newline_before_closing=False
         ... )
         >>>
-        >>> with writer.sub_block(TokenID.vertex):
-        ...     writer.write_flags(flags)
-        ...     writer.write_int(ipoint)
-        ...     writer.write_int(inormal)
-        ...     writer.write_flags(color1)
-        ...     writer.write_flags(color2)
+        >>> with writer.sub_block(TokenID.vertex) as vertex_block:
+        ...     vertex_block.write_flags(flags)
+        ...     vertex_block.write_int(point_index)
+        ...     vertex_block.write_int(normal_index)
+        ...     vertex_block.write_flags(color1)
+        ...     vertex_block.write_flags(color2)
         ...
-        ...     with writer.sub_block(TokenID.vertex_uvs, format=UV_LIST):
-        ...         writer.write_count(len(uvs))
-        ...         for uv in uvs:
-        ...             writer.write_int(uv)
+        ...     with vertex_block.sub_block(TokenID.vertex_uvs, format=UV_LIST) as vertex_uvs_block:
+        ...         vertex_uvs_block.write_count(len(uvs))
+        ...         for uv_index in uvs:
+        ...             vertex_uvs_block.write_int(uv_index)
     """
     max_items_per_line: Optional[int] = None
     disable_inner_indent: bool = False

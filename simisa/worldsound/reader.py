@@ -19,7 +19,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from typing import List
 
-from .. import TokenID, Units
+from .. import TokenID
 from ..reader import BlockReader
 from .models import *
 

@@ -21,7 +21,7 @@ from abc import ABC
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 
 class Interpolator:
@@ -62,18 +62,6 @@ class LatLon:
 
 class TrRouteFile:
     pass
-
-
-@dataclass
-class TrackDatabaseFile:
-    track_db: Optional["TrackDB"] = None
-    last_write_time: Optional[datetime] = None
-
-
-@dataclass
-class TrackDB:
-    track_nodes: list["TrackNode"] = field(default_factory=list)
-    tr_item_table: list["TrItem"] = field(default_factory=list)
 
 
 @dataclass
@@ -138,20 +126,6 @@ class TrVectorNode:
     tr_vector_sections: list[TrVectorSection] = field(default_factory=list)
     tr_item_refs: list[int] = field(default_factory=list)
     no_item_refs: int = 0
-
-
-@dataclass
-class TrackNode:
-    tr_junction_node: Optional[TrJunctionNode] = None
-    tr_vector_node: Optional[TrVectorNode] = None
-    tr_end_node: bool = False
-    uid: Optional[UiD] = None
-    tr_pins: list[TrPin] = field(default_factory=list)
-    inpins: int = 0
-    outpins: int = 0
-    index: int = 0
-    reduced: bool = False
-    tc_cross_reference: Optional["TrackCircuitXRefList"] = None
 
 
 class TrItemType(Enum):
@@ -286,3 +260,40 @@ class TrackCircuitSectionXref:
 
 class TrackCircuitXRefList(list[TrackCircuitSectionXref]):
     pass
+
+
+###################################
+
+
+@dataclass
+class TrackNode:
+    index: int
+    uid: Optional[UiD] = None
+    tr_junction_node: Optional[TrJunctionNode] = None
+    tr_vector_node: Optional[TrVectorNode] = None
+    tr_end_node: bool = False
+    tr_pins: List[TrPin] = field(default_factory=list)
+
+    def __repr__(self):
+        return (
+            f"TrackNode(index={self.index}, "
+            f"uid={self.uid}), "
+            f"tr_junction_node (len={len(self.tr_junction_node)}), "
+            f"tr_vector_node (len={len(self.tr_vector_node)}), "
+            f"tr_end_node={self.tr_end_node}), "
+            f"tr_pins (len={len(self.tr_pins)}))"
+        )
+
+
+@dataclass
+class TrackDB:
+    serial: int = 0
+    track_nodes: List[TrackNode] = field(default_factory=list)
+    tr_item_table: List[TrItem] = field(default_factory=list)
+
+    def __repr__(self):
+        return (
+            f"TrackDB(serial={self.serial}, "
+            f"track_nodes (len={len(self.track_nodes)}), "
+            f"tr_item_table (len={len(self.tr_item_table)}))"
+        )

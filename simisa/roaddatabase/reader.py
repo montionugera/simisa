@@ -19,21 +19,92 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from typing import List
 
-from .. import TokenID, Units
+from .. import TokenID
 from ..reader import BlockReader
-from .models import *
+from ..trackdatabase.reader import read_track_nodes, read_tr_item_table
+from .models import RoadDB
 
 
-# def load(filepath: str) -> Shape:
-#     with BlockReader.open(filepath) as reader:
-#         return read_shape(reader)
+
+def load(filepath: str) -> RoadDB:
+    """
+    Load and parse a road database file from disk.
+
+    This function opens the file at the given path, validates that it is a supported rdb
+    file based on its subheader, and returns a parsed `RoadDB` object.
+
+    Args:
+        filepath (str): Path to the rdb file.
+
+    Returns:
+        RoadDB: The parsed road database object.
+
+    Raises:
+        TypeError: If `filepath` is not a string.
+        SimisaHeaderError: If the data has an invalid or unrecognized SIMISA header.
+        SimisaSubheaderError: If the data has an invalid or unrecognized SIMISA subheader.
+        BlockReaderError: If the block reader encounters an error or malformed data.
+        StfReaderError: If the STF reader encounters an error or malformed data.
+        UnresolvableIncludeError: If includes within the file cannot be resolved.
+        OSError: If the file cannot be opened.
+    """
+    if not isinstance(filepath, str):
+        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+
+    with BlockReader.open(filepath) as reader:
+
+        if not reader.filetype == 'T':
+            raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it a road database?")
+
+        return read_roaddb(reader)
 
 
-# def loads(shape_string: str) -> Shape:
-#     reader = BlockReader.from_string(shape_string)
-#     return read_shape(reader)
+def loads(rdb_text: str) -> RoadDB:
+    """
+    Parse a road database from a string containing rdb data.
+
+    This function does not support binary or compressed data. It reads rdb
+    data from the provided string, validates that it represents a supported
+    road database file based on its subheader, and returns a parsed `RoadDB` object.
+
+    Args:
+        rdb_text (str): String containing rdb file data.
+
+    Returns:
+        RoadDB: The parsed road database object.
+
+    Raises:
+        TypeError: If `rdb_text` is not a string.
+        SimisaHeaderError: If the data has an invalid or unrecognized SIMISA header.
+        SimisaSubheaderError: If the data has an invalid or unrecognized SIMISA subheader.
+        BlockReaderError: If the block reader encounters an error or malformed data.
+        StfReaderError: If the STF reader encounters an error or malformed data.
+        UnresolvableIncludeError: If includes within the file cannot be resolved.
+    """
+    if not isinstance(rdb_text, str):
+        raise TypeError(f"Parameter 'rdb_text' must be str, but got {type(rdb_text).__name__}")
+
+    reader = BlockReader.from_string(rdb_text)
+
+    if not reader.filetype == 'T':
+        raise SimisaSubheaderError(f"Unrecognized filetype '{reader.filetype}' in subheader. Is it a road database?")
+
+    return read_roaddb(reader)
 
 
-# def read_rit(reader: BlockReader) -> Shape:
-#     # TODO
-#     raise NotImplementedError()
+def read_roaddb(reader: BlockReader) -> RoadDB:
+
+    with reader.sub_block(TokenID.TrackDB) as trackdb_block:
+        serial = 0
+
+        with trackdb_block.sub_block(TokenID.Serial) as serial_block:
+            serial = serial_block.read_uint()
+
+        track_nodes = read_track_nodes(trackdb_block)
+        tr_item_table = read_tr_item_table(trackdb_block)
+
+        return RoadDB(
+            serial=serial,
+            track_nodes=track_nodes,
+            tr_item_table=tr_item_table
+        )

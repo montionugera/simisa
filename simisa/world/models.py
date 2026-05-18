@@ -24,6 +24,7 @@ from typing import Optional, List
 
 
 
+@dataclass
 class WorldObject(ABC):
     uid: int
     file_name: Optional[str]
@@ -35,28 +36,34 @@ class WorldObject(ABC):
     matrix: Optional["Matrix3x3"]
 
 
+@dataclass
 class BaseWorldObject(WorldObject):
     pass
 
 
+@dataclass
 class TrackLinkedObject(WorldObject):
     tr_item_ids: List["TrItemId"]
 
 
+@dataclass
 class WorldFile:
     tile_x: int
     tile_z: int
     world: "TrWorldFile"
 
 
+@dataclass
 class TrWorldFile:
     objects: List[WorldObject]
 
 
+@dataclass
 class StaticObj(BaseWorldObject):
     pass
 
 
+@dataclass
 class PickupObj(BaseWorldObject):
     pickup_type: int
     pickup_anim_data: Optional["PickupAnimData"]
@@ -74,11 +81,13 @@ class PickupObj(BaseWorldObject):
     location: Optional["WorldLocation"]
 
 
+@dataclass
 class TransferObj(WorldObject):
     width: float
     height: float
 
 
+@dataclass
 class TrackObj(WorldObject):
     section_idx: int
     elevation: float
@@ -86,6 +95,7 @@ class TrackObj(WorldObject):
     jnode_position: Optional["JNodePosn"]
 
 
+@dataclass
 class DynTrackObj(WorldObject):
     section_idx: int
     elevation: float
@@ -93,6 +103,7 @@ class DynTrackObj(WorldObject):
     track_sections: Optional["TrackSections"]
 
 
+@dataclass
 class ForestObj(WorldObject):
     is_yard: bool
     tree_texture: Optional[str]
@@ -102,11 +113,13 @@ class ForestObj(WorldObject):
     tree_size: Optional["TreeSize"]
 
 
+@dataclass
 class SignalObj(WorldObject):
     signal_sub_obj: int
     signal_units: Optional["SignalUnits"]
 
 
+@dataclass
 class SpeedPostObj(WorldObject):
     speed_digit_tex: Optional[str]
     text_size: Optional["SpeedTextSize"]
@@ -114,6 +127,7 @@ class SpeedPostObj(WorldObject):
     tr_item_ids: List["TrItemId"]
 
 
+@dataclass
 class LevelCrossingObj(WorldObject):
     level_parameters: Optional["LevelCrParameters"]
     level_data: Optional["LevelCrData"]
@@ -125,10 +139,12 @@ class LevelCrossingObj(WorldObject):
     sound_filename: str
 
 
+@dataclass
 class HazardObj(WorldObject):
     item_id: int
 
 
+@dataclass
 class CarSpawnerObj(WorldObject):
     tr_item_ids: List["TrItemId"]
     car_frequency: float
@@ -137,23 +153,28 @@ class CarSpawnerObj(WorldObject):
     car_spawner_list_idx: int
 
 
+@dataclass
 class TrObject(TrackLinkedObject):
     pass
 
 
+@dataclass
 class SidingObj(TrObject):
     pass
 
 
+@dataclass
 class PlatformObj(TrObject):
     platform_data: int
 
 
+@dataclass
 class TrItemId:
     db: int
     db_id: int
 
 
+@dataclass
 class Matrix3x3:
     ax: float
     ay: float
@@ -166,6 +187,7 @@ class Matrix3x3:
     cz: float
 
 
+@dataclass
 class JNodePosn:
     tile_x: int
     tile_z: int
@@ -174,16 +196,19 @@ class JNodePosn:
     z: float
 
 
+@dataclass
 class TWorldPosition:
     x: float
     y: float
     z: float
 
 
+@dataclass
 class STFPosition(TWorldPosition):
     pass
 
 
+@dataclass
 class TWorldDirection:
     a: float
     b: float
@@ -191,39 +216,47 @@ class TWorldDirection:
     d: float
 
 
+@dataclass
 class STFQDirection(TWorldDirection):
     pass
 
 
+@dataclass
 class Vector3:
     x: float
     y: float
     z: float
 
 
+@dataclass
 class WorldLocation:
     pass
 
 
+@dataclass
 class SpeedRange:
     min_mps: float
     max_mps: float
 
 
+@dataclass
 class PickupAnimData:
     pickup_options: float
     animation_speed: float
 
 
+@dataclass
 class PickupCapacity:
     quantity_available_kg: float
     feed_rate_kg_per_s: float
 
 
+@dataclass
 class StackLocations:
     locations: List["StackLocation"]
 
 
+@dataclass
 class StackLocation:
     position: Optional[Vector3]
     max_stacked_containers: int
@@ -231,10 +264,12 @@ class StackLocation:
     flipped: bool
 
 
+@dataclass
 class TrackSections:
     sections: List["TrackSection"]
 
 
+@dataclass
 class TrackSection:
     is_curved: bool
     uid: int
@@ -243,51 +278,61 @@ class TrackSection:
     delta_y: float
 
 
+@dataclass
 class ScaleRange:
     minimum: float
     maximum: float
 
 
+@dataclass
 class ForestArea:
     x: float
     z: float
 
 
+@dataclass
 class TreeSize:
     width: float
     height: float
 
 
+@dataclass
 class SignalUnits:
     units: List["SignalUnit"]
 
 
+@dataclass
 class SignalUnit:
     sub_obj: int
     tr_item: int
 
 
+@dataclass
 class SpeedSignShape:
     num_shapes: int
     shape_info: List[float]
 
 
+@dataclass
 class SpeedTextSize:
     size: float
     dx: float
     dy: float
 
 
+@dataclass
 class LevelCrParameters:
     warning_time: float
     minimum_distance: float
 
 
+@dataclass
 class LevelCrData:
     data1: int
     data2: int
 
 
+@dataclass
 class LevelCrTiming:
     initial_timing: float
     serious_timing: float

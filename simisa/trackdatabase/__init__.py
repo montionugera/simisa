@@ -17,12 +17,12 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-#from .reader import load, loads
-#from .models import *
+from .reader import load, loads
+from .models import *
 
 __all__ = [
-    #"load",
-    #"loads",
-    # TODO
+    "load",
+    "loads",
+    "TrackDB"
 ]
 

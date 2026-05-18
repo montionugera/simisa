@@ -21,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import io
 import logging
 from dataclasses import dataclass
 from typing import Optional
@@ -348,7 +349,7 @@ class StfReader:
 
         include_path_token = self.next()
 
-        if include_path_token.is_string:
+        if not include_path_token.is_string:
             raise StfReaderError(f"Expected string path in include, but got {include_path_token}")
 
         self._expect(")")
