@@ -17,4 +17,43 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-# TODO
+from abc import ABC
+from enum import IntEnum
+from typing import Optional, List
+
+
+
+class WorldSoundFile:
+    world_sound: Optional["TrWorldSoundFile"]
+
+
+class TrWorldSoundFile:
+    sound_sources: List["WorldSoundSource"]
+    sound_regions: List["WorldSoundRegion"]
+
+
+class SoundEntity(ABC):
+    pass
+
+
+class WorldSoundSource(SoundEntity):
+    x: float
+    y: float
+    z: float
+    sound_source_filename: Optional[str]
+
+
+class WorldSoundRegion(SoundEntity):
+    sound_region_track_type: int
+    rot_y: float
+    track_nodes: List[int]
+
+
+class Position3D:
+    x: float
+    y: float
+    z: float
+
+
+class TrackNodeReference:
+    tr_item_id: int

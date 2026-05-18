@@ -45,9 +45,9 @@ class CompressedStreamWriter(io.RawIOBase):
     """
     CHUNK_SIZE = 65536
 
-    def __init__(self, fileobj, level=6):
+    def __init__(self, fileobj):
         self.fileobj = fileobj
-        self.compressor = zlib.compressobj(level=level, wbits=-zlib.MAX_WBITS)
+        self.compressor = zlib.compressobj(wbits=-zlib.MAX_WBITS)
         self._closed = False
 
     def writable(self):
@@ -146,8 +146,7 @@ class BlockWriter(ABC):
             f.write(b"SIMISA@F")
             f.write(b"\x97\x86\r\x00")
             f.write(b"@@@@")
-            compressor = zlib.compressobj(wbits=-zlib.MAX_WBITS)
-            stream = CompressedStreamWriter(f, compressor)
+            stream = CompressedStreamWriter(f)
         else:
             if is_unicode:
                 f.write(codecs.BOM_UTF16_LE)
