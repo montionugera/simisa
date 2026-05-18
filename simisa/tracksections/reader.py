@@ -347,7 +347,6 @@ def read_trackshapes(reader: BlockReader) -> TrackShapes:
         road_shape = False
         crossover_shape = False
         manual_junction_shape = False
-        # CrossoverShape, XoverPts/XoverPt, ManualJunctionShape
 
         for sub_block in trackshape_block:
             if sub_block.id == TokenID.FileName:
@@ -370,9 +369,6 @@ def read_trackshapes(reader: BlockReader) -> TrackShapes:
                 section_idxs.append(sectionidx)
 
             elif sub_block.id == TokenID.XoverPts:
-                if xover_pts is None:
-                    xover_pts = []
-                
                 xover_pts = read_xoverpts(sub_block)
 
             elif sub_block.id == TokenID.TunnelShape:
