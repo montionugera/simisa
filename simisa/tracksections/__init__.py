@@ -32,6 +32,7 @@ __all__ = [
     "SectionIdx",
     "TrackPath",
     "TSectionIdx",
+    "XoverPt",
     "TrackShape",
     "TrackShapes",
     "TSection"

@@ -168,6 +168,16 @@ class TSectionIdx:
 
 
 @dataclass
+class XoverPt:
+    x: float
+    y: float
+    z: float
+
+    def __repr__(self):
+        return f"XoverPt(x={self.x}, y={self.y}, z={self.z})"
+
+
+@dataclass
 class TrackShape:
     shape_index: int
     file_name: Optional[str] = None
@@ -175,8 +185,11 @@ class TrackShape:
     main_route: Optional[int] = None
     clearance_distance: float = 0.0
     section_idxs: Optional[List[SectionIdx]] = None
+    xover_pts: Optional[List[XoverPt]] = None
     tunnel_shape: bool = False
     road_shape: bool = False
+    crossover_shape: bool = False
+    manual_junction_shape: bool = False
 
     def __repr__(self):
         return (
@@ -186,8 +199,11 @@ class TrackShape:
             f"main_route={self.main_route}, "
             f"clearance_distance={self.clearance_distance}, "
             f"section_idxs (len={len(self.section_idxs)}), "
+            f"xover_pts (len={len(self.xover_pts)}), "
             f"tunnel_shape={self.tunnel_shape}, "
-            f"road_shape={self.road_shape})"
+            f"road_shape={self.road_shape}, "
+            f"crossover_shape={self.crossover_shape}, "
+            f"manual_junction_shape={self.manual_junction_shape})"
         )
 
 

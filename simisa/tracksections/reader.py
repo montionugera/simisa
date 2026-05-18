@@ -342,8 +342,12 @@ def read_trackshapes(reader: BlockReader) -> TrackShapes:
         main_route = None
         clearance_distance = 0.0
         section_idxs = None
+        xover_pts = None
         tunnel_shape = False
         road_shape = False
+        crossover_shape = False
+        manual_junction_shape = False
+        # CrossoverShape, XoverPts/XoverPt, ManualJunctionShape
 
         for sub_block in trackshape_block:
             if sub_block.id == TokenID.FileName:
@@ -365,11 +369,23 @@ def read_trackshapes(reader: BlockReader) -> TrackShapes:
                 sectionidx = read_sectionidx(sub_block)
                 section_idxs.append(sectionidx)
 
+            elif sub_block.id == TokenID.XoverPts:
+                if xover_pts is None:
+                    xover_pts = []
+                
+                xover_pts = read_xoverpts(sub_block)
+
             elif sub_block.id == TokenID.TunnelShape:
                 tunnel_shape = True
 
             elif sub_block.id == TokenID.RoadShape:
                 road_shape = True
+
+            elif sub_block.id == TokenID.CrossoverShape:
+                crossover_shape = True
+
+            elif sub_block.id == TokenID.ManualJunctionShape:
+                manual_junction_shape = True
             
             else:
                 logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
@@ -384,8 +400,11 @@ def read_trackshapes(reader: BlockReader) -> TrackShapes:
             main_route=main_route,
             clearance_distance=clearance_distance,
             section_idxs=section_idxs,
+            xover_pts=xover_pts,
             tunnel_shape=tunnel_shape,
-            road_shape=road_shape
+            road_shape=road_shape,
+            crossover_shape=crossover_shape,
+            manual_junction_shape=manual_junction_shape
         )
         trackshapes.add(trackshape)
         
@@ -426,6 +445,41 @@ def read_sectionidx(reader: BlockReader) -> SectionIdx:
         a=a,
         track_sections=track_sections
     )
+
+
+def read_xoverpts(reader: BlockReader) -> List[XoverPt]:
+    """
+    Read and parse an xover pts block from a BlockReader.
+
+    Consumes the `XoverPts` block and returns a list of `XoverPt` objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at an xover pts block.
+
+    Returns:
+        SectionIdx: The parsed xover pts.
+    """
+    reader.verify_id(TokenID.XoverPts)
+
+    xover_pts: List[XoverPt] = []
+    count = reader.read_uint()
+
+    for xoverpt_block in reader:
+        xoverpt_block.verify_id(TokenID.XoverPt)
+
+        x = reader.read_float()
+        y = reader.read_float()
+        z = reader.read_float()
+
+        xover_pts.append(XoverPt(
+            x=x,
+            y=y,
+            z=z
+        ))
+
+    reader.verify_count(count, len(xover_pts))
+
+    return xover_pts
 
 
 def read_tsectionidx(reader: BlockReader) -> TSectionIdx:
