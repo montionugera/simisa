@@ -370,16 +370,14 @@ class BlockReader(ABC):
         """
         sub_block = self.read_sub_block()
 
-        if sub_block is None:
-            return
-
-        if expected_id is not None:
+        if expected_id is not None and sub_block is not None:
             sub_block.verify_id(expected_id)
 
         try:
             yield sub_block
         finally:
-            sub_block.verify_end_of_block()
+            if sub_block is not None:
+                sub_block.verify_end_of_block()
     
     def sub_blocks(self, expected_id: Optional[TokenID] = None) -> Iterator["BlockReader"]:
         """

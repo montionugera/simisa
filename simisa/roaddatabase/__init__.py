@@ -20,13 +20,23 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 from .reader import load, loads
 from .models import *
 from ..trackdatabase.models import (
-    TrItem,
+    TrPin,
+    TrVectorSection,
+    TrVectorNode,
+    TrJunctionNode,
+    UiD,
     TrackNode,
 )
 
 __all__ = [
     "load",
     "loads",
+    "TrPin",
+    "TrVectorSection",
+    "TrVectorNode",
+    "TrJunctionNode",
+    "UiD",
+    "TrackNode",
     "RoadDB"
 ]
 

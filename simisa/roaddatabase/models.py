@@ -18,7 +18,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 from dataclasses import dataclass, field
-from datetime import datetime
 from typing import Optional, List
 
 from ..trackdatabase.models import TrackNode, TrItem

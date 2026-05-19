@@ -19,7 +19,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from abc import ABC
 from dataclasses import dataclass, field
-from datetime import datetime
 from enum import Enum
 from typing import Optional, List
 
@@ -64,68 +63,7 @@ class TrRouteFile:
     pass
 
 
-@dataclass
-class TrPin:
-    link: int = 0
-    direction: int = 0
 
-
-@dataclass
-class UiD:
-    tile_x: int = 0
-    tile_z: int = 0
-    x: float = 0.0
-    y: float = 0.0
-    z: float = 0.0
-    ax: float = 0.0
-    ay: float = 0.0
-    az: float = 0.0
-    world_tile_x: int = 0
-    world_tile_z: int = 0
-    world_id: int = 0
-
-
-@dataclass
-class TrJunctionNode:
-    selected_route: int = 0
-    tn: Optional["TrackNode"] = None
-    idx: int = 0
-    shape_index: int = 0
-    angle: float = float("inf")
-    angle_computed: bool = False
-
-
-@dataclass
-class TrVectorSection:
-    flag1: int = 0
-    flag2: int = 0
-    section_index: int = 0
-    shape_index: int = 0
-    tile_x: int = 0
-    tile_z: int = 0
-    x: float = 0.0
-    y: float = 0.0
-    z: float = 0.0
-    ax: float = 0.0
-    ay: float = 0.0
-    az: float = 0.0
-    world_file_uid: int = 0
-    wf_name_x: int = 0
-    wf_name_z: int = 0
-    phys_elev_table: Interpolator = field(default_factory=Interpolator)
-    vis_elev_table: Interpolator = field(default_factory=Interpolator)
-    nom_elev_m: float = -1.0
-    elev_offset_m: float = 0.0
-    freight_speed_mps: float = float("-inf")
-    pass_speed_mps: float = float("-inf")
-    reduced: bool = False
-
-
-@dataclass
-class TrVectorNode:
-    tr_vector_sections: list[TrVectorSection] = field(default_factory=list)
-    tr_item_refs: list[int] = field(default_factory=list)
-    no_item_refs: int = 0
 
 
 class TrItemType(Enum):
@@ -266,6 +204,110 @@ class TrackCircuitXRefList(list[TrackCircuitSectionXref]):
 
 
 @dataclass
+class TrPin:
+    link: int = 0
+    direction: int = 0
+
+    def __repr__(self):
+        return (
+            f"TrPin(link={self.link}, "
+            f"direction={self.direction}))"
+        )
+
+
+@dataclass
+class TrVectorSection:
+    flags1: int = 0
+    flags2: int = 0
+    section_index: int = 0
+    shape_index: int = 0
+    tile_x: int = 0
+    tile_z: int = 0
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    ax: float = 0.0
+    ay: float = 0.0
+    az: float = 0.0
+    world_file_uid: int = 0
+    wf_name_x: int = 0
+    wf_name_z: int = 0
+
+    def __repr__(self):
+        return (
+            f"TrVectorSection(flags1={self.flags1}, "
+            f"flags2={self.flags2}), "
+            f"section_index={self.section_index}), "
+            f"shape_index={self.shape_index}), "
+            f"tile_x={self.tile_x}), "
+            f"tile_z={self.tile_z}), "
+            f"x={self.x}), "
+            f"y={self.y}), "
+            f"z={self.z}), "
+            f"ax={self.ax}), "
+            f"ay={self.ay}), "
+            f"az={self.az}), "
+            f"world_file_uid={self.world_file_uid}), "
+            f"wf_name_x={self.wf_name_x}), "
+            f"wf_name_z={self.wf_name_z}))"
+        )
+
+
+@dataclass
+class TrVectorNode:
+    tr_vector_sections: List[TrVectorSection] = field(default_factory=list)
+    tr_item_refs: List[int] = field(default_factory=list)
+
+    def __repr__(self):
+        return (
+            "TrVectorNode("
+            f"tr_vector_sections (len={len(self.tr_vector_sections)}), "
+            f"tr_item_refs (len={len(self.tr_item_refs)}))"
+        )
+
+
+@dataclass
+class TrJunctionNode:
+    shape_index: int = 0
+
+    def __repr__(self):
+        return (
+            "TrJunctionNode("
+            f"shape_index={self.shape_index}))"
+        )
+
+
+@dataclass
+class UiD:
+    tile_x: int = 0
+    tile_z: int = 0
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    ax: float = 0.0
+    ay: float = 0.0
+    az: float = 0.0
+    world_tile_x: int = 0
+    world_tile_z: int = 0
+    world_id: int = 0
+
+    def __repr__(self):
+        return (
+            f"UiD(tile_x={self.tile_x}, "
+            f"tile_z={self.tile_z}), "
+            f"x={self.x}), "
+            f"y={self.y}), "
+            f"z={self.z}), "
+            f"ax={self.ax}), "
+            f"ay={self.ay}), "
+            f"az={self.az}), "
+            f"world_tile_x={self.world_tile_x}), "
+            f"world_tile_z={self.world_tile_z}), "
+            f"world_id={self.world_id}))"
+        )
+
+
+@dataclass
 class TrackNode:
     index: int
     uid: Optional[UiD] = None
@@ -273,15 +315,19 @@ class TrackNode:
     tr_vector_node: Optional[TrVectorNode] = None
     tr_end_node: bool = False
     tr_pins: List[TrPin] = field(default_factory=list)
+    inpins: int = 0
+    outpins: int = 0
 
     def __repr__(self):
         return (
             f"TrackNode(index={self.index}, "
-            f"uid={self.uid}), "
-            f"tr_junction_node (len={len(self.tr_junction_node)}), "
-            f"tr_vector_node (len={len(self.tr_vector_node)}), "
-            f"tr_end_node={self.tr_end_node}), "
-            f"tr_pins (len={len(self.tr_pins)}))"
+            f"uid={self.uid}, "
+            f"tr_junction_node={self.tr_junction_node}, "
+            f"tr_vector_node={self.tr_vector_node}, "
+            f"tr_end_node={self.tr_end_node}, "
+            f"tr_pins (len={len(self.tr_pins)}), "
+            f"inpins={self.inpins}, "
+            f"outpins={self.outpins})"
         )
 
 

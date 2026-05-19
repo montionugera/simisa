@@ -23,6 +23,12 @@ from .models import *
 __all__ = [
     "load",
     "loads",
+    "TrPin",
+    "TrVectorSection",
+    "TrVectorNode",
+    "TrJunctionNode",
+    "UiD",
+    "TrackNode",
     "TrackDB"
 ]
 
