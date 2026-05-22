@@ -23,23 +23,9 @@ from enum import IntEnum
 from typing import Optional, List
 
 
-class TrItemType(IntEnum):
-    EMPTY = 0
-    CROSSOVER = 1
-    SIGNAL = 2
-    SPEEDPOST = 3
-    PLATFORM = 4
-    SOUNDREGION = 5
-    XING = 6
-    SIDING = 7
-    HAZARD = 8
-    PICKUP = 9
-    CARSPAWNER = 10
-
 @dataclass
 class TrItem(ABC):
     item_name: Optional[str] = None
-    item_type: TrItemType = TrItemType.EMPTY
     tr_item_id: int = 0
     tile_x: int = 0
     tile_z: int = 0

@@ -345,60 +345,105 @@ def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
         tr_items: List[TrItem] = []
         count = tr_item_table_block.read_uint()
         
-        for tr_item_block in tr_item_table_block:
+        for sub_block in tr_item_table_block:
             tr_item = None
-            tr_item_id = 0
-            tile_x = 0
-            tile_z = 0
-            x = 0.0
-            y = 0.0
-            z = 0.0
-            tile_px = 0
-            tile_pz = 0
-            px = 0.0
-            pz = 0.0
-            sdata1 = 0.0
-            sdata2 = 0
 
-            for sub_block in tr_item_block:
-                if sub_block.id == TokenID.TrItemId:
-                    tr_item_id = sub_block.read_uint()
-                    sub_block.skip()
+            if sub_block.id == TokenID.CrossoverItem:
+                tr_item = read_crossover_item(sub_block)
 
-                elif sub_block.id == TokenID.TrItemRData:
-                    x = sub_block.read_float()
-                    y = sub_block.read_float()
-                    z = sub_block.read_float()
-                    tile_x = sub_block.read_int()
-                    tile_z = sub_block.read_int()
-                    sub_block.skip()
+            #elif sub_block.id == TokenID.SignalItem:
+            #    tr_item = read_tr_item_refs(sub_block)
 
-                elif sub_block.id == TokenID.TrItemPData:
-                    px = sub_block.read_float()
-                    pz = sub_block.read_float()
-                    tile_px = sub_block.read_int()
-                    tile_pz = sub_block.read_int()
-                    sub_block.skip()
+            else:
+                logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+                sub_block.skip()
+            
+            if tr_item is not None:
+                tr_items.append(tr_item)
 
-                elif sub_block.id == TokenID.TrItemSData:
-                    sdata1 = sub_block.read_float()
-                    sdata2 = sub_block.read_flags()
-                    sub_block.skip()
-                
-                else:
-                    logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
-                    sub_block.skip()
+        tr_item_table_block.verify_count(count, len(tr_items))
 
-            track_node = TrackNode(
-                index=index,
-                uid=uid,
-                tr_junction_node=tr_junction_node,
-                tr_vector_node=tr_vector_node,
-                tr_end_node=tr_end_node,
-                tr_pins=tr_pins
-            )
-            track_nodes.append(track_node)
+        return tr_items
 
-        track_nodes_block.verify_count(count, len(track_nodes))
 
-        return track_nodes
+def read_crossover_item(reader: BlockReader) -> TrItem:
+
+    reader.verify_id(TokenID.CrossoverItem)
+
+    crossover_item = CrossoverItem()
+    
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            crossover_item = read_tr_item_id(sub_block, crossover_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            crossover_item = read_tr_item_rdata(sub_block, crossover_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            crossover_item = read_tr_item_pdata(sub_block, crossover_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            crossover_item = read_tr_item_sdata(sub_block, crossover_item)
+
+        elif sub_block.id == TokenID.CrossoverTrItemData:
+            crossover_item.track_node = sub_block.read_uint()
+            crossover_item.shape_index = sub_block.read_uint()
+            sub_block.skip()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return crossover_item
+
+
+def read_tr_item_id(reader: BlockReader, tr_item: TrItem) -> TrItem:
+
+    reader.verify_id(TokenID.TrItemId)
+
+    tr_item.tr_item_id = reader.read_uint()
+
+    reader.skip()
+
+    return tr_item
+
+
+def read_tr_item_rdata(reader: BlockReader, tr_item: TrItem) -> TrItem:
+
+    reader.verify_id(TokenID.TrItemRData)
+
+    tr_item.x = reader.read_float()
+    tr_item.y = reader.read_float()
+    tr_item.z = reader.read_float()
+    tr_item.tile_x = reader.read_int()
+    tr_item.tile_z = reader.read_int()
+
+    reader.skip()
+
+    return tr_item
+
+
+def read_tr_item_pdata(reader: BlockReader, tr_item: TrItem) -> TrItem:
+
+    reader.verify_id(TokenID.TrItemPData)
+
+    tr_item.px = reader.read_float()
+    tr_item.pz = reader.read_float()
+    tr_item.tile_px = reader.read_int()
+    tr_item.tile_pz = reader.read_int()
+
+    reader.skip()
+
+    return tr_item
+
+
+def read_tr_item_sdata(reader: BlockReader, tr_item: TrItem) -> TrItem:
+
+    reader.verify_id(TokenID.TrItemSData)
+
+    tr_item.sdata1 = reader.read_float()
+    tr_item.sdata2 = reader.read_flags()
+
+    reader.skip()
+
+    return tr_item
