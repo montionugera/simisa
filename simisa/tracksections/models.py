@@ -29,7 +29,6 @@ class SectionCurve:
     def __repr__(self):
         return f"SectionCurve(radius={self.radius}, angle={self.angle})"
 
-
 @dataclass
 class SectionSize:
     width: float = 1.5
@@ -38,14 +37,12 @@ class SectionSize:
     def __repr__(self):
         return f"SectionSize(width={self.width}, length={self.length})"
 
-
 @dataclass
 class SectionSkew:
     angle: float = 0.0
 
     def __repr__(self):
         return f"SectionSkew(angle={self.angle})"
-
 
 @dataclass
 class TrackSection:
@@ -64,7 +61,6 @@ class TrackSection:
             f"water_scoop={self.water_scoop})"
         )
 
-
 @dataclass
 class RouteTrackSection(TrackSection):
     def __repr__(self):
@@ -75,7 +71,6 @@ class RouteTrackSection(TrackSection):
             f"section_skew={self.section_skew}, "
             f"water_scoop={self.water_scoop})"
         )
-
 
 @dataclass
 class TrackSections:
@@ -112,7 +107,6 @@ class TrackSections:
             f"track_sections (len={len(self.track_sections)}))"
         )
 
-
 @dataclass
 class SectionIdx:
     x: float
@@ -131,7 +125,6 @@ class SectionIdx:
             f"track_sections (len={len(self.a)}))"
         )
 
-
 @dataclass
 class TrackPath:
     section_index: int
@@ -142,7 +135,6 @@ class TrackPath:
             f"TrackPath(section_index={self.section_index}, "
             f"track_sections (len={len(self.track_sections)}))"
         )
-
 
 @dataclass
 class TSectionIdx:
@@ -165,7 +157,6 @@ class TSectionIdx:
         return (
             f"TSectionIdx(track_paths (len={len(self.track_paths)}))"
         )
-
 
 @dataclass
 class XoverPt:
@@ -206,7 +197,6 @@ class TrackShape:
             f"manual_junction_shape={self.manual_junction_shape})"
         )
 
-
 @dataclass
 class TrackShapes:
     track_shapes: Dict[int, TrackShape] = field(default_factory=dict)
@@ -241,7 +231,6 @@ class TrackShapes:
             f"TrackShapes(max_shape_index={self.max_shape_index}, "
             f"track_shapes (len={len(self.track_shapes)}))"
         )
-
 
 @dataclass
 class TSection:

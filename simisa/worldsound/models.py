@@ -22,22 +22,18 @@ from enum import IntEnum
 from typing import Optional, List
 
 
-
 @dataclass
 class WorldSoundFile:
     world_sound: Optional["TrWorldSoundFile"]
-
 
 @dataclass
 class TrWorldSoundFile:
     sound_sources: List["WorldSoundSource"]
     sound_regions: List["WorldSoundRegion"]
 
-
 @dataclass
 class SoundEntity(ABC):
     pass
-
 
 @dataclass
 class WorldSoundSource(SoundEntity):
@@ -46,20 +42,17 @@ class WorldSoundSource(SoundEntity):
     z: float
     sound_source_filename: Optional[str]
 
-
 @dataclass
 class WorldSoundRegion(SoundEntity):
     sound_region_track_type: int
     rot_y: float
     track_nodes: List[int]
 
-
 @dataclass
 class Position3D:
     x: float
     y: float
     z: float
-
 
 @dataclass
 class TrackNodeReference:

@@ -292,7 +292,6 @@ def read_tr_vector_sections(reader: BlockReader) -> List[TrVectorSection]:
         tr_vector_sections.append(tr_vector_section)
 
     reader.skip()
-
     reader.verify_count(count, len(tr_vector_sections))
 
     return tr_vector_sections
@@ -311,7 +310,6 @@ def read_tr_item_refs(reader: BlockReader) -> List[int]:
         tr_item_refs.append(tr_item_ref)
 
     reader.skip()
-
     reader.verify_count(count, len(tr_item_refs))
 
     return tr_item_refs
@@ -344,5 +342,63 @@ def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
         if tr_item_table_block is None:
             return []
         
-        tr_item_table_block.skip()
-        return []
+        tr_items: List[TrItem] = []
+        count = tr_item_table_block.read_uint()
+        
+        for tr_item_block in tr_item_table_block:
+            tr_item = None
+            tr_item_id = 0
+            tile_x = 0
+            tile_z = 0
+            x = 0.0
+            y = 0.0
+            z = 0.0
+            tile_px = 0
+            tile_pz = 0
+            px = 0.0
+            pz = 0.0
+            sdata1 = 0.0
+            sdata2 = 0
+
+            for sub_block in tr_item_block:
+                if sub_block.id == TokenID.TrItemId:
+                    tr_item_id = sub_block.read_uint()
+                    sub_block.skip()
+
+                elif sub_block.id == TokenID.TrItemRData:
+                    x = sub_block.read_float()
+                    y = sub_block.read_float()
+                    z = sub_block.read_float()
+                    tile_x = sub_block.read_int()
+                    tile_z = sub_block.read_int()
+                    sub_block.skip()
+
+                elif sub_block.id == TokenID.TrItemPData:
+                    px = sub_block.read_float()
+                    pz = sub_block.read_float()
+                    tile_px = sub_block.read_int()
+                    tile_pz = sub_block.read_int()
+                    sub_block.skip()
+
+                elif sub_block.id == TokenID.TrItemSData:
+                    sdata1 = sub_block.read_float()
+                    sdata2 = sub_block.read_flags()
+                    sub_block.skip()
+                
+                else:
+                    logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+                    sub_block.skip()
+
+            track_node = TrackNode(
+                index=index,
+                uid=uid,
+                tr_junction_node=tr_junction_node,
+                tr_vector_node=tr_vector_node,
+                tr_end_node=tr_end_node,
+                tr_pins=tr_pins
+            )
+            track_nodes.append(track_node)
+
+        track_nodes_block.verify_count(count, len(track_nodes))
+
+        return track_nodes

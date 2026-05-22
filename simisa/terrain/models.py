@@ -35,7 +35,6 @@ class TerrainWaterHeightOffset:
             f"ne={self.ne}, nw={self.nw})"
         )
 
-
 @dataclass
 class TerrainSamples:
     terrain_nsamples: Optional[int] = None
@@ -60,7 +59,6 @@ class TerrainSamples:
             f"terrain_sample_nbuffer={self.terrain_sample_nbuffer})"
         )
 
-
 @dataclass
 class TerrainTexslot:
     filename: str
@@ -72,7 +70,6 @@ class TerrainTexslot:
             f"TerrainTexslot("
             f"filename='{self.filename}', a={self.a}, b={self.b})"
         )
-
 
 @dataclass
 class TerrainUVCalc:
@@ -87,7 +84,6 @@ class TerrainUVCalc:
             f"c={self.c}, d={self.d})"
         )
 
-
 @dataclass
 class TerrainShader:
     shader_name: str
@@ -101,7 +97,6 @@ class TerrainShader:
             f"terrain_texslots (len={len(self.terrain_texslots)}), "
             f"terrain_uvcalcs (len={len(self.terrain_uvcalcs)}))"
         )
-
 
 @dataclass
 class TerrainPatchsetPatch:
@@ -149,7 +144,6 @@ class TerrainPatchsetPatch:
             f"radius_m={self.radius_m})"
         )
 
-
 @dataclass
 class TerrainPatchset:
     terrain_patchset_distance: int
@@ -168,7 +162,6 @@ class TerrainPatchset:
             f"terrain_patchset_npatches={self.terrain_patchset_npatches}, "
             f"terrain_patchset_patches (len={len(self.terrain_patchset_patches)}))"
         )
-
 
 @dataclass
 class Terrain:

@@ -23,7 +23,6 @@ from enum import IntFlag
 from typing import Optional, List
 
 
-
 @dataclass
 class WorldObject(ABC):
     uid: int
@@ -35,16 +34,13 @@ class WorldObject(ABC):
     direction: Optional["STFQDirection"]
     matrix: Optional["Matrix3x3"]
 
-
 @dataclass
 class BaseWorldObject(WorldObject):
     pass
 
-
 @dataclass
 class TrackLinkedObject(WorldObject):
     tr_item_ids: List["TrItemId"]
-
 
 @dataclass
 class WorldFile:
@@ -52,16 +48,13 @@ class WorldFile:
     tile_z: int
     world: "TrWorldFile"
 
-
 @dataclass
 class TrWorldFile:
     objects: List[WorldObject]
 
-
 @dataclass
 class StaticObj(BaseWorldObject):
     pass
-
 
 @dataclass
 class PickupObj(BaseWorldObject):
@@ -80,12 +73,10 @@ class PickupObj(BaseWorldObject):
     crane_sound: Optional[str]
     location: Optional["WorldLocation"]
 
-
 @dataclass
 class TransferObj(WorldObject):
     width: float
     height: float
-
 
 @dataclass
 class TrackObj(WorldObject):
@@ -94,14 +85,12 @@ class TrackObj(WorldObject):
     collide_flags: int
     jnode_position: Optional["JNodePosn"]
 
-
 @dataclass
 class DynTrackObj(WorldObject):
     section_idx: int
     elevation: float
     collide_flags: int
     track_sections: Optional["TrackSections"]
-
 
 @dataclass
 class ForestObj(WorldObject):
@@ -112,12 +101,10 @@ class ForestObj(WorldObject):
     forest_area: Optional["ForestArea"]
     tree_size: Optional["TreeSize"]
 
-
 @dataclass
 class SignalObj(WorldObject):
     signal_sub_obj: int
     signal_units: Optional["SignalUnits"]
-
 
 @dataclass
 class SpeedPostObj(WorldObject):
@@ -125,7 +112,6 @@ class SpeedPostObj(WorldObject):
     text_size: Optional["SpeedTextSize"]
     sign_shape: Optional["SpeedSignShape"]
     tr_item_ids: List["TrItemId"]
-
 
 @dataclass
 class LevelCrossingObj(WorldObject):
@@ -138,11 +124,9 @@ class LevelCrossingObj(WorldObject):
     silent: bool
     sound_filename: str
 
-
 @dataclass
 class HazardObj(WorldObject):
     item_id: int
-
 
 @dataclass
 class CarSpawnerObj(WorldObject):
@@ -152,27 +136,22 @@ class CarSpawnerObj(WorldObject):
     list_name: Optional[str]
     car_spawner_list_idx: int
 
-
 @dataclass
 class TrObject(TrackLinkedObject):
     pass
-
 
 @dataclass
 class SidingObj(TrObject):
     pass
 
-
 @dataclass
 class PlatformObj(TrObject):
     platform_data: int
-
 
 @dataclass
 class TrItemId:
     db: int
     db_id: int
-
 
 @dataclass
 class Matrix3x3:
@@ -186,7 +165,6 @@ class Matrix3x3:
     cy: float
     cz: float
 
-
 @dataclass
 class JNodePosn:
     tile_x: int
@@ -195,18 +173,15 @@ class JNodePosn:
     y: float
     z: float
 
-
 @dataclass
 class TWorldPosition:
     x: float
     y: float
     z: float
 
-
 @dataclass
 class STFPosition(TWorldPosition):
     pass
-
 
 @dataclass
 class TWorldDirection:
@@ -215,11 +190,9 @@ class TWorldDirection:
     c: float
     d: float
 
-
 @dataclass
 class STFQDirection(TWorldDirection):
     pass
-
 
 @dataclass
 class Vector3:
@@ -227,34 +200,28 @@ class Vector3:
     y: float
     z: float
 
-
 @dataclass
 class WorldLocation:
     pass
-
 
 @dataclass
 class SpeedRange:
     min_mps: float
     max_mps: float
 
-
 @dataclass
 class PickupAnimData:
     pickup_options: float
     animation_speed: float
-
 
 @dataclass
 class PickupCapacity:
     quantity_available_kg: float
     feed_rate_kg_per_s: float
 
-
 @dataclass
 class StackLocations:
     locations: List["StackLocation"]
-
 
 @dataclass
 class StackLocation:
@@ -268,7 +235,6 @@ class StackLocation:
 class TrackSections:
     sections: List["TrackSection"]
 
-
 @dataclass
 class TrackSection:
     is_curved: bool
@@ -277,41 +243,34 @@ class TrackSection:
     param2: float
     delta_y: float
 
-
 @dataclass
 class ScaleRange:
     minimum: float
     maximum: float
-
 
 @dataclass
 class ForestArea:
     x: float
     z: float
 
-
 @dataclass
 class TreeSize:
     width: float
     height: float
 
-
 @dataclass
 class SignalUnits:
     units: List["SignalUnit"]
-
 
 @dataclass
 class SignalUnit:
     sub_obj: int
     tr_item: int
 
-
 @dataclass
 class SpeedSignShape:
     num_shapes: int
     shape_info: List[float]
-
 
 @dataclass
 class SpeedTextSize:
@@ -319,18 +278,15 @@ class SpeedTextSize:
     dx: float
     dy: float
 
-
 @dataclass
 class LevelCrParameters:
     warning_time: float
     minimum_distance: float
 
-
 @dataclass
 class LevelCrData:
     data1: int
     data2: int
-
 
 @dataclass
 class LevelCrTiming:
@@ -338,11 +294,9 @@ class LevelCrTiming:
     serious_timing: float
     animation_timing: float
 
-
 class PlatformDataFlag(IntFlag):
     PLATFORM_LEFT = 0x00000002
     PLATFORM_RIGHT = 0x00000004
-
 
 class StaticFlag(IntFlag):
     ROUND_SHADOW = 0x00002000

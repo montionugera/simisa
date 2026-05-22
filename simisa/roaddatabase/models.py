@@ -23,10 +23,16 @@ from typing import Optional, List
 from ..trackdatabase.models import TrackNode, TrItem
 
 
-
 @dataclass
 class RoadDB:
     serial: int = 0
     track_nodes: List[TrackNode] = field(default_factory=list)
     tr_item_table: List[TrItem] = field(default_factory=list)
+
+    def __repr__(self):
+        return (
+            f"RoadDB(serial={self.serial}, "
+            f"track_nodes (len={len(self.track_nodes)}), "
+            f"tr_item_table (len={len(self.tr_item_table)}))"
+        )
 

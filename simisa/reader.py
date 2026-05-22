@@ -354,7 +354,7 @@ class BlockReader(ABC):
         self.close()
 
     @contextmanager
-    def sub_block(self, expected_id: Optional[TokenID] = None) -> "BlockReader":
+    def sub_block(self, expected_id: Optional[TokenID] = None) -> Optional["BlockReader"]:
         """
         Context-scoped access to a single child block.
 
@@ -366,7 +366,7 @@ class BlockReader(ABC):
             expected_id: Expected TokenID for validation.
 
         Yields:
-            BlockReader: Child block instance.
+            BlockReader: Child block instance or None if there were no blocks.
         """
         sub_block = self.read_sub_block()
 

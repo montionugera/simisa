@@ -19,54 +19,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from abc import ABC
 from dataclasses import dataclass, field
-from enum import Enum
+from enum import IntEnum
 from typing import Optional, List
 
 
-class Interpolator:
-    pass
-
-
-class WorldPosition:
-    pass
-
-
-class Position:
-    pass
-
-
-class TrackSectionsFile:
-    pass
-
-
-class TrackShape:
-    pass
-
-
-class TrackSection:
-    pass
-
-
-class SectionIdx:
-    pass
-
-
-class InfoApiMap:
-    pass
-
-
-class LatLon:
-    pass
-
-
-class TrRouteFile:
-    pass
-
-
-
-
-
-class TrItemType(Enum):
+class TrItemType(IntEnum):
     EMPTY = 0
     CROSSOVER = 1
     SIGNAL = 2
@@ -78,7 +35,6 @@ class TrItemType(Enum):
     HAZARD = 8
     PICKUP = 9
     CARSPAWNER = 10
-
 
 @dataclass
 class TrItem(ABC):
@@ -95,14 +51,12 @@ class TrItem(ABC):
     px: float = 0.0
     pz: float = 0.0
     sdata1: float = 0.0
-    sdata2: Optional[str] = None
-
+    sdata2: int = 0
 
 @dataclass
 class CrossoverItem(TrItem):
     track_node: int = 0
-    shape_id: int = 0
-
+    shape_index: int = 0
 
 @dataclass
 class SignalDirection:
@@ -111,17 +65,15 @@ class SignalDirection:
     link_lr_path: int = 0
     sd3: int = 0
 
-
 @dataclass
 class SignalItem(TrItem):
-    flags1: Optional[str] = None
+    flags1: Optional[int] = None
     direction: int = 0
     sig_obj: int = -1
     sig_data1: float = 0.0
     signal_type: Optional[str] = None
     no_sig_dirs: int = 0
-    tr_signal_dirs: list[SignalDirection] = field(default_factory=list)
-
+    tr_signal_dirs: List[SignalDirection] = field(default_factory=list)
 
 @dataclass
 class SpeedPostItem(TrItem):
@@ -141,11 +93,9 @@ class SpeedPostItem(TrItem):
     direction: int = 0
     display_number: int = 0
 
-
 @dataclass
 class TempSpeedPostItem(SpeedPostItem):
-    world_position: Optional[WorldPosition] = None
-
+    pass # TODO world position?
 
 @dataclass
 class SoundRegionItem(TrItem):
@@ -153,22 +103,18 @@ class SoundRegionItem(TrItem):
     sr_data2: int = 0
     sr_data3: float = 0.0
 
-
 @dataclass
 class EmptyItem(TrItem):
     pass
-
 
 @dataclass
 class LevelCrItem(TrItem):
     pass
 
-
 @dataclass
 class SidingItem(TrItem):
     flags1: Optional[str] = None
     linked_siding_id: int = 0
-
 
 @dataclass
 class PlatformItem(TrItem):
@@ -178,30 +124,13 @@ class PlatformItem(TrItem):
     platform_num_passengers_waiting: int = 0
     linked_platform_item_id: int = 0
 
-
 @dataclass
 class HazzardItem(TrItem):
     pass
 
-
 @dataclass
 class PickupItem(TrItem):
     pass
-
-
-@dataclass
-class TrackCircuitSectionXref:
-    length: float = 0.0
-    offset_length: list[float] = field(default_factory=lambda: [0.0, 0.0])
-    index: int = 0
-
-
-class TrackCircuitXRefList(list[TrackCircuitSectionXref]):
-    pass
-
-
-###################################
-
 
 @dataclass
 class TrPin:
@@ -213,7 +142,6 @@ class TrPin:
             f"TrPin(link={self.link}, "
             f"direction={self.direction}))"
         )
-
 
 @dataclass
 class TrVectorSection:
@@ -252,7 +180,6 @@ class TrVectorSection:
             f"wf_name_z={self.wf_name_z}))"
         )
 
-
 @dataclass
 class TrVectorNode:
     tr_vector_sections: List[TrVectorSection] = field(default_factory=list)
@@ -265,7 +192,6 @@ class TrVectorNode:
             f"tr_item_refs (len={len(self.tr_item_refs)}))"
         )
 
-
 @dataclass
 class TrJunctionNode:
     shape_index: int = 0
@@ -275,7 +201,6 @@ class TrJunctionNode:
             "TrJunctionNode("
             f"shape_index={self.shape_index}))"
         )
-
 
 @dataclass
 class UiD:
@@ -306,7 +231,6 @@ class UiD:
             f"world_id={self.world_id}))"
         )
 
-
 @dataclass
 class TrackNode:
     index: int
@@ -329,7 +253,6 @@ class TrackNode:
             f"inpins={self.inpins}, "
             f"outpins={self.outpins})"
         )
-
 
 @dataclass
 class TrackDB:
