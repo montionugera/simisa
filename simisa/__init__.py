@@ -58,4 +58,3 @@ from . import terrain
 from . import trackdatabase
 from . import tracksections
 from . import world
-from . import worldsound

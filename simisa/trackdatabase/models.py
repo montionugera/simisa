@@ -19,7 +19,6 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 from abc import ABC
 from dataclasses import dataclass, field
-from enum import IntEnum
 from typing import Optional, List
 
 
@@ -263,7 +262,7 @@ class TrVectorSection:
             f"ax={self.ax}), "
             f"ay={self.ay}), "
             f"az={self.az}), "
-            f"world_file_uid={self.world_file_uid}), "
+            f"wf_uid={self.wf_uid}), "
             f"wf_name_x={self.wf_name_x}), "
             f"wf_name_z={self.wf_name_z}))"
         )

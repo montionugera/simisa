@@ -744,17 +744,19 @@ class BinaryBlockReader(BlockReader):
         sub_block.filetype = self.filetype
         sub_block.fileversion = self.fileversion
 
+        sub_block.flags = raw_flags
+        sub_block.remaining_bytes = size
+
+        self.remaining_bytes -= size
+
         token_id = raw_id + self.token_offset
 
         try:
             sub_block.id = TokenID(token_id)
         except ValueError:
-            raise BlockReaderError(f"Token ID {token_id} is not defined.")
-            
-        sub_block.flags = raw_flags
-        sub_block.remaining_bytes = size
-
-        self.remaining_bytes -= size
+            logger.warning(f"Unknown Token ID {token_id}, skipping block.")
+            sub_block.skip()
+            return self.read_sub_block()
 
         if sub_block.remaining_bytes > 0:
             label_length = sub_block._read(1)[0]

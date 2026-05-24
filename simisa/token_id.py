@@ -279,11 +279,17 @@ class TokenID(IntEnum):
     terrain_sample_asbuffer = 281
     Static = 303
     TrackObj = 305
+    Dyntrack = 306
     Forest = 308
     CollideObject = 311
     Signal = 317
+    Gantry = 356
+    CarSpawner = 357
+    Pickup = 359
     Platform = 360
+    Siding = 361
     LevelCr = 362
+    Transfer = 363
     Speedpost = 364
     Hazard = 365
     Tr_Worldfile = 375
@@ -1450,12 +1456,14 @@ class TokenID(IntEnum):
     DerailScale = 1537
     TimetableTollerance = 1538
     DEMPath = 1539
-    CarSpawner = 1540
-    Siding = 1541
-    Dyntrack = 1542
-    Transfer = 1543
-    Gantry = 1544
-    Pickup = 1545
+    # TODO these are probably for activities, but the worldfile stuff is more important,
+    # so therefore they are commented out. Somehow add it back in if activity stuff is needed at some point.
+    #CarSpawner = 1540
+    #Siding = 1541
+    #Dyntrack = 1542
+    #Transfer = 1543
+    #Gantry = 1544
+    #Pickup = 1545
     Wagon = 1546
     Engine = 1547
     ORTSListName = 1548
