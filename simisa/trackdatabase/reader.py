@@ -336,18 +336,6 @@ def read_tr_pins(reader: BlockReader) -> List[TrPin]:
 
     return tr_pins
 
-# EmptyItem = 928 x
-# SignalItem = 929 x
-# PickupItem = 930
-# PlatformItem = 931
-# HazzardItem = 932
-# CarSpawnerItem = 933
-# SidingItem = 934
-# LevelCrItem = 935
-# SpeedPostItem = 936 x
-# SoundRegionItem = 937
-# CrossoverItem = 938 x
-
 
 def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
 
@@ -373,6 +361,27 @@ def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
             elif sub_block.id == TokenID.SpeedPostItem:
                 tr_item = read_speedpost_item(sub_block)
 
+            elif sub_block.id == TokenID.SoundRegionItem:
+                tr_item = read_soundregion_item(sub_block)
+
+            elif sub_block.id == TokenID.LevelCrItem:
+                tr_item = read_levelcr_item(sub_block)
+
+            elif sub_block.id == TokenID.SidingItem:
+                tr_item = read_siding_item(sub_block)
+
+            elif sub_block.id == TokenID.PlatformItem:
+                tr_item = read_platform_item(sub_block)
+
+            elif sub_block.id == TokenID.HazzardItem:
+                tr_item = read_hazzard_item(sub_block)
+
+            elif sub_block.id == TokenID.PickupItem:
+                tr_item = read_pickup_item(sub_block)
+
+            elif sub_block.id == TokenID.CarSpawnerItem:
+                tr_item = read_carspawner_item(sub_block)
+
             else:
                 logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
                 sub_block.skip()
@@ -385,7 +394,7 @@ def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
         return tr_items
 
 
-def read_empty_item(reader: BlockReader) -> TrItem:
+def read_empty_item(reader: BlockReader) -> EmptyItem:
 
     reader.verify_id(TokenID.EmptyItem)
 
@@ -402,7 +411,7 @@ def read_empty_item(reader: BlockReader) -> TrItem:
     return empty_item
 
 
-def read_crossover_item(reader: BlockReader) -> TrItem:
+def read_crossover_item(reader: BlockReader) -> CrossoverItem:
 
     reader.verify_id(TokenID.CrossoverItem)
 
@@ -433,7 +442,7 @@ def read_crossover_item(reader: BlockReader) -> TrItem:
     return crossover_item
 
 
-def read_signal_item(reader: BlockReader) -> TrItem:
+def read_signal_item(reader: BlockReader) -> SignalItem:
 
     reader.verify_id(TokenID.SignalItem)
 
@@ -501,7 +510,7 @@ def read_signal_directions(reader: BlockReader) -> List[SignalDirection]:
     return signal_directions
 
 
-def read_speedpost_item(reader: BlockReader) -> TrItem:
+def read_speedpost_item(reader: BlockReader) -> SpeedPostItem:
 
     reader.verify_id(TokenID.SpeedPostItem)
 
@@ -576,11 +585,222 @@ def read_speedpost_item(reader: BlockReader) -> TrItem:
     return speedpost_item
 
 
+def read_soundregion_item(reader: BlockReader) -> SoundRegionItem:
+
+    reader.verify_id(TokenID.SoundRegionItem)
+
+    soundregion_item = SoundRegionItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            soundregion_item = read_tr_item_id(sub_block, soundregion_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            soundregion_item = read_tr_item_rdata(sub_block, soundregion_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            soundregion_item = read_tr_item_pdata(sub_block, soundregion_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            soundregion_item = read_tr_item_sdata(sub_block, soundregion_item)
+
+        elif sub_block.id == TokenID.TrItemSRData:
+            soundregion_item.sr_data1 = sub_block.read_uint()
+            soundregion_item.sr_data2 = sub_block.read_uint()
+            soundregion_item.sr_data3 = sub_block.read_float()
+            sub_block.skip()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return soundregion_item
+
+
+def read_levelcr_item(reader: BlockReader) -> LevelCrItem:
+
+    reader.verify_id(TokenID.LevelCrItem)
+
+    levelcr_item = LevelCrItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            levelcr_item = read_tr_item_id(sub_block, levelcr_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            levelcr_item = read_tr_item_rdata(sub_block, levelcr_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            levelcr_item = read_tr_item_pdata(sub_block, levelcr_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            levelcr_item = read_tr_item_sdata(sub_block, levelcr_item)
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return levelcr_item
+
+
+def read_siding_item(reader: BlockReader) -> SidingItem:
+
+    reader.verify_id(TokenID.SidingItem)
+
+    siding_item = SidingItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            siding_item = read_tr_item_id(sub_block, siding_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            siding_item = read_tr_item_rdata(sub_block, siding_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            siding_item = read_tr_item_pdata(sub_block, siding_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            siding_item = read_tr_item_sdata(sub_block, siding_item)
+
+        elif sub_block.id == TokenID.SidingTrItemData:
+            siding_item.flags = sub_block.read_flags()
+            siding_item.linked_siding_item_id = sub_block.read_uint()
+            sub_block.skip()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return siding_item
+
+
+def read_platform_item(reader: BlockReader) -> PlatformItem:
+
+    reader.verify_id(TokenID.PlatformItem)
+
+    platform_item = PlatformItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            platform_item = read_tr_item_id(sub_block, platform_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            platform_item = read_tr_item_rdata(sub_block, platform_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            platform_item = read_tr_item_pdata(sub_block, platform_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            platform_item = read_tr_item_sdata(sub_block, platform_item)
+
+        elif sub_block.id == TokenID.PlatformName:
+            platform_item.name = sub_block.read_string()
+            sub_block.skip()
+
+        elif sub_block.id == TokenID.Station:
+            platform_item.station = sub_block.read_string()
+            sub_block.skip()
+
+        elif sub_block.id == TokenID.PlatformMinWaitingTime:
+            platform_item.min_waiting_time = sub_block.read_uint()
+            sub_block.skip()
+
+        elif sub_block.id == TokenID.PlatformNumPassengersWaiting:
+            platform_item.num_passengers_waiting = sub_block.read_uint()
+            sub_block.skip()
+
+        elif sub_block.id == TokenID.PlatformTrItemData:
+            platform_item.flags = sub_block.read_flags()
+            platform_item.linked_platform_item_id = sub_block.read_uint()
+            sub_block.skip()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return platform_item
+
+
+def read_hazzard_item(reader: BlockReader) -> HazzardItem:
+
+    reader.verify_id(TokenID.HazzardItem)
+
+    hazzard_item = HazzardItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            hazzard_item = read_tr_item_id(sub_block, hazzard_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            hazzard_item = read_tr_item_rdata(sub_block, hazzard_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            hazzard_item = read_tr_item_pdata(sub_block, hazzard_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            hazzard_item = read_tr_item_sdata(sub_block, hazzard_item)
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return hazzard_item
+
+
+def read_pickup_item(reader: BlockReader) -> PickupItem:
+
+    reader.verify_id(TokenID.PickupItem)
+
+    pickup_item = PickupItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            pickup_item = read_tr_item_id(sub_block, pickup_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            pickup_item = read_tr_item_rdata(sub_block, pickup_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            pickup_item = read_tr_item_pdata(sub_block, pickup_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            pickup_item = read_tr_item_sdata(sub_block, pickup_item)
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return pickup_item
+
+
+def read_carspawner_item(reader: BlockReader) -> CarSpawnerItem:
+
+    reader.verify_id(TokenID.CarSpawnerItem)
+
+    carspawner_item = CarSpawnerItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            carspawner_item = read_tr_item_id(sub_block, carspawner_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            carspawner_item = read_tr_item_rdata(sub_block, carspawner_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            carspawner_item = read_tr_item_sdata(sub_block, carspawner_item)
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return carspawner_item
+
+
 def read_tr_item_id(reader: BlockReader, tr_item: TrItem) -> TrItem:
 
     reader.verify_id(TokenID.TrItemId)
 
-    tr_item.tr_item_id = reader.read_uint()
+    tr_item.item_id = reader.read_uint()
 
     reader.skip()
 

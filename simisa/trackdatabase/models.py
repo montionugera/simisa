@@ -25,8 +25,8 @@ from typing import Optional, List
 
 @dataclass
 class TrItem(ABC):
-    item_name: Optional[str] = None
-    tr_item_id: int = 0
+    name: Optional[str] = None
+    item_id: int = 0
     tile_x: int = 0
     tile_z: int = 0
     x: float = 0.0
@@ -41,8 +41,8 @@ class TrItem(ABC):
 
     def _base_repr(self):
         return (
-            f"item_name={self.item_name}, "
-            f"tr_item_id={self.tr_item_id}, "
+            f"name={self.name}, "
+            f"item_id={self.item_id}, "
             f"tile_x={self.tile_x}, "
             f"tile_z={self.tile_z}, "
             f"x={self.x}, "
@@ -95,7 +95,7 @@ class SignalDirection:
 
 @dataclass
 class SignalItem(TrItem):
-    flags: Optional[int] = None
+    flags: int = 0
     direction: int = 0
     signal_data1: float = 0.0
     signal_type: Optional[str] = None
@@ -155,6 +155,15 @@ class SoundRegionItem(TrItem):
     sr_data2: int = 0
     sr_data3: float = 0.0
 
+    def __repr__(self):
+        return (
+            "SoundRegionItem("
+            f"{self._base_repr()}, "
+            f"sr_data1={self.sr_data1}, "
+            f"sr_data2={self.sr_data2}, "
+            f"sr_data3={self.sr_data3})"
+        )
+
 @dataclass
 class LevelCrItem(TrItem):
 
@@ -163,16 +172,35 @@ class LevelCrItem(TrItem):
 
 @dataclass
 class SidingItem(TrItem):
-    flags: Optional[str] = None
-    linked_siding_id: int = 0
+    flags: int = 0
+    linked_siding_item_id: int = 0
+
+    def __repr__(self):
+        return (
+            "SidingItem("
+            f"{self._base_repr()}, "
+            f"flags={self.flags}, "
+            f"linked_siding_item_id={self.linked_siding_item_id})"
+        )
 
 @dataclass
 class PlatformItem(TrItem):
     station: Optional[str] = None
-    flags: Optional[str] = None
-    platform_min_waiting_time: int = 0
-    platform_num_passengers_waiting: int = 0
+    flags: int = 0
+    min_waiting_time: int = 0
+    num_passengers_waiting: int = 0
     linked_platform_item_id: int = 0
+
+    def __repr__(self):
+        return (
+            "PlatformItem("
+            f"{self._base_repr()}, "
+            f"station={self.station}, "
+            f"flags={self.flags}, "
+            f"min_waiting_time={self.min_waiting_time}, "
+            f"num_passengers_waiting={self.num_passengers_waiting}, "
+            f"linked_platform_item_id={self.linked_platform_item_id})"
+        )
 
 @dataclass
 class HazzardItem(TrItem):
@@ -187,8 +215,10 @@ class PickupItem(TrItem):
         return f"PickupItem({self._base_repr()})"
 
 @dataclass
-class CarspawnerItem(TrItem):
-    pass
+class CarSpawnerItem(TrItem):
+
+    def __repr__(self):
+        return f"CarSpawnerItem({self._base_repr()})"
 
 @dataclass
 class TrPin:
