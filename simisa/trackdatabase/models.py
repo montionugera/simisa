@@ -39,10 +39,44 @@ class TrItem(ABC):
     sdata1: float = 0.0
     sdata2: int = 0
 
+    def _base_repr(self):
+        return (
+            f"item_name={self.item_name}, "
+            f"tr_item_id={self.tr_item_id}, "
+            f"tile_x={self.tile_x}, "
+            f"tile_z={self.tile_z}, "
+            f"x={self.x}, "
+            f"y={self.y}, "
+            f"z={self.z}, "
+            f"tile_px={self.tile_px}, "
+            f"tile_pz={self.tile_pz}, "
+            f"px={self.px}, "
+            f"pz={self.pz}, "
+            f"sdata1={self.sdata1}, "
+            f"sdata2={self.sdata2}"
+        )
+    
+    def __repr__(self):
+        return f"TrItem({self._base_repr()})"
+
+@dataclass
+class EmptyItem(TrItem):
+
+    def __repr__(self):
+        return f"EmptyItem({self._base_repr()})"
+
 @dataclass
 class CrossoverItem(TrItem):
     track_node: int = 0
     shape_index: int = 0
+
+    def __repr__(self):
+        return (
+            "CrossoverItem("
+            f"{self._base_repr()}, "
+            f"track_node={self.track_node}, "
+            f"shape_index={self.shape_index})"
+        )
 
 @dataclass
 class SignalDirection:
@@ -51,15 +85,32 @@ class SignalDirection:
     link_lr_path: int = 0
     sd3: int = 0
 
+    def __repr__(self):
+        return (
+            f"SignalDirection(track_node={self.track_node}, "
+            f"sd1={self.sd1}, "
+            f"link_lr_path={self.link_lr_path}, "
+            f"sd3={self.sd3}))"
+        )
+
 @dataclass
 class SignalItem(TrItem):
-    flags1: Optional[int] = None
+    flags: Optional[int] = None
     direction: int = 0
-    sig_obj: int = -1
-    sig_data1: float = 0.0
+    signal_data1: float = 0.0
     signal_type: Optional[str] = None
-    no_sig_dirs: int = 0
-    tr_signal_dirs: List[SignalDirection] = field(default_factory=list)
+    signal_dirs: List[SignalDirection] = field(default_factory=list)
+
+    def __repr__(self):
+        return (
+            "SignalItem("
+            f"{self._base_repr()}, "
+            f"flags={self.flags}, "
+            f"direction={self.direction}, "
+            f"signal_data1={self.signal_data1}, "
+            f"signal_type={self.signal_type}, "
+            f"signal_dirs (len={len(self.signal_dirs)}))"
+        )
 
 @dataclass
 class SpeedPostItem(TrItem):
@@ -74,14 +125,29 @@ class SpeedPostItem(TrItem):
     show_number: bool = False
     show_dot: bool = False
     speed_ind: float = 0.0
-    sig_obj: int = -1
     angle: float = 0.0
     direction: int = 0
     display_number: int = 0
 
-@dataclass
-class TempSpeedPostItem(SpeedPostItem):
-    pass # TODO world position?
+    def __repr__(self):
+        return (
+            "SpeedPostItem("
+            f"{self._base_repr()}, "
+            f"flags={self.flags}, "
+            f"is_mile_post={self.is_mile_post}, "
+            f"is_warning={self.is_warning}, "
+            f"is_limit={self.is_limit}, "
+            f"is_resume={self.is_resume}, "
+            f"is_passenger={self.is_passenger}, "
+            f"is_freight={self.is_freight}, "
+            f"is_mph={self.is_mph}, "
+            f"show_number={self.show_number}, "
+            f"show_dot={self.show_dot}, "
+            f"speed_ind={self.speed_ind}, "
+            f"angle={self.angle}, "
+            f"direction={self.direction}, "
+            f"display_number={self.display_number})"
+        )
 
 @dataclass
 class SoundRegionItem(TrItem):
@@ -90,32 +156,38 @@ class SoundRegionItem(TrItem):
     sr_data3: float = 0.0
 
 @dataclass
-class EmptyItem(TrItem):
-    pass
-
-@dataclass
 class LevelCrItem(TrItem):
-    pass
+
+    def __repr__(self):
+        return f"LevelCrItem({self._base_repr()})"
 
 @dataclass
 class SidingItem(TrItem):
-    flags1: Optional[str] = None
+    flags: Optional[str] = None
     linked_siding_id: int = 0
 
 @dataclass
 class PlatformItem(TrItem):
     station: Optional[str] = None
-    flags1: Optional[str] = None
+    flags: Optional[str] = None
     platform_min_waiting_time: int = 0
     platform_num_passengers_waiting: int = 0
     linked_platform_item_id: int = 0
 
 @dataclass
 class HazzardItem(TrItem):
-    pass
+
+    def __repr__(self):
+        return f"HazzardItem({self._base_repr()})"
 
 @dataclass
 class PickupItem(TrItem):
+
+    def __repr__(self):
+        return f"PickupItem({self._base_repr()})"
+
+@dataclass
+class CarspawnerItem(TrItem):
     pass
 
 @dataclass
@@ -143,7 +215,7 @@ class TrVectorSection:
     ax: float = 0.0
     ay: float = 0.0
     az: float = 0.0
-    world_file_uid: int = 0
+    wf_uid: int = 0
     wf_name_x: int = 0
     wf_name_z: int = 0
 

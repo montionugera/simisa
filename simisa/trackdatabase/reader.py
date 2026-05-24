@@ -17,6 +17,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import math
 import logging
 from typing import List
 
@@ -259,7 +260,7 @@ def read_tr_vector_sections(reader: BlockReader) -> List[TrVectorSection]:
         shape_index = reader.read_uint()
         wf_name_x = reader.read_int()
         wf_name_z = reader.read_int()
-        world_file_uid = reader.read_uint()
+        wf_uid = reader.read_uint()
         flags1 = reader.read_flags()
         flags2 = reader.read_flags()
         _ = reader.read_string()
@@ -285,7 +286,7 @@ def read_tr_vector_sections(reader: BlockReader) -> List[TrVectorSection]:
             ax=ax,
             ay=ay,
             az=az,
-            world_file_uid=world_file_uid,
+            wf_uid=wf_uid,
             wf_name_x=wf_name_x,
             wf_name_z=wf_name_z
         )
@@ -335,6 +336,18 @@ def read_tr_pins(reader: BlockReader) -> List[TrPin]:
 
     return tr_pins
 
+# EmptyItem = 928 x
+# SignalItem = 929 x
+# PickupItem = 930
+# PlatformItem = 931
+# HazzardItem = 932
+# CarSpawnerItem = 933
+# SidingItem = 934
+# LevelCrItem = 935
+# SpeedPostItem = 936 x
+# SoundRegionItem = 937
+# CrossoverItem = 938 x
+
 
 def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
 
@@ -348,11 +361,17 @@ def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
         for sub_block in tr_item_table_block:
             tr_item = None
 
-            if sub_block.id == TokenID.CrossoverItem:
+            if sub_block.id == TokenID.EmptyItem:
+                tr_item = read_empty_item(sub_block)
+
+            elif sub_block.id == TokenID.CrossoverItem:
                 tr_item = read_crossover_item(sub_block)
 
-            #elif sub_block.id == TokenID.SignalItem:
-            #    tr_item = read_tr_item_refs(sub_block)
+            elif sub_block.id == TokenID.SignalItem:
+                tr_item = read_signal_item(sub_block)
+
+            elif sub_block.id == TokenID.SpeedPostItem:
+                tr_item = read_speedpost_item(sub_block)
 
             else:
                 logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
@@ -364,6 +383,23 @@ def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
         tr_item_table_block.verify_count(count, len(tr_items))
 
         return tr_items
+
+
+def read_empty_item(reader: BlockReader) -> TrItem:
+
+    reader.verify_id(TokenID.EmptyItem)
+
+    empty_item = EmptyItem()
+    
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            empty_item = read_tr_item_id(sub_block, empty_item)
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return empty_item
 
 
 def read_crossover_item(reader: BlockReader) -> TrItem:
@@ -395,6 +431,149 @@ def read_crossover_item(reader: BlockReader) -> TrItem:
             sub_block.skip()
 
     return crossover_item
+
+
+def read_signal_item(reader: BlockReader) -> TrItem:
+
+    reader.verify_id(TokenID.SignalItem)
+
+    signal_item = SignalItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            signal_item = read_tr_item_id(sub_block, signal_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            signal_item = read_tr_item_rdata(sub_block, signal_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            signal_item = read_tr_item_pdata(sub_block, signal_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            signal_item = read_tr_item_sdata(sub_block, signal_item)
+
+        elif sub_block.id == TokenID.TrSignalType:
+            signal_item.flags = sub_block.read_flags()
+            signal_item.direction = sub_block.read_uint()
+            signal_item.signal_data1 = sub_block.read_float()
+            signal_item.signal_type = sub_block.read_string()
+            sub_block.skip()
+        
+        elif sub_block.id == TokenID.TrSignalDirs:
+            signal_item.signal_dirs = read_signal_directions(sub_block)
+            sub_block.skip()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return signal_item
+
+
+def read_signal_directions(reader: BlockReader) -> List[SignalDirection]:
+
+    reader.verify_id(TokenID.TrSignalDirs)
+
+    signal_directions: List[SignalDirection] = []
+    count = reader.read_uint()
+
+    for signal_direction_block in reader:
+        signal_direction_block.verify_id(TokenID.TrSignalDir)
+
+        track_node = signal_direction_block.read_uint()
+        sd1 = signal_direction_block.read_uint()
+        link_lr_path = signal_direction_block.read_uint()
+        sd3 = signal_direction_block.read_uint()
+
+        signal_direction_block.skip()
+
+        signal_direction = SignalDirection(
+            track_node=track_node,
+            sd1=sd1,
+            link_lr_path=link_lr_path,
+            sd3=sd3
+        )
+        signal_directions.append(signal_direction)
+
+    reader.skip()
+    reader.verify_count(count, len(signal_directions))
+
+    return signal_directions
+
+
+def read_speedpost_item(reader: BlockReader) -> TrItem:
+
+    reader.verify_id(TokenID.SpeedPostItem)
+
+    speedpost_item = SpeedPostItem()
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.TrItemId:
+            speedpost_item = read_tr_item_id(sub_block, speedpost_item)
+
+        elif sub_block.id == TokenID.TrItemRData:
+            speedpost_item = read_tr_item_rdata(sub_block, speedpost_item)
+
+        elif sub_block.id == TokenID.TrItemPData:
+            speedpost_item = read_tr_item_pdata(sub_block, speedpost_item)
+
+        elif sub_block.id == TokenID.TrItemSData:
+            speedpost_item = read_tr_item_sdata(sub_block, speedpost_item)
+
+        elif sub_block.id == TokenID.SpeedpostTrItemData:
+            flags = sub_block.read_flags()
+            speedpost_item.flags = flags
+
+            is_warning = (flags & 1) != 0
+            is_limit = (flags & (1 << 1)) != 0
+
+            if not is_warning and not is_limit:
+                speedpost_item.is_mile_post = True
+            else:
+                speedpost_item.is_warning = is_warning
+                speedpost_item.is_limit = is_limit
+
+                if is_warning and is_limit:
+                    speedpost_item.is_warning = False
+                    speedpost_item.is_resume = True
+
+                if (flags & (1 << 5)) != 0:
+                    speedpost_item.is_passenger = True
+
+                if (flags & (1 << 6)) != 0:
+                    speedpost_item.is_freight = True
+
+                if (flags & (1 << 7)) != 0:
+                    speedpost_item.is_passenger = True
+                    speedpost_item.is_freight = True
+
+                if (flags & (1 << 8)) != 0:
+                    speedpost_item.is_mph = True
+
+                if (flags & (1 << 4)) != 0:
+                    speedpost_item.show_number = True
+
+                    if (flags & (1 << 9)) != 0:
+                        speedpost_item.show_dot = True
+
+            if not speedpost_item.is_resume:
+                if speedpost_item.is_mile_post and ((flags & (1 << 9)) == 0):
+                    speedpost_item.speed_ind = float(math.trunc(sub_block.read_float()))
+                else:
+                    speedpost_item.speed_ind = sub_block.read_float()
+
+            if speedpost_item.show_number:
+                speedpost_item.display_number = sub_block.read_int()
+
+            speedpost_item.angle = (sub_block.read_float() + math.pi) % (2 * math.pi) - math.pi
+
+            sub_block.skip()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return speedpost_item
 
 
 def read_tr_item_id(reader: BlockReader, tr_item: TrItem) -> TrItem:

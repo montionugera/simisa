@@ -32,6 +32,7 @@ from .units import Units
 logger = logging.getLogger(__name__)
 
 # TODO Handle units
+# TODO pass filepath to from_stream and use it in `resolve_include`
 
 
 class StfReaderError(Exception):

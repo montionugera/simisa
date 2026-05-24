@@ -221,7 +221,8 @@ class BlockReader(ABC):
             # Then use 'from_string' to re-do all checks and return the configured reader if header was valid.
             with open(filepath, "rb") as f:
                 bom = f.read(2)
-                encoding = "utf-16-le" if bom == codecs.BOM_UTF16_LE else "ascii"
+                is_unicode = (bom == codecs.BOM_UTF16_LE)
+                encoding = "utf-16-le" if is_unicode else "ascii"
 
                 buffer = f.read()
                 try:
