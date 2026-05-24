@@ -40,6 +40,11 @@ def test_worldfile_load(global_storage):
     print(w)
     assert False
 
+def test_worldfile2_load(global_storage):
+    w = world.load(global_storage["worldfile2_path"])
+    print(w)
+    assert False
+
 def test_worldfile_load_compressed(global_storage):
     w = world.load(global_storage["worldfile_compressed_path"])
     print(w)

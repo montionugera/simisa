@@ -122,24 +122,30 @@ def read_world(reader: BlockReader) -> World:
         return World(objects=objects)
 
 
-def read_world_objects(reader: BlockReader) -> List[WorldObject]:
+def read_world_objects(reader: BlockReader) -> List[WorldObj]:
 
     reader.verify_id(TokenID.Tr_Worldfile)
 
-    world_objects: List[WorldObject] = []
+    objects: List[WorldObj] = []
     current_watermark: int = 0
 
     for sub_block in reader:
+        world_object = None
+
         if sub_block.id == TokenID.CollideObject:
+            world_object = read_collide_object(sub_block, current_watermark)
             sub_block.skip()
 
         elif sub_block.id == TokenID.Static:
+            world_object = read_static_object(sub_block, current_watermark)
             sub_block.skip()
 
         elif sub_block.id == TokenID.TrackObj:
+            world_object = read_track_object(sub_block, current_watermark)
             sub_block.skip()
 
         elif sub_block.id == TokenID.CarSpawner:
+            world_object = read_carspawner_object(sub_block, current_watermark)
             sub_block.skip()
 
         elif sub_block.id == TokenID.Siding:
@@ -177,11 +183,278 @@ def read_world_objects(reader: BlockReader) -> List[WorldObject]:
 
         elif sub_block.id == TokenID.Tr_Watermark:
             current_watermark = sub_block.read_int()
+            sub_block.skip()
 
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
             sub_block.skip()
 
+        if world_object is not None:
+            objects.append(world_object)
+
     reader.skip()
 
-    return world_objects
+    return objects
+
+
+def read_collide_object(reader: BlockReader, detail_level: int) -> StaticObj:
+
+    reader.verify_id(TokenID.CollideObject)
+
+    static_obj = StaticObj()
+    static_obj.static_detail_level = detail_level
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.UiD:
+            static_obj.uid = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.FileName:
+            static_obj.file_name = sub_block.read_string()
+
+        elif sub_block.id == TokenID.Position:
+            static_obj.position = read_position(sub_block)
+
+        elif sub_block.id == TokenID.QDirection:
+            static_obj.direction = read_qdirection(sub_block)
+
+        elif sub_block.id == TokenID.Matrix3x3:
+            static_obj.matrix3x3 = read_matrix3x3(sub_block)
+
+        elif sub_block.id == TokenID.VDbId:
+            static_obj.vdb_id = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.StaticFlags:
+            static_obj.static_flags = sub_block.read_flags()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return static_obj
+
+
+def read_static_object(reader: BlockReader, detail_level: int) -> StaticObj:
+
+    reader.verify_id(TokenID.Static)
+
+    static_obj = StaticObj()
+    static_obj.static_detail_level = detail_level
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.UiD:
+            static_obj.uid = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.FileName:
+            static_obj.file_name = sub_block.read_string()
+
+        elif sub_block.id == TokenID.Position:
+            static_obj.position = read_position(sub_block)
+
+        elif sub_block.id == TokenID.QDirection:
+            static_obj.direction = read_qdirection(sub_block)
+
+        elif sub_block.id == TokenID.Matrix3x3:
+            static_obj.matrix3x3 = read_matrix3x3(sub_block)
+
+        elif sub_block.id == TokenID.VDbId:
+            static_obj.vdb_id = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.StaticFlags:
+            static_obj.static_flags = sub_block.read_flags()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return static_obj
+
+
+def read_track_object(reader: BlockReader, detail_level: int) -> TrackObj:
+
+    reader.verify_id(TokenID.TrackObj)
+
+    track_obj = TrackObj()
+    track_obj.static_detail_level = detail_level
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.UiD:
+            track_obj.uid = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.FileName:
+            track_obj.file_name = sub_block.read_string()
+
+        elif sub_block.id == TokenID.SectionIdx:
+            track_obj.section_index = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.Elevation:
+            track_obj.elevation = sub_block.read_float()
+
+        elif sub_block.id == TokenID.CollideFlags:
+            track_obj.collide_flags = sub_block.read_flags()
+
+        elif sub_block.id == TokenID.Position:
+            track_obj.position = read_position(sub_block)
+
+        elif sub_block.id == TokenID.QDirection:
+            track_obj.direction = read_qdirection(sub_block)
+
+        elif sub_block.id == TokenID.Matrix3x3:
+            track_obj.matrix3x3 = read_matrix3x3(sub_block)
+
+        elif sub_block.id == TokenID.JNodePosn:
+            track_obj.jnode_position = read_jnode_position(sub_block)
+
+        elif sub_block.id == TokenID.VDbId:
+            track_obj.vdb_id = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.StaticFlags:
+            track_obj.static_flags = sub_block.read_flags()
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return track_obj
+
+
+def read_carspawner_object(reader: BlockReader, detail_level: int) -> CarSpawnerObj:
+
+    reader.verify_id(TokenID.CarSpawner)
+
+    carspawner_obj = CarSpawnerObj()
+    carspawner_obj.static_detail_level = detail_level
+
+    for sub_block in reader:
+        if sub_block.id == TokenID.UiD:
+            carspawner_obj.uid = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.FileName:
+            carspawner_obj.file_name = sub_block.read_string()
+
+        elif sub_block.id == TokenID.Position:
+            carspawner_obj.position = read_position(sub_block)
+
+        elif sub_block.id == TokenID.QDirection:
+            carspawner_obj.direction = read_qdirection(sub_block)
+
+        elif sub_block.id == TokenID.Matrix3x3:
+            carspawner_obj.matrix3x3 = read_matrix3x3(sub_block)
+
+        elif sub_block.id == TokenID.VDbId:
+            carspawner_obj.vdb_id = sub_block.read_uint()
+
+        elif sub_block.id == TokenID.StaticFlags:
+            carspawner_obj.static_flags = sub_block.read_flags()
+
+        elif sub_block.id == TokenID.CarFrequency:
+            carspawner_obj.car_frequency = sub_block.read_float()
+
+        elif sub_block.id == TokenID.CarAvSpeed:
+            carspawner_obj.car_avg_speed = sub_block.read_float()
+
+        elif sub_block.id == TokenID.ORTSListName:
+            carspawner_obj.list_name = sub_block.read_string()
+
+        elif sub_block.id == TokenID.TrItemId:
+            if carspawner_obj.tr_item_ids is None:
+                carspawner_obj.tr_item_ids = []
+            
+            tr_item_id = read_tr_item_id(sub_block)
+            carspawner_obj.tr_item_ids.append(tr_item_ids)
+        
+        else:
+            logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
+            sub_block.skip()
+
+    return static_obj
+
+
+def read_position(reader: BlockReader) -> Position:
+
+    reader.verify_id(TokenID.Position)
+
+    x = reader.read_float()
+    y = reader.read_float()
+    z = reader.read_float()
+
+    return Position(
+        x=x,
+        y=y,
+        z=z
+    )
+
+
+def read_qdirection(reader: BlockReader) -> QDirection:
+
+    reader.verify_id(TokenID.QDirection)
+
+    x = reader.read_float()
+    y = reader.read_float()
+    z = reader.read_float()
+    w = reader.read_float()
+
+    return QDirection(
+        x=x,
+        y=y,
+        z=z,
+        w=w
+    )
+
+
+def read_matrix3x3(reader: BlockReader) -> Matrix3x3:
+
+    reader.verify_id(TokenID.Matrix3x3)
+
+    ax = reader.read_float()
+    ay = reader.read_float()
+    az = reader.read_float()
+    bx = reader.read_float()
+    by = reader.read_float()
+    bz = reader.read_float()
+    cx = reader.read_float()
+    cy = reader.read_float()
+    cz = reader.read_float()
+
+    return Matrix3x3(
+        ax=ax,
+        ay=ay,
+        az=az,
+        bx=bx,
+        by=by,
+        bz=bz,
+        cx=cx,
+        cy=cy,
+        cz=cz
+    )
+
+
+def read_jnode_position(reader: BlockReader) -> JNodePosn:
+
+    reader.verify_id(TokenID.JNodePosn)
+
+    tile_x = reader.read_int()
+    tile_z = reader.read_int()
+    x = reader.read_float()
+    y = reader.read_float()
+    z = reader.read_float()
+
+    return JNodePosn(
+        tile_x=tile_x,
+        tile_z=tile_z,
+        x=x,
+        y=y,
+        z=z
+    )
+
+
+def read_tr_item_id(reader: BlockReader) -> TrItemId:
+
+    reader.verify_id(TokenID.TrItemId)
+
+    db = reader.read_int()
+    db_id = reader.read_int()
+
+    return TrItemId(
+        db=db,
+        db_id=db_id
+    )

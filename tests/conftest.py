@@ -53,6 +53,7 @@ def global_storage():
         "tsectionlocal_path": "./tests/data/tsectionlocal.dat",
         "terrainfile_compressed_path": "./tests/data/-11dc0894.t",
         "worldfile_path": "./tests/data/w-005655+015119.w",
+        "worldfile2_path": "./tests/data/w-005579+015131.w",
         "worldfile_compressed_path": "./tests/data/w-005655+015119_compressed.w",
         "worldsoundfile_path": "./tests/data/w-005656+015119.ws"
     }

@@ -17,22 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
-from enum import IntFlag
-from typing import Optional, List
-
 from abc import ABC
 from dataclasses import dataclass, field
+from enum import IntFlag
 from typing import Optional, List
 
 # @dataclass
 # class TrackLinkedObject(WorldObject):
 #     tr_item_ids: List["TrItemId"]
-
-# @dataclass
-# class StaticObj(BaseWorldObject):
-#     pass
 
 # @dataclass
 # class PickupObj(BaseWorldObject):
@@ -55,13 +47,6 @@ from typing import Optional, List
 # class TransferObj(WorldObject):
 #     width: float
 #     height: float
-
-# @dataclass
-# class TrackObj(WorldObject):
-#     section_idx: int
-#     elevation: float
-#     collide_flags: int
-#     jnode_position: Optional["JNodePosn"]
 
 # @dataclass
 # class DynTrackObj(WorldObject):
@@ -107,14 +92,6 @@ from typing import Optional, List
 #     item_id: int
 
 # @dataclass
-# class CarSpawnerObj(WorldObject):
-#     tr_item_ids: List["TrItemId"]
-#     car_frequency: float
-#     car_avg_speed: float
-#     list_name: Optional[str]
-#     car_spawner_list_idx: int
-
-# @dataclass
 # class TrObject(TrackLinkedObject):
 #     pass
 
@@ -130,57 +107,6 @@ from typing import Optional, List
 # class TrItemId:
 #     db: int
 #     db_id: int
-
-# @dataclass
-# class Matrix3x3:
-#     ax: float
-#     ay: float
-#     az: float
-#     bx: float
-#     by: float
-#     bz: float
-#     cx: float
-#     cy: float
-#     cz: float
-
-# @dataclass
-# class JNodePosn:
-#     tile_x: int
-#     tile_z: int
-#     x: float
-#     y: float
-#     z: float
-
-# @dataclass
-# class TWorldPosition:
-#     x: float
-#     y: float
-#     z: float
-
-# @dataclass
-# class STFPosition(TWorldPosition):
-#     pass
-
-# @dataclass
-# class TWorldDirection:
-#     a: float
-#     b: float
-#     c: float
-#     d: float
-
-# @dataclass
-# class STFQDirection(TWorldDirection):
-#     pass
-
-# @dataclass
-# class Vector3:
-#     x: float
-#     y: float
-#     z: float
-
-# @dataclass
-# class WorldLocation:
-#     pass
 
 # @dataclass
 # class SpeedRange:
@@ -289,39 +215,163 @@ from typing import Optional, List
 
 
 @dataclass
-class WorldObject(ABC):
-    uid: int = 0
-    file_name: Optional[str] = None
-    vdb_id: Optional[int] = None
+class Position:
     x: float = 0.0
     y: float = 0.0
     z: float = 0.0
-    qx: float = 0.0
-    qy: float = 0.0
-    qz: float = 0.0
-    qw: float = 0.0
+
+    def __repr__(self):
+        return (
+            "Position("
+            f"x={self.z}, "
+            f"y={self.y}, "
+            f"z={self.z})"
+        )
+
+@dataclass
+class QDirection:
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+    w: float = 0.0
+
+    def __repr__(self):
+        return (
+            "QDirection("
+            f"x={self.z}, "
+            f"y={self.y}, "
+            f"z={self.z}, "
+            f"w={self.w})"
+        )
+
+@dataclass
+class Matrix3x3:
+    ax: float = 0.0
+    ay: float = 0.0
+    az: float = 0.0
+    bx: float = 0.0
+    by: float = 0.0
+    bz: float = 0.0
+    cx: float = 0.0
+    cy: float = 0.0
+    cz: float = 0.0
+
+    def __repr__(self):
+        return (
+            "Matrix3x3("
+            f"ax={self.ax}, "
+            f"ay={self.ay}, "
+            f"az={self.az}, "
+            f"bx={self.bx}, "
+            f"by={self.by}, "
+            f"bz={self.bz}, "
+            f"cx={self.cx}, "
+            f"cy={self.cy}, "
+            f"cz={self.cz})"
+        )
+
+@dataclass
+class WorldObj(ABC):
+    uid: int = 0
+    file_name: Optional[str] = None
+    vdb_id: Optional[int] = None
+    static_detail_level: int = 0
+    static_flags: int = 0
+    position: Position = field(default_factory=lambda: Position(0.0, 0.0, 0.0))
+    direction: QDirection = field(default_factory=lambda: QDirection(0.0, 0.0, 0.0, 1.0))
+    matrix3x3: Optional[Matrix3x3] = None
 
     def _base_repr(self):
         return (
             f"uid={self.uid}, "
             f"file_name={self.file_name}, "
             f"vdb_id={self.vdb_id}, "
-            f"x={self.x}, "
-            f"y={self.y}, "
-            f"z={self.z}, "
-            f"qx={self.qx}, "
-            f"qy={self.qy}, "
-            f"qz={self.qz}, "
-            f"qw={self.qw}"
+            f"static_detail_level={self.static_detail_level}, "
+            f"static_flags={self.static_flags}, "
+            f"position={self.position}, "
+            f"direction={self.direction}, "
+            f"matrix3x3={self.matrix3x3}"
         )
     
     def __repr__(self):
-        return f"WorldObject({self._base_repr()})"
+        return f"WorldObj({self._base_repr()})"
+
+@dataclass
+class StaticObj(WorldObj):
+
+    def __repr__(self):
+        return f"StaticObj({self._base_repr()})"
+
+@dataclass
+class JNodePosn:
+    tile_x: int = 0
+    tile_z: int = 0
+    x: float = 0.0
+    y: float = 0.0
+    z: float = 0.0
+
+    def __repr__(self):
+        return (
+            "JNodePosn("
+            f"tile_x={self.tile_x}, "
+            f"tile_z={self.tile_z}, "
+            f"x={self.z}, "
+            f"y={self.y}, "
+            f"z={self.z})"
+        )
+
+@dataclass
+class TrackObj(WorldObj):
+    section_index: int = 0
+    elevation: float = 0.0
+    collide_flags: int = 0x00200180
+    jnode_position: Optional[JNodePosn] = None
+
+    def __repr__(self):
+        return (
+            "TrackObj("
+            f"{self._base_repr()}, "
+            f"section_index={self.section_index}, "
+            f"elevation={self.elevation}, "
+            f"collide_flags={self.collide_flags}, "
+            f"jnode_position={self.jnode_position})"
+        )
+
+@dataclass
+class TrItemId:
+    db: int = 0
+    db_id: int = 0
+
+    def __repr__(self):
+        return (
+            "TrItemId("
+            f"db={self.db}, "
+            f"db_id={self.db_id})"
+        )
+
+@dataclass
+class CarSpawnerObj(WorldObj):
+    list_name: Optional[str] = None
+    car_frequency: float = 5.0
+    car_avg_speed: float = 20.0
+    car_spawner_list_index: int = 0
+    tr_item_ids: List[TrItemId] = field(default_factory=list)
+
+    def __repr__(self):
+        return (
+            "CarSpawnerObj("
+            f"{self._base_repr()}, "
+            f"list_name={self.list_name}, "
+            f"car_frequency={self.car_frequency}, "
+            f"car_avg_speed={self.car_avg_speed}, "
+            f"car_spawner_list_index={self.car_spawner_list_index}, "
+            f"tr_item_ids (len={self.tr_item_ids}))"
+        )
 
 @dataclass
 class World:
     file_name: Optional[str] = None
-    objects: List[WorldObject] = field(default_factory=list)
+    objects: List[WorldObj] = field(default_factory=list)
 
     @property
     def tile_x(self) -> Optional[int]:
