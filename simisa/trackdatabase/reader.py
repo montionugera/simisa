@@ -96,7 +96,17 @@ def loads(tdb_text: str) -> TrackDB:
 
 
 def read_trackdb(reader: BlockReader) -> TrackDB:
+    """
+    Read and parse a track database from a BlockReader.
 
+    Consumes the `TrackDB` block and its child blocks, returning a TrackDB object.
+
+    Args:
+        reader (BlockReader): Reader positioned at the start of a track database file.
+
+    Returns:
+        TrackDB: The parsed track database.
+    """
     with reader.sub_block(TokenID.TrackDB) as trackdb_block:
         serial = 0
 
@@ -114,7 +124,17 @@ def read_trackdb(reader: BlockReader) -> TrackDB:
 
 
 def read_track_nodes(reader: BlockReader) -> List[TrackNode]:
-    
+    """
+    Read and parse track nodes from a BlockReader.
+
+    Consumes the `TrackNodes` block and returns a list of TrackNode objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track nodes block.
+
+    Returns:
+        List[TrackNode]: The parsed track nodes.
+    """
     with reader.sub_block(TokenID.TrackNodes) as track_nodes_block:
         if track_nodes_block is None:
             return []
@@ -177,7 +197,17 @@ def read_track_nodes(reader: BlockReader) -> List[TrackNode]:
 
 
 def read_uid(reader: BlockReader) -> UiD:
+    """
+    Read and parse a UiD block from a BlockReader.
 
+    Consumes the `UiD` block and returns a UiD object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a UiD block.
+
+    Returns:
+        UiD: The parsed UiD.
+    """
     reader.verify_id(TokenID.UiD)
     
     world_tile_x = reader.read_int()
@@ -211,7 +241,17 @@ def read_uid(reader: BlockReader) -> UiD:
 
 
 def read_tr_junction_node(reader: BlockReader) -> TrJunctionNode:
+    """
+    Read and parse a track junction node from a BlockReader.
 
+    Consumes the `TrJunctionNode` block and returns a TrJunctionNode object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track junction node block.
+
+    Returns:
+        TrJunctionNode: The parsed track junction node.
+    """
     reader.verify_id(TokenID.TrJunctionNode)
 
     _ = reader.read_string()
@@ -225,6 +265,17 @@ def read_tr_junction_node(reader: BlockReader) -> TrJunctionNode:
 
 
 def read_tr_vector_node(reader: BlockReader) -> TrVectorNode:
+    """
+    Read and parse a track vector node from a BlockReader.
+
+    Consumes the `TrVectorNode` block and its child blocks, returning a TrVectorNode object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track vector node block.
+
+    Returns:
+        TrVectorNode: The parsed track vector node.
+    """
     reader.verify_id(TokenID.TrVectorNode)
 
     tr_vector_sections: List[TrVectorSection] = []
@@ -250,6 +301,17 @@ def read_tr_vector_node(reader: BlockReader) -> TrVectorNode:
 
 
 def read_tr_vector_sections(reader: BlockReader) -> List[TrVectorSection]:
+    """
+    Read and parse track vector sections from a BlockReader.
+
+    Consumes the `TrVectorSections` block and returns a list of TrVectorSection objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track vector sections block.
+
+    Returns:
+        List[TrVectorSection]: The parsed track vector sections.
+    """
     reader.verify_id(TokenID.TrVectorSections)
 
     tr_vector_sections: List[TrVectorSection] = []
@@ -299,6 +361,17 @@ def read_tr_vector_sections(reader: BlockReader) -> List[TrVectorSection]:
 
 
 def read_tr_item_refs(reader: BlockReader) -> List[int]:
+    """
+    Read and parse track item references from a BlockReader.
+
+    Consumes the `TrItemRefs` block and returns a list of track item references.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track item references block.
+
+    Returns:
+        List[int]: The parsed track item references.
+    """
     reader.verify_id(TokenID.TrItemRefs)
     
     tr_item_refs: List[int] = []
@@ -317,6 +390,17 @@ def read_tr_item_refs(reader: BlockReader) -> List[int]:
 
 
 def read_tr_pins(reader: BlockReader) -> List[TrPin]:
+    """
+    Read and parse track pins from a BlockReader.
+
+    Consumes the `TrPins` block and returns a list of TrPin objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track pins block.
+
+    Returns:
+        List[TrPin]: The parsed track pins.
+    """
     reader.verify_id(TokenID.TrPins)
 
     tr_pins: List[int] = []
@@ -338,7 +422,17 @@ def read_tr_pins(reader: BlockReader) -> List[TrPin]:
 
 
 def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
+    """
+    Read and parse track items from a BlockReader.
 
+    Consumes the `TrItemTable` block and its child blocks, returning a list of TrItem objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track item table block.
+
+    Returns:
+        List[TrItem]: The parsed track items.
+    """
     with reader.sub_block(TokenID.TrItemTable) as tr_item_table_block:
         if tr_item_table_block is None:
             return []
@@ -395,7 +489,17 @@ def read_tr_item_table(reader: BlockReader) -> List[TrItem]:
 
 
 def read_empty_item(reader: BlockReader) -> EmptyItem:
+    """
+    Read and parse an empty item from a BlockReader.
 
+    Consumes the `EmptyItem` block and returns an EmptyItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at an empty item block.
+
+    Returns:
+        EmptyItem: The parsed empty item.
+    """
     reader.verify_id(TokenID.EmptyItem)
 
     empty_item = EmptyItem()
@@ -412,7 +516,17 @@ def read_empty_item(reader: BlockReader) -> EmptyItem:
 
 
 def read_crossover_item(reader: BlockReader) -> CrossoverItem:
+    """
+    Read and parse a crossover item from a BlockReader.
 
+    Consumes the `CrossoverItem` block and its child blocks, returning a CrossoverItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a crossover item block.
+
+    Returns:
+        CrossoverItem: The parsed crossover item.
+    """
     reader.verify_id(TokenID.CrossoverItem)
 
     crossover_item = CrossoverItem()
@@ -443,7 +557,17 @@ def read_crossover_item(reader: BlockReader) -> CrossoverItem:
 
 
 def read_signal_item(reader: BlockReader) -> SignalItem:
+    """
+    Read and parse a signal item from a BlockReader.
 
+    Consumes the `SignalItem` block and its child blocks, returning a SignalItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a signal item block.
+
+    Returns:
+        SignalItem: The parsed signal item.
+    """
     reader.verify_id(TokenID.SignalItem)
 
     signal_item = SignalItem()
@@ -480,7 +604,17 @@ def read_signal_item(reader: BlockReader) -> SignalItem:
 
 
 def read_signal_directions(reader: BlockReader) -> List[SignalDirection]:
+    """
+    Read and parse signal directions from a BlockReader.
 
+    Consumes the `TrSignalDirs` block and returns a list of SignalDirection objects.
+
+    Args:
+        reader (BlockReader): Reader positioned at a signal directions block.
+
+    Returns:
+        List[SignalDirection]: The parsed signal directions.
+    """
     reader.verify_id(TokenID.TrSignalDirs)
 
     signal_directions: List[SignalDirection] = []
@@ -511,7 +645,17 @@ def read_signal_directions(reader: BlockReader) -> List[SignalDirection]:
 
 
 def read_speedpost_item(reader: BlockReader) -> SpeedPostItem:
+    """
+    Read and parse a speed post item from a BlockReader.
 
+    Consumes the `SpeedPostItem` block and its child blocks, returning a SpeedPostItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a speed post item block.
+
+    Returns:
+        SpeedPostItem: The parsed speed post item.
+    """
     reader.verify_id(TokenID.SpeedPostItem)
 
     speedpost_item = SpeedPostItem()
@@ -586,7 +730,17 @@ def read_speedpost_item(reader: BlockReader) -> SpeedPostItem:
 
 
 def read_soundregion_item(reader: BlockReader) -> SoundRegionItem:
+    """
+    Read and parse a sound region item from a BlockReader.
 
+    Consumes the `SoundRegionItem` block and its child blocks, returning a SoundRegionItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a sound region item block.
+
+    Returns:
+        SoundRegionItem: The parsed sound region item.
+    """
     reader.verify_id(TokenID.SoundRegionItem)
 
     soundregion_item = SoundRegionItem()
@@ -618,7 +772,17 @@ def read_soundregion_item(reader: BlockReader) -> SoundRegionItem:
 
 
 def read_levelcr_item(reader: BlockReader) -> LevelCrItem:
+    """
+    Read and parse a level crossing item from a BlockReader.
 
+    Consumes the `LevelCrItem` block and its child blocks, returning a LevelCrItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a level crossing item block.
+
+    Returns:
+        LevelCrItem: The parsed level crossing item.
+    """
     reader.verify_id(TokenID.LevelCrItem)
 
     levelcr_item = LevelCrItem()
@@ -644,7 +808,17 @@ def read_levelcr_item(reader: BlockReader) -> LevelCrItem:
 
 
 def read_siding_item(reader: BlockReader) -> SidingItem:
+    """
+    Read and parse a siding item from a BlockReader.
 
+    Consumes the `SidingItem` block and its child blocks, returning a SidingItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a siding item block.
+
+    Returns:
+        SidingItem: The parsed siding item.
+    """
     reader.verify_id(TokenID.SidingItem)
 
     siding_item = SidingItem()
@@ -675,7 +849,17 @@ def read_siding_item(reader: BlockReader) -> SidingItem:
 
 
 def read_platform_item(reader: BlockReader) -> PlatformItem:
+    """
+    Read and parse a platform item from a BlockReader.
 
+    Consumes the `PlatformItem` block and its child blocks, returning a PlatformItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a platform item block.
+
+    Returns:
+        PlatformItem: The parsed platform item.
+    """
     reader.verify_id(TokenID.PlatformItem)
 
     platform_item = PlatformItem()
@@ -722,7 +906,17 @@ def read_platform_item(reader: BlockReader) -> PlatformItem:
 
 
 def read_hazzard_item(reader: BlockReader) -> HazzardItem:
+    """
+    Read and parse a hazzard item from a BlockReader.
 
+    Consumes the `HazzardItem` block and its child blocks, returning a HazzardItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a hazzard item block.
+
+    Returns:
+        HazzardItem: The parsed hazzard item.
+    """
     reader.verify_id(TokenID.HazzardItem)
 
     hazzard_item = HazzardItem()
@@ -748,7 +942,17 @@ def read_hazzard_item(reader: BlockReader) -> HazzardItem:
 
 
 def read_pickup_item(reader: BlockReader) -> PickupItem:
+    """
+    Read and parse a pickup item from a BlockReader.
 
+    Consumes the `PickupItem` block and its child blocks, returning a PickupItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a pickup item block.
+
+    Returns:
+        PickupItem: The parsed pickup item.
+    """
     reader.verify_id(TokenID.PickupItem)
 
     pickup_item = PickupItem()
@@ -774,7 +978,17 @@ def read_pickup_item(reader: BlockReader) -> PickupItem:
 
 
 def read_carspawner_item(reader: BlockReader) -> CarSpawnerItem:
+    """
+    Read and parse a car spawner item from a BlockReader.
 
+    Consumes the `CarSpawnerItem` block and its child blocks, returning a CarSpawnerItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a car spawner item block.
+
+    Returns:
+        CarSpawnerItem: The parsed car spawner item.
+    """
     reader.verify_id(TokenID.CarSpawnerItem)
 
     carspawner_item = CarSpawnerItem()
@@ -797,7 +1011,18 @@ def read_carspawner_item(reader: BlockReader) -> CarSpawnerItem:
 
 
 def read_tr_item_id(reader: BlockReader, tr_item: TrItem) -> TrItem:
+    """
+    Read and parse track item ID data from a BlockReader.
 
+    Consumes the `TrItemId` block and updates a TrItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track item ID block.
+        tr_item (TrItem): Track item to update.
+
+    Returns:
+        TrItem: The updated track item.
+    """
     reader.verify_id(TokenID.TrItemId)
 
     tr_item.item_id = reader.read_uint()
@@ -808,7 +1033,18 @@ def read_tr_item_id(reader: BlockReader, tr_item: TrItem) -> TrItem:
 
 
 def read_tr_item_rdata(reader: BlockReader, tr_item: TrItem) -> TrItem:
+    """
+    Read and parse track item rdata from a BlockReader.
 
+    Consumes the `TrItemRData` block and updates a TrItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track item rdata block.
+        tr_item (TrItem): Track item to update.
+
+    Returns:
+        TrItem: The updated track item.
+    """
     reader.verify_id(TokenID.TrItemRData)
 
     tr_item.x = reader.read_float()
@@ -823,7 +1059,18 @@ def read_tr_item_rdata(reader: BlockReader, tr_item: TrItem) -> TrItem:
 
 
 def read_tr_item_pdata(reader: BlockReader, tr_item: TrItem) -> TrItem:
+    """
+    Read and parse track item pdata from a BlockReader.
 
+    Consumes the `TrItemPData` block and updates a TrItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track item pdata block.
+        tr_item (TrItem): Track item to update.
+
+    Returns:
+        TrItem: The updated track item.
+    """
     reader.verify_id(TokenID.TrItemPData)
 
     tr_item.px = reader.read_float()
@@ -837,7 +1084,18 @@ def read_tr_item_pdata(reader: BlockReader, tr_item: TrItem) -> TrItem:
 
 
 def read_tr_item_sdata(reader: BlockReader, tr_item: TrItem) -> TrItem:
+    """
+    Read and parse track item sdata from a BlockReader.
 
+    Consumes the `TrItemSData` block and updates a TrItem object.
+
+    Args:
+        reader (BlockReader): Reader positioned at a track item sdata block.
+        tr_item (TrItem): Track item to update.
+
+    Returns:
+        TrItem: The updated track item.
+    """
     reader.verify_id(TokenID.TrItemSData)
 
     tr_item.sdata1 = reader.read_float()

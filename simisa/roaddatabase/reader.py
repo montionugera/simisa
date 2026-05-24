@@ -93,7 +93,17 @@ def loads(rdb_text: str) -> RoadDB:
 
 
 def read_roaddb(reader: BlockReader) -> RoadDB:
+    """
+    Read and parse a road database from a BlockReader.
 
+    Consumes the `TrackDB` block and its child blocks, returning a RoadDB object.
+
+    Args:
+        reader (BlockReader): Reader positioned at the start of a road database file.
+
+    Returns:
+        RoadDB: The parsed road database.
+    """
     with reader.sub_block(TokenID.TrackDB) as trackdb_block:
         serial = 0
 
