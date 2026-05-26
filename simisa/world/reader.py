@@ -426,7 +426,7 @@ def read_carspawner_object(reader: BlockReader, detail_level: int) -> CarSpawner
                 carspawner_obj.tr_item_ids = []
             
             tr_item_id = read_tr_item_id(sub_block)
-            carspawner_obj.tr_item_ids.append(tr_item_ids)
+            carspawner_obj.tr_item_ids.append(tr_item_id)
         
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
@@ -480,7 +480,7 @@ def read_siding_object(reader: BlockReader, detail_level: int) -> SidingObj:
                 siding_obj.tr_item_ids = []
             
             tr_item_id = read_tr_item_id(sub_block)
-            siding_obj.tr_item_ids.append(tr_item_ids)
+            siding_obj.tr_item_ids.append(tr_item_id)
         
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
@@ -537,7 +537,7 @@ def read_platform_object(reader: BlockReader, detail_level: int) -> PlatformObj:
                 platform_obj.tr_item_ids = []
             
             tr_item_id = read_tr_item_id(sub_block)
-            platform_obj.tr_item_ids.append(tr_item_ids)
+            platform_obj.tr_item_ids.append(tr_item_id)
         
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
@@ -713,7 +713,7 @@ def read_levelcr_object(reader: BlockReader, detail_level: int) -> LevelCrObj:
                 levelcr_obj.tr_item_ids = []
             
             tr_item_id = read_tr_item_id(sub_block)
-            levelcr_obj.tr_item_ids.append(tr_item_ids)
+            levelcr_obj.tr_item_ids.append(tr_item_id)
         
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
@@ -980,7 +980,7 @@ def read_pickup_object(reader: BlockReader, detail_level: int) -> PickupObj:
                 pickup_obj.tr_item_ids = []
             
             tr_item_id = read_tr_item_id(sub_block)
-            pickup_obj.tr_item_ids.append(tr_item_ids)
+            pickup_obj.tr_item_ids.append(tr_item_id)
         
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
@@ -1250,7 +1250,7 @@ def read_speedpost_object(reader: BlockReader, detail_level: int) -> SpeedPostOb
                 speedpost_obj.tr_item_ids = []
             
             tr_item_id = read_tr_item_id(sub_block)
-            speedpost_obj.tr_item_ids.append(tr_item_ids)
+            speedpost_obj.tr_item_ids.append(tr_item_id)
         
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
