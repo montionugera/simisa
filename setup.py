@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="simisa",
-    version="0.0.1b2",
+    version="0.0.1b3",
     packages=find_packages(),
     install_requires=[
     ],
