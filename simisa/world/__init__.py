@@ -70,7 +70,9 @@ __all__ = [
     "HazardObj",
     "SignalUnit",
     "SignalObj",
-    "",
+    "SpeedSignShape",
+    "SpeedTextSize",
+    "SpeedPostObj",
     "World"
 ]
 

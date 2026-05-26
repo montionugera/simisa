@@ -25,7 +25,6 @@ from typing import Optional, List
 from ..tracksections.models import TrackSections
 
 
-
 class StaticFlag(IntFlag):
     ROUND_SHADOW = 0x00002000
     RECTANGULAR_SHADOW = 0x00004000
