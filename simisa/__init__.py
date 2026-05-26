@@ -31,9 +31,11 @@ __all__ = [
     'TokenID', 'Units', 'StfReader',
     'BlockReader', 'BlockWriter', 'BlockFormat',
     'BlockReaderError', 'StfReaderError',
-    'roaddatabase', 'shape', 'terrain',
-    'tracksections', 'trackdatabase',
-    'world', 'worldsound'
+    'roaddatabase', 'rdb',
+    'shape', 's', 'terrain', 't',
+    'tracksections', 'tsection',
+    'trackdatabase', 'tdb',
+    'world', 'w'
 ]
 
 __author__ = 'Peter Grønbæk Andersen <peter@grnbk.io>'
@@ -53,8 +55,14 @@ from .writer import BlockWriter
 from .format import BlockFormat
 
 from . import roaddatabase
+from . import roaddatabase as rdb
 from . import shape
+from . import shape as s
 from . import terrain
+from . import terrain as t
 from . import trackdatabase
+from . import trackdatabase as tdb
 from . import tracksections
+from . import tracksections as tsection
 from . import world
+from . import world as w

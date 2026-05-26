@@ -38,7 +38,7 @@ from ..trackdatabase.models import (
     TrVectorNode,
     TrJunctionNode,
     UiD,
-    TrackNode,
+    TrackNode
 )
 
 __all__ = [
