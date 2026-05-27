@@ -22,7 +22,8 @@ import logging
 from typing import List
 
 from .. import TokenID
-from ..reader import BlockReader, SimisaSubheaderError
+from ..reader import BlockReader
+from ..header import SimisaSubheaderError
 from .models import *
 
 logger = logging.getLogger(__name__)

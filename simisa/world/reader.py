@@ -22,7 +22,8 @@ from pathlib import Path
 from typing import List
 
 from .. import TokenID
-from ..reader import BlockReader, SimisaSubheaderError
+from ..reader import BlockReader
+from ..header import SimisaSubheaderError
 from ..tracksections.reader import read_local_tracksections
 from .models import *
 

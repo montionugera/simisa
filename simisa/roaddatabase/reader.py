@@ -21,6 +21,7 @@ from typing import List
 
 from .. import TokenID
 from ..reader import BlockReader
+from ..header import SimisaSubheaderError
 from ..trackdatabase.reader import read_track_nodes, read_tr_item_table
 from .models import RoadDB
 
