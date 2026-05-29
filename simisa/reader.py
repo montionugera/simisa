@@ -57,7 +57,7 @@ class CompressedStreamReader(io.RawIOBase):
 
     def __init__(self, fileobj):
         self.fileobj = fileobj
-        self.decompressor = zlib.decompressobj(wbits=-zlib.MAX_WBITS)
+        self.decompressor = zlib.decompressobj(wbits=zlib.MAX_WBITS)
         self._buffer = bytearray()
         self._eof = False
 
@@ -247,9 +247,8 @@ class BlockReader(ABC):
             else:
                 header_bytes = bom + f.read(14)
                 header = header_bytes[:8].decode(encoding, errors="ignore")
-
+            
             if compressed:
-                f.read(2) # skip compression marker
                 stream = CompressedStreamReader(f)
             else:
                 if header.startswith("\r\n"):

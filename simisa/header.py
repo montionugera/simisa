@@ -167,8 +167,7 @@ def peek_subheader(filepath: str) -> Optional[str]:
 
         if compressed:
             from .reader import CompressedStreamReader
-
-            f.read(2) # skip compression marker
+            
             stream = CompressedStreamReader(f)
         else:
             if header.startswith("\r\n"):
