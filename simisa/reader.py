@@ -52,12 +52,13 @@ class CompressedStreamReader(io.RawIOBase):
 
     Compatible with Python IO wrappers such as `TextIOWrapper` and `BufferedReader`.
     """
-    CHUNK_SIZE = 65536
+    CHUNK_SIZE = 8192
 
     def __init__(self, fileobj):
         self.fileobj = fileobj
         self.decompressor = zlib.decompressobj(wbits=zlib.MAX_WBITS)
         self._buffer = bytearray()
+        self._buffer_position = 0
         self._eof = False
 
     def readable(self):
@@ -102,10 +103,16 @@ class CompressedStreamReader(io.RawIOBase):
         out = bytearray()
 
         if self._buffer:
-            take = min(size, len(self._buffer))
-            out += self._buffer[:take]
-            del self._buffer[:take]
+            available = len(self._buffer) - self._buffer_position
+            take = min(size, available)
+
+            out += self._buffer[self._buffer_position:self._buffer_position + take]
+            self._buffer_position += take
             size -= take
+
+            if self._buffer_position == len(self._buffer):
+                self._buffer.clear()
+                self._buffer_position = 0
 
         while size > 0 and not self._eof:
             raw = self.fileobj.read(self.CHUNK_SIZE)
@@ -504,17 +511,10 @@ class BlockReader(ABC):
 
 
 class TextBlockReader(BlockReader):
-    _TOKEN_TABLE: Optional[Dict[str, TokenID]] = None
-
-    @classmethod
-    def _init_token_table(cls):
-        if cls._TOKEN_TABLE is not None:
-            return
-
-        cls._TOKEN_TABLE = {
-            name.lower(): token
-            for name, token in TokenID.__members__.items()
-        }
+    _TOKEN_TABLE: Dict[str, TokenID] = {
+        name.lower(): token
+        for name, token in TokenID.__members__.items()
+    }
 
     def __init__(self):
         self.stf_reader: Optional[StfReader] = None
@@ -525,9 +525,6 @@ class TextBlockReader(BlockReader):
         self.is_closed: bool = False
 
     def _get_token_id(self, token: str) -> TokenID:
-        if self._TOKEN_TABLE is None:
-            self._init_token_table()
-
         t = token.lower()
 
         token_id = self._TOKEN_TABLE.get(t)
