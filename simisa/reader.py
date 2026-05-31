@@ -48,9 +48,8 @@ class BlockReaderError(Exception):
 
 class CompressedStreamReader(io.RawIOBase):
     """
-    Wrapper to read from a raw zlib DEFLATE-compressed stream.
+    File-like wrapper that decompresses data on-the-fly using the DEFLATE algorithm via zlib.
 
-    Provides a file-like interface that decompresses data on-the-fly.
     Compatible with Python IO wrappers such as `TextIOWrapper` and `BufferedReader`.
     """
     CHUNK_SIZE = 65536
@@ -63,7 +62,8 @@ class CompressedStreamReader(io.RawIOBase):
 
     def readable(self):
         return True
-
+    
+    @property
     def closed(self):
         return self.fileobj is None
 
@@ -173,7 +173,7 @@ class BlockReader(ABC):
     the `sub_block()` context manager or any iterator exposed by the reader.
 
     Supports input streams that are:
-    - Compressed (raw zlib DEFLATE) or uncompressed
+    - Compressed (zlib DEFLATE) or uncompressed
     - UTF-16 LE or ASCII encoded
     - Binary or text formatted
     """
@@ -698,10 +698,10 @@ class BinaryBlockReader(BlockReader):
     def __init__(self):
         self.filepath: str = ""
         self.stream: Optional[BinaryIO] = None
-        self.token_offset = 0
-        self.remaining_bytes = 0
-        self.flags = 0
+        self.token_offset: int = 0
+        self.remaining_bytes: int = 0
         self.id: Optional[TokenID] = None
+        self.flags: int = 0
         self.label: Optional[str] = None
         self._buffer: Optional[bytes] = None
 

@@ -19,6 +19,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import io
 import zlib
+import codecs
+import struct
 import logging
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
@@ -38,21 +40,21 @@ class BlockWriterError(Exception):
 
 class CompressedStreamWriter(io.RawIOBase):
     """
-    Wrapper to write to a raw zlib DEFLATE-compressed stream.
+    File-like wrapper that compresses data on-the-fly using the DEFLATE algorithm via zlib.
 
-    Provides a file-like interface that compresses data on-the-fly.
     Compatible with Python IO wrappers such as `TextIOWrapper` and `BufferedWriter`.
     """
     CHUNK_SIZE = 65536
 
     def __init__(self, fileobj):
         self.fileobj = fileobj
-        self.compressor = zlib.compressobj(wbits=-zlib.MAX_WBITS)
+        self.compressor = zlib.compressobj(wbits=zlib.MAX_WBITS)
         self._closed = False
 
     def writable(self):
         return True
-
+    
+    @property
     def closed(self):
         return self._closed
 
@@ -121,7 +123,7 @@ class BlockWriter(ABC):
         check_params = (
             ("filepath", filepath, str),
             ("filetype", filetype, str),
-            ("fileversion", fileversion, str),
+            ("fileversion", fileversion, int),
             ("is_binary", is_binary, bool),
             ("is_unicode", is_unicode, bool),
             ("is_compressed", is_compressed, bool),
@@ -143,8 +145,12 @@ class BlockWriter(ABC):
         f = open(filepath, "wb")
 
         if is_compressed:
+            # Total number of bytes in the file, including the header (when uncompressed)
+            # Not yet known here, so it is patched with the actual value upon calling close()
+            total_length = b"\x00\x00\x00\x00"
+
             f.write(b"SIMISA@F")
-            f.write(b"\x97\x86\r\x00")
+            f.write(total_length)
             f.write(b"@@@@")
             stream = CompressedStreamWriter(f)
         else:
@@ -183,22 +189,33 @@ class BlockWriter(ABC):
         writer.close()
         return stream.getvalue()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        self.flush()
+        self.close()
+
+    @contextmanager
+    def sub_block(self, block_id: TokenID, block_format: Optional[BlockFormat] = None):
+        sub_block = self.begin_block(block_id, block_format)
+
+        try:
+            yield sub_block
+        finally:
+            sub_block.end_block()
+
     @abstractmethod
-    def begin_block(self, block_id: TokenID, label: Optional[str] = None):
+    def begin_block(self, block_id: TokenID, block_format: Optional[BlockFormat] = None):
         pass
 
     @abstractmethod
     def end_block(self):
         pass
-
-    @contextmanager
-    def block(self, block_id: TokenID, label: Optional[str] = None):
-        self.begin_block(block_id, label)
-
-        try:
-            yield self
-        finally:
-            self.end_block()
+    
+    @abstractmethod
+    def write_count(self, value: int):
+        pass
 
     @abstractmethod
     def write_flags(self, value: int):
@@ -222,21 +239,6 @@ class BlockWriter(ABC):
 
     @abstractmethod
     def write_comment(self, text: str):
-        pass
-
-    #@abstractmethod # TODO Use this along with begin_block and end_block to manage text list formats
-    def write_count(self, text: str):
-        pass
-
-    @abstractmethod # TODO delete this
-    def write_list(
-        self,
-        block_id: TokenID,
-        values,
-        *,
-        format: BlockFormat,
-        item_writer: Optional[Callable[["BlockWriter", Any], None]] = None,
-    ):
         pass
 
     @abstractmethod
@@ -247,92 +249,138 @@ class BlockWriter(ABC):
     def flush(self):
         pass
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc, tb):
-        self.flush()
-        self.close()
-
 
 class TextBlockWriter(BlockWriter):
 
     def __init__(self):
-        self.stream: TextIO | None = None
+        self.stream: Optional[TextIO] = None
         self.depth = 0
+        self.indent = "\t"
+        self._block_format: Optional[BlockFormat] = None
+        self._writing_block = False
+        self._items_on_line = 0
+        self._written_bytes = 0
+        self._buffer = []
 
-    def begin_block(self, block_id: TokenID, label: Optional[str] = None):
-        raise NotImplementedError
+    def _emit(self, text: str):
+        self._buffer.append(text)
 
-    def end_block(self):
-        raise NotImplementedError
+    def _flush(self):
+        if self.stream is None:
+            raise BlockWriterError("Stream is not initialized")
 
-    def write_flags(self, value: int):
-        raise NotImplementedError
+        data = "".join(self._buffer)
+        self._buffer.clear()
 
-    def write_int(self, value: int):
-        raise NotImplementedError
+        encoding = "utf-16-le"
 
-    def write_uint(self, value: int):
-        raise NotImplementedError
+        output_bytes = data.encode(encoding)
 
-    def write_float(self, value: float):
-        raise NotImplementedError
+        self.stream.write(output_bytes)
+        self._written_bytes += len(output_bytes)
 
-    def write_string(self, value: str):
-        raise NotImplementedError
+    def begin_block(self, block_id: TokenID, block_format: BlockFormat = BlockFormat()):
+        if self.stream is None:
+            raise BlockWriterError("Stream is not initialized")
 
-    def write_comment(self, text: str):
-        raise NotImplementedError
+        self._block_format = block_format or BlockFormat()
+        self._items_on_line = 0
 
-    def _indent(self):
-        if self.stream:
-            self.stream.write("    " * self.depth)
+        if self._block_format.newline_before_start:
+            self._emit("\n")
 
-    def write_list(
-        self,
-        block_id: TokenID,
-        values,
-        *,
-        format: BlockFormat,
-        item_writer: Optional[Callable] = None,
-    ):
-        self.begin_block(block_id)
+        indent = "" if self._block_format.disable_inner_indent else self.indent * self.depth
+        self._emit(f"{indent}{block_id.name} (")
 
-        count = int(len(values) * format.count_multiplier)
-        self.write_int(count)
-
-        if format.newline_after_header and self.stream:
-            self.stream.write("\n")
+        if self._block_format.newline_after_start:
+            self._emit("\n")
 
         self.depth += 1
+        self._writing_block = True
 
-        if item_writer is None:
-            item_writer = self.write_int
+        self._flush()
+        return self
 
-        items_per_line = format.items_per_line
-        line_count = 0
+    def end_block(self):
+        if self.stream is None:
+            raise BlockWriterError("Stream is not initialized")
 
-        for item in values:
+        if self.depth == 0:
+            raise BlockWriterError("No open block")
 
-            if items_per_line is not None and line_count >= items_per_line:
-                if self.stream:
-                    self.stream.write("\n")
-                line_count = 0
+        block_format = self._block_format or BlockFormat()
 
-            if not format.disable_inner_indent:
-                self._indent()
-
-            item_writer(self, item)
-
-            line_count += 1
+        if block_format.newline_before_closing:
+            self._emit("\n")
 
         self.depth -= 1
 
-        if format.newline_before_closing and self.stream:
-            self.stream.write("\n")
+        indent = "" if block_format.disable_inner_indent else self.indent * self.depth
+        self._emit(f"{indent})")
 
-        self.end_block()
+        if block_format.newline_after_closing:
+            self._emit("\n")
+
+        if self.depth == 0:
+            self._writing_block = False
+            self._block_format = None
+            self._items_on_line = 0
+
+        self._flush()
+
+    def _write_token(self, text: str):
+        block_format = self._block_format or BlockFormat()
+
+        if block_format.max_items_per_line is not None:
+            if self._items_on_line > 0:
+                self._emit(" ")
+
+            self._emit(text)
+            self._items_on_line += 1
+
+            if self._items_on_line >= block_format.max_items_per_line:
+                self._emit("\n")
+                self._items_on_line = 0
+        else:
+            self._emit(text + " ")
+
+    def write_count(self, value: int):
+        block_format = self._block_format or BlockFormat()
+
+        if block_format.newline_before_count:
+            self._emit("\n")
+
+        self._write_token(str(value))
+
+        if block_format.newline_after_count:
+            self._emit("\n")
+            self._items_on_line = 0
+
+        self._flush()
+
+    def write_flags(self, value: int):
+        self._write_token(f"{value:08X}")
+        self._flush()
+
+    def write_int(self, value: int):
+        self._write_token(str(value))
+        self._flush()
+
+    def write_uint(self, value: int):
+        self._write_token(str(value))
+        self._flush()
+
+    def write_float(self, value: float):
+        self._write_token(str(value))
+        self._flush()
+
+    def write_string(self, value: str):
+        self._write_token(value)
+        self._flush()
+
+    def write_comment(self, text: str):
+        self._emit("# " + text + "\n")
+        self._flush()
 
 
 class TextFileWriter(TextBlockWriter):
@@ -347,62 +395,120 @@ class TextFileWriter(TextBlockWriter):
     def flush(self):
         if not self.is_closed and self.stream:
             self.stream.flush()
-    
+
     def close(self):
         if not self.is_closed and self.stream:
+            # TODO patch size in header if compressed
+            # with open(filepath, "r+b") as f:
+            #     f.seek(8)  # after "SIMISA@F"
+            #     f.write(writer._simisa_size.to_bytes(4, "little"))
             self.stream.close()
             self.is_closed = True
 
 
 class BinaryBlockWriter(BlockWriter):
+    _UINT32 = struct.Struct("<I")
+    _INT32 = struct.Struct("<i")
+    _UINT16 = struct.Struct("<H")
+    _FLOAT32 = struct.Struct("<f")
+    _BLOCK_HEADER = struct.Struct("<HHI")
 
     def __init__(self):
-        self.filename = ""
-        self.stream: BinaryIO | None = None
-        self.token_offset = 0
-        self.block_stack: list[int] = []
+        self.filename: str = ""
+        self.stream: Optional[BinaryIO] = None
 
-    def begin_block(self, block_id: TokenID, label: Optional[str] = None):
-        raise NotImplementedError
+        self.token_offset: int = 0
+        self.id: Optional[TokenID] = None
+        self.flags: int = 0
+        self.label: Optional[str] = None
+
+        self._parent: Optional[BlockWriter] = None
+
+        self._buffer = io.BytesIO()
+        self._writing_block: bool = False
+        self._written_bytes: int = 0
+
+    def begin_block(self, block_id: TokenID, block_format=None):
+        if self._writing_block:
+            raise BlockWriterError("Cannot begin a new block while the current block has not been ended")
+
+        sub_block = BinaryBlockWriter()
+        sub_block.stream = self.stream
+        sub_block.token_offset = self.token_offset
+        sub_block.id = block_id
+        sub_block._parent = self
+        sub_block._buffer = io.BytesIO()
+        sub_block._writing_block = True
+
+        return sub_block
 
     def end_block(self):
-        raise NotImplementedError
+        if not self._writing_block:
+            return
 
-    def write_flags(self, value: int):
-        raise NotImplementedError
+        self._writing_block = False
 
-    def write_int(self, value: int):
-        raise NotImplementedError
+        payload = self._buffer.getvalue()
 
-    def write_uint(self, value: int):
-        raise NotImplementedError
-
-    def write_float(self, value: float):
-        raise NotImplementedError
-
-    def write_string(self, value: str):
-        raise NotImplementedError
-
-    def write_list(
-        self,
-        block_id: TokenID,
-        values,
-        *,
-        format: BlockFormat,
-        item_writer: Optional[Callable] = None,
-    ):
-        self.begin_block(block_id)
-
-        self.write_int(len(values))
-
-        if item_writer is None:
-            for v in values:
-                self.write_int(v)
+        if self.label:
+            encoded_label = self.label.encode("utf-16-le")
+            label_bytes = bytes([len(self.label)]) + encoded_label
         else:
-            for v in values:
-                item_writer(self, v)
+            label_bytes = b"\x00"
 
-        self.end_block()
+        size = len(label_bytes) + len(payload)
+        raw_id = self.id.value - self.token_offset
+        header_bytes = self._BLOCK_HEADER.pack(raw_id, self.flags, size)
+
+        block_bytes = header_bytes + label_bytes + payload
+
+        self._written_bytes += len(block_bytes)
+
+        if self._parent is not None:
+            self._parent._buffer.write(block_bytes)
+            return
+        else:
+            if self.stream is None:
+                raise BlockWriterError("No output stream set")
+            self.stream.write(block_bytes)
+
+    def _write(self, data: bytes) -> None:
+        self._buffer.write(data)
+        self._written_bytes += len(data)
+
+    def write_count(self, value: int):
+        self.write_int(value)
+
+    def write_flags(self, value: int) -> None:
+        self._write(self._UINT32.pack(value))
+
+    def write_int(self, value: int) -> None:
+        self._write(self._INT32.pack(value))
+
+    def write_uint(self, value: int) -> None:
+        self._write(self._UINT32.pack(value))
+
+    def write_float(self, value: float) -> None:
+        self._write(self._FLOAT32.pack(value))
+
+    def write_string(self, value: str) -> None:
+        if not value:
+            self._write(self._UINT16.pack(0))
+            return
+        encoded = value.encode("utf-16-le")
+        self._write(self._UINT16.pack(len(value)))
+        self._write(encoded)
+
+    def write_comment(self, text: str):
+        pass
+
+    def flush(self):
+        if self.stream:
+            self.stream.flush()
+
+    def close(self):
+        if self.stream and not self.stream.closed:
+            self.stream.close()
 
 
 class BinaryFileWriter(BinaryBlockWriter):
@@ -414,19 +520,22 @@ class BinaryFileWriter(BinaryBlockWriter):
         self.token_offset = token_offset
         self.is_closed = False
 
+    def _write(self, data: bytes) -> None:
+        if self.stream is None:
+            raise BlockWriterError("No output stream set")
+        self.stream.write(data)
+        self._written_bytes += len(data)
+
     def flush(self):
         if not self.is_closed and self.stream:
             self.stream.flush()
-    
+
     def close(self):
-        if not self.is_closed and self.stream:
-            self.stream.close()
-            self.is_closed = True
+        if self.is_closed or self.stream is None:
+            return
 
+        if self._buffer:
+            self.stream.write(self._buffer.getvalue())
 
-class BlockWriterException(Exception):
-
-    def __init__(self, writer: BlockWriter, message: str):
-        super().__init__(message)
-        self.writer = writer
-
+        self.stream.close()
+        self.is_closed = True
