@@ -24,6 +24,23 @@ from .models import *
 
 
 def dump(world: World, filepath: str, compressed: bool = False) -> None:
+    """
+    Write a world object to disk.
+
+    This function supports both compressed/uncompressed as well as binary/text data.
+    It writes the world data to the file at the given path.
+
+    Args:
+        world (World): The world object to write.
+        filepath (str): Path to the output file.
+        compressed (bool): Whether to write compressed data. Defaults to False.
+
+    Raises:
+        TypeError: If `world` is not a World object.
+        TypeError: If `filepath` is not a string.
+        TypeError: If `compressed` is not a bool.
+        OSError: If the file cannot be written.
+    """
     if not isinstance(world, World):
         raise TypeError(f"Parameter 'world' must be World, but got {type(world).__name__}")
 
@@ -45,6 +62,21 @@ def dump(world: World, filepath: str, compressed: bool = False) -> None:
 
 
 def dumps(world: World) -> str:
+    """
+    Write a world object to a string.
+
+    This function does not support binary or compressed data. It writes world
+    data to a string and returns it.
+
+    Args:
+        world (World): The world object to write.
+
+    Returns:
+        str: The string containing the world data.
+
+    Raises:
+        TypeError: If `world` is not a World object.
+    """
     if not isinstance(world, World):
         raise TypeError(f"Parameter 'world' must be World, but got {type(world).__name__}")
 
@@ -58,11 +90,29 @@ def dumps(world: World) -> str:
 
 
 def write_world(writer: BlockWriter, world: World) -> None:
+    """
+    Write a world block to a BlockWriter.
+
+    Writes the `Tr_Worldfile` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the world block to.
+        world (World): The world object to write.
+    """
     with writer.sub_block(TokenID.Tr_Worldfile):
         write_world_objects(writer, world.objects)
 
 
 def write_world_objects(writer: BlockWriter, objects: list) -> None:
+    """
+    Write world objects to a BlockWriter.
+
+    Writes world objects by dispatching to the appropriate object type writer.
+
+    Args:
+        writer (BlockWriter): Writer to write the world objects to.
+        objects (list): List of world object objects to write.
+    """
     current_watermark = 0
 
     for obj in objects:
@@ -97,11 +147,31 @@ def write_world_objects(writer: BlockWriter, objects: list) -> None:
 
 
 def write_static_object(writer: BlockWriter, obj: StaticObj, detail_level: int) -> None:
+    """
+    Write a static object to a BlockWriter.
+
+    Writes the `Static` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the static object to.
+        obj (StaticObj): The static object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Static):
         write_world_obj_base(writer, obj, detail_level)
 
 
 def write_track_object(writer: BlockWriter, obj: TrackObj, detail_level: int) -> None:
+    """
+    Write a track object to a BlockWriter.
+
+    Writes the `TrackObj` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the track object to.
+        obj (TrackObj): The track object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.TrackObj):
         write_world_obj_base(writer, obj, detail_level)
         with writer.sub_block(TokenID.SectionIdx):
@@ -115,6 +185,16 @@ def write_track_object(writer: BlockWriter, obj: TrackObj, detail_level: int) ->
 
 
 def write_carspawner_object(writer: BlockWriter, obj: CarSpawnerObj, detail_level: int) -> None:
+    """
+    Write a car spawner object to a BlockWriter.
+
+    Writes the `CarSpawner` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the car spawner object to.
+        obj (CarSpawnerObj): The car spawner object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.CarSpawner):
         write_world_obj_base(writer, obj, detail_level)
         with writer.sub_block(TokenID.CarFrequency):
@@ -130,6 +210,16 @@ def write_carspawner_object(writer: BlockWriter, obj: CarSpawnerObj, detail_leve
 
 
 def write_siding_object(writer: BlockWriter, obj: SidingObj, detail_level: int) -> None:
+    """
+    Write a siding object to a BlockWriter.
+
+    Writes the `Siding` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the siding object to.
+        obj (SidingObj): The siding object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Siding):
         write_world_obj_base(writer, obj, detail_level)
         if obj.tr_item_ids:
@@ -138,6 +228,16 @@ def write_siding_object(writer: BlockWriter, obj: SidingObj, detail_level: int) 
 
 
 def write_platform_object(writer: BlockWriter, obj: PlatformObj, detail_level: int) -> None:
+    """
+    Write a platform object to a BlockWriter.
+
+    Writes the `Platform` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the platform object to.
+        obj (PlatformObj): The platform object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Platform):
         write_world_obj_base(writer, obj, detail_level)
         with writer.sub_block(TokenID.PlatformData):
@@ -148,6 +248,16 @@ def write_platform_object(writer: BlockWriter, obj: PlatformObj, detail_level: i
 
 
 def write_forest_object(writer: BlockWriter, obj: ForestObj, detail_level: int) -> None:
+    """
+    Write a forest object to a BlockWriter.
+
+    Writes the `Forest` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the forest object to.
+        obj (ForestObj): The forest object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Forest):
         write_world_obj_base(writer, obj, detail_level)
         if obj.tree_texture is not None:
@@ -171,6 +281,16 @@ def write_forest_object(writer: BlockWriter, obj: ForestObj, detail_level: int) 
 
 
 def write_levelcr_object(writer: BlockWriter, obj: LevelCrObj, detail_level: int) -> None:
+    """
+    Write a level crossing object to a BlockWriter.
+
+    Writes the `LevelCr` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the level crossing object to.
+        obj (LevelCrObj): The level crossing object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.LevelCr):
         write_world_obj_base(writer, obj, detail_level)
         if obj.levelcr_params is not None:
@@ -198,6 +318,16 @@ def write_levelcr_object(writer: BlockWriter, obj: LevelCrObj, detail_level: int
 
 
 def write_dyntrack_object(writer: BlockWriter, obj: DynTrackObj, detail_level: int) -> None:
+    """
+    Write a dynamic track object to a BlockWriter.
+
+    Writes the `Dyntrack` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the dynamic track object to.
+        obj (DynTrackObj): The dynamic track object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Dyntrack):
         with writer.sub_block(TokenID.UiD):
             writer.write_uint(obj.uid)
@@ -219,6 +349,16 @@ def write_dyntrack_object(writer: BlockWriter, obj: DynTrackObj, detail_level: i
 
 
 def write_transfer_object(writer: BlockWriter, obj: TransferObj, detail_level: int) -> None:
+    """
+    Write a transfer object to a BlockWriter.
+
+    Writes the `Transfer` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the transfer object to.
+        obj (TransferObj): The transfer object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Transfer):
         write_world_obj_base(writer, obj, detail_level)
         with writer.sub_block(TokenID.Width):
@@ -228,11 +368,31 @@ def write_transfer_object(writer: BlockWriter, obj: TransferObj, detail_level: i
 
 
 def write_gantry_object(writer: BlockWriter, obj: GantryObj, detail_level: int) -> None:
+    """
+    Write a gantry object to a BlockWriter.
+
+    Writes the `Gantry` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the gantry object to.
+        obj (GantryObj): The gantry object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Gantry):
         write_world_obj_base(writer, obj, detail_level)
 
 
 def write_pickup_object(writer: BlockWriter, obj: PickupObj, detail_level: int) -> None:
+    """
+    Write a pickup object to a BlockWriter.
+
+    Writes the `Pickup` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the pickup object to.
+        obj (PickupObj): The pickup object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Pickup):
         write_world_obj_base(writer, obj, detail_level)
         if obj.speed_range is not None:
@@ -276,6 +436,15 @@ def write_pickup_object(writer: BlockWriter, obj: PickupObj, detail_level: int) 
 
 
 def write_stack_locations(writer: BlockWriter, stack_locations: list) -> None:
+    """
+    Write stack locations to a BlockWriter.
+
+    Writes the `ORTSStackLocations` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the stack locations block to.
+        stack_locations (list): List of stack location objects to write.
+    """
     with writer.sub_block(TokenID.ORTSStackLocations):
         writer.write_count(len(stack_locations))
         for stack_location in stack_locations:
@@ -292,6 +461,16 @@ def write_stack_locations(writer: BlockWriter, stack_locations: list) -> None:
 
 
 def write_hazard_object(writer: BlockWriter, obj: HazardObj, detail_level: int) -> None:
+    """
+    Write a hazard object to a BlockWriter.
+
+    Writes the `Hazard` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the hazard object to.
+        obj (HazardObj): The hazard object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Hazard):
         write_world_obj_base(writer, obj, detail_level)
         if obj.tr_item_id is not None:
@@ -299,6 +478,16 @@ def write_hazard_object(writer: BlockWriter, obj: HazardObj, detail_level: int) 
 
 
 def write_signal_object(writer: BlockWriter, obj: SignalObj, detail_level: int) -> None:
+    """
+    Write a signal object to a BlockWriter.
+
+    Writes the `Signal` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the signal object to.
+        obj (SignalObj): The signal object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Signal):
         write_world_obj_base(writer, obj, detail_level)
         with writer.sub_block(TokenID.SignalSubObj):
@@ -308,6 +497,15 @@ def write_signal_object(writer: BlockWriter, obj: SignalObj, detail_level: int) 
 
 
 def write_signal_units(writer: BlockWriter, signal_units: list) -> None:
+    """
+    Write signal units to a BlockWriter.
+
+    Writes the `SignalUnits` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the signal units block to.
+        signal_units (list): List of signal unit objects to write.
+    """
     with writer.sub_block(TokenID.SignalUnits):
         writer.write_count(len(signal_units))
         for signal_unit in signal_units:
@@ -318,6 +516,16 @@ def write_signal_units(writer: BlockWriter, signal_units: list) -> None:
 
 
 def write_speedpost_object(writer: BlockWriter, obj: SpeedPostObj, detail_level: int) -> None:
+    """
+    Write a speed post object to a BlockWriter.
+
+    Writes the `Speedpost` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the speed post object to.
+        obj (SpeedPostObj): The speed post object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.Speedpost):
         write_world_obj_base(writer, obj, detail_level)
         if obj.speed_digit_tex is not None:
@@ -339,6 +547,16 @@ def write_speedpost_object(writer: BlockWriter, obj: SpeedPostObj, detail_level:
 
 
 def write_world_obj_base(writer: BlockWriter, obj: WorldObj, detail_level: int) -> None:
+    """
+    Write the base fields of a world object to a BlockWriter.
+
+    Writes the common sub-blocks shared by all world object types.
+
+    Args:
+        writer (BlockWriter): Writer to write the world object base to.
+        obj (WorldObj): The world object to write.
+        detail_level (int): Detail level associated with the object.
+    """
     with writer.sub_block(TokenID.UiD):
         writer.write_uint(obj.uid)
     if obj.file_name is not None:
@@ -356,6 +574,15 @@ def write_world_obj_base(writer: BlockWriter, obj: WorldObj, detail_level: int) 
 
 
 def write_position(writer: BlockWriter, position: Position) -> None:
+    """
+    Write a position to a BlockWriter.
+
+    Writes the `Position` sub-block.
+
+    Args:
+        writer (BlockWriter): Writer to write the position block to.
+        position (Position): The position object to write.
+    """
     with writer.sub_block(TokenID.Position):
         writer.write_float(position.x)
         writer.write_float(position.y)
@@ -363,6 +590,15 @@ def write_position(writer: BlockWriter, position: Position) -> None:
 
 
 def write_qdirection(writer: BlockWriter, qdirection: QDirection) -> None:
+    """
+    Write a quaternion direction to a BlockWriter.
+
+    Writes the `QDirection` sub-block.
+
+    Args:
+        writer (BlockWriter): Writer to write the quaternion direction block to.
+        qdirection (QDirection): The quaternion direction object to write.
+    """
     with writer.sub_block(TokenID.QDirection):
         writer.write_float(qdirection.x)
         writer.write_float(qdirection.y)
@@ -371,6 +607,15 @@ def write_qdirection(writer: BlockWriter, qdirection: QDirection) -> None:
 
 
 def write_matrix3x3(writer: BlockWriter, matrix3x3: Matrix3x3) -> None:
+    """
+    Write a 3x3 matrix to a BlockWriter.
+
+    Writes the `Matrix3x3` sub-block.
+
+    Args:
+        writer (BlockWriter): Writer to write the 3x3 matrix block to.
+        matrix3x3 (Matrix3x3): The 3x3 matrix object to write.
+    """
     with writer.sub_block(TokenID.Matrix3x3):
         writer.write_float(matrix3x3.ax)
         writer.write_float(matrix3x3.ay)
@@ -384,6 +629,15 @@ def write_matrix3x3(writer: BlockWriter, matrix3x3: Matrix3x3) -> None:
 
 
 def write_jnode_position(writer: BlockWriter, jnode_position: JNodePosition) -> None:
+    """
+    Write a junction node position to a BlockWriter.
+
+    Writes the `JNodePosn` sub-block.
+
+    Args:
+        writer (BlockWriter): Writer to write the junction node position block to.
+        jnode_position (JNodePosition): The junction node position object to write.
+    """
     with writer.sub_block(TokenID.JNodePosn):
         writer.write_int(jnode_position.tile_x)
         writer.write_int(jnode_position.tile_z)
@@ -393,6 +647,15 @@ def write_jnode_position(writer: BlockWriter, jnode_position: JNodePosition) -> 
 
 
 def write_tr_item_id(writer: BlockWriter, tr_item_id: TrItemId) -> None:
+    """
+    Write a track item ID to a BlockWriter.
+
+    Writes the `TrItemId` sub-block.
+
+    Args:
+        writer (BlockWriter): Writer to write the track item ID block to.
+        tr_item_id (TrItemId): The track item ID object to write.
+    """
     with writer.sub_block(TokenID.TrItemId):
         writer.write_int(tr_item_id.db)
         writer.write_int(tr_item_id.db_id)

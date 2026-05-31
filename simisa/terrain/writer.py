@@ -23,6 +23,23 @@ from .models import *
 
 
 def dump(terrain: Terrain, filepath: str, compressed: bool = False) -> None:
+    """
+    Write a terrain object to disk.
+
+    This function supports both compressed/uncompressed as well as binary/text data.
+    It writes the terrain data to the file at the given path.
+
+    Args:
+        terrain (Terrain): The terrain object to write.
+        filepath (str): Path to the output file.
+        compressed (bool): Whether to write compressed data. Defaults to False.
+
+    Raises:
+        TypeError: If `terrain` is not a Terrain object.
+        TypeError: If `filepath` is not a string.
+        TypeError: If `compressed` is not a bool.
+        OSError: If the file cannot be written.
+    """
     if not isinstance(terrain, Terrain):
         raise TypeError(f"Parameter 'terrain' must be Terrain, but got {type(terrain).__name__}")
 
@@ -35,7 +52,7 @@ def dump(terrain: Terrain, filepath: str, compressed: bool = False) -> None:
     with BlockWriter.open(
         filepath,
         filetype="t",
-        fileversion="0",
+        fileversion="6",
         is_binary=compressed,
         is_unicode=not compressed,
         is_compressed=compressed
@@ -44,19 +61,43 @@ def dump(terrain: Terrain, filepath: str, compressed: bool = False) -> None:
 
 
 def dumps(terrain: Terrain) -> str:
+    """
+    Write a terrain object to a string.
+
+    This function does not support binary or compressed data. It writes terrain
+    data to a string and returns it.
+
+    Args:
+        terrain (Terrain): The terrain object to write.
+
+    Returns:
+        str: The string containing the terrain data.
+
+    Raises:
+        TypeError: If `terrain` is not a Terrain object.
+    """
     if not isinstance(terrain, Terrain):
         raise TypeError(f"Parameter 'terrain' must be Terrain, but got {type(terrain).__name__}")
 
     terrain_text = BlockWriter.to_string(
         lambda writer: write_terrain(writer, terrain),
         filetype="t",
-        fileversion="0"
+        fileversion="6"
     )
 
     return terrain_text
 
 
 def write_terrain(writer: BlockWriter, terrain: Terrain) -> None:
+    """
+    Write a terrain block to a BlockWriter.
+
+    Writes the `terrain` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the terrain block to.
+        terrain (Terrain): The terrain object to write.
+    """
     with writer.sub_block(TokenID.terrain):
         with writer.sub_block(TokenID.terrain_errthreshold_scale):
             writer.write_float(terrain.terrain_errthreshold_scale)
@@ -79,6 +120,15 @@ def write_terrain(writer: BlockWriter, terrain: Terrain) -> None:
 
 
 def write_terrain_water_height_offset(writer: BlockWriter, offset: TerrainWaterHeightOffset) -> None:
+    """
+    Write a terrain water height offset block to a BlockWriter.
+
+    Writes the `terrain_water_height_offset` sub-block.
+
+    Args:
+        writer (BlockWriter): Writer to write the terrain water height offset block to.
+        offset (TerrainWaterHeightOffset): The terrain water height offset object to write.
+    """
     with writer.sub_block(TokenID.terrain_water_height_offset):
         if offset.sw is not None:
             writer.write_float(offset.sw)
@@ -91,6 +141,15 @@ def write_terrain_water_height_offset(writer: BlockWriter, offset: TerrainWaterH
 
 
 def write_terrain_samples(writer: BlockWriter, samples: TerrainSamples) -> None:
+    """
+    Write terrain samples to a BlockWriter.
+
+    Writes the `terrain_samples` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the terrain samples block to.
+        samples (TerrainSamples): The terrain samples object to write.
+    """
     with writer.sub_block(TokenID.terrain_samples):
         if samples.terrain_nsamples is not None:
             with writer.sub_block(TokenID.terrain_nsamples):
@@ -119,6 +178,15 @@ def write_terrain_samples(writer: BlockWriter, samples: TerrainSamples) -> None:
 
 
 def write_terrain_shaders(writer: BlockWriter, shaders: list) -> None:
+    """
+    Write terrain shaders to a BlockWriter.
+
+    Writes the `terrain_shaders` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the terrain shaders block to.
+        shaders (list): List of terrain shader objects to write.
+    """
     with writer.sub_block(TokenID.terrain_shaders):
         writer.write_count(len(shaders))
         for shader in shaders:
@@ -131,6 +199,15 @@ def write_terrain_shaders(writer: BlockWriter, shaders: list) -> None:
 
 
 def write_terrain_texslots(writer: BlockWriter, texslots: list) -> None:
+    """
+    Write terrain texture slots to a BlockWriter.
+
+    Writes the `terrain_texslots` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the terrain texture slots block to.
+        texslots (list): List of terrain texture slot objects to write.
+    """
     with writer.sub_block(TokenID.terrain_texslots):
         writer.write_count(len(texslots))
         for texslot in texslots:
@@ -141,6 +218,15 @@ def write_terrain_texslots(writer: BlockWriter, texslots: list) -> None:
 
 
 def write_terrain_uvcalcs(writer: BlockWriter, uvcalcs: list) -> None:
+    """
+    Write terrain UV calculations to a BlockWriter.
+
+    Writes the `terrain_uvcalcs` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the terrain UV calculations block to.
+        uvcalcs (list): List of terrain UV calculation objects to write.
+    """
     with writer.sub_block(TokenID.terrain_uvcalcs):
         writer.write_count(len(uvcalcs))
         for uvcalc in uvcalcs:
@@ -152,6 +238,15 @@ def write_terrain_uvcalcs(writer: BlockWriter, uvcalcs: list) -> None:
 
 
 def write_terrain_patchsets(writer: BlockWriter, patchsets: list) -> None:
+    """
+    Write terrain patchsets to a BlockWriter.
+
+    Writes the `terrain_patchsets` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the terrain patchsets block to.
+        patchsets (list): List of terrain patchset objects to write.
+    """
     with writer.sub_block(TokenID.terrain_patchsets):
         writer.write_count(len(patchsets))
         for patchset in patchsets:
@@ -164,6 +259,15 @@ def write_terrain_patchsets(writer: BlockWriter, patchsets: list) -> None:
 
 
 def write_terrain_patchset_patches(writer: BlockWriter, patches: list) -> None:
+    """
+    Write terrain patchset patches to a BlockWriter.
+
+    Writes the `terrain_patchset_patches` sub-block and its child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the terrain patchset patches block to.
+        patches (list): List of terrain patchset patch objects to write.
+    """
     with writer.sub_block(TokenID.terrain_patchset_patches):
         for patch in patches:
             with writer.sub_block(TokenID.terrain_patchset_patch):
