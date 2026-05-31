@@ -20,6 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import math
 import pytest
 from simisa import world
+from tests import compare_objects
 
 
 # def test_tracksections_load(global_storage):
@@ -106,3 +107,25 @@ def test_worldfile_load_compressed(global_storage):
         
 #         with pytest.raises(TypeError):
 #             tracksections.loads(tracksections_bytes)
+
+
+def test_world_roundtrip_uncompressed(global_storage, tmp_path):
+    original = world.load(global_storage["worldfile_path"])
+    output_path = tmp_path / "roundtrip.w"
+    
+    world.dump(original, str(output_path), compressed=False)
+    roundtripped = world.load(str(output_path))
+    
+    if not compare_objects(original, roundtripped):
+        assert False
+
+
+def test_world_roundtrip_compressed(global_storage, tmp_path):
+    original = world.load(global_storage["worldfile_path"])
+    output_path = tmp_path / "roundtrip_compressed.w"
+    
+    world.dump(original, str(output_path), compressed=True)
+    roundtripped = world.load(str(output_path))
+    
+    if not compare_objects(original, roundtripped):
+        assert False

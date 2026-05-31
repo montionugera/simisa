@@ -53,7 +53,7 @@ def dump(world: World, filepath: str, compressed: bool = False) -> None:
     with BlockWriter.open(
         filepath,
         filetype="w",
-        fileversion="0",
+        fileversion=0,
         is_binary=compressed,
         is_unicode=not compressed,
         is_compressed=compressed
@@ -83,7 +83,7 @@ def dumps(world: World) -> str:
     world_text = BlockWriter.to_string(
         lambda writer: write_world(writer, world),
         filetype="w",
-        fileversion="0"
+        fileversion=0
     )
 
     return world_text

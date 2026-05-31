@@ -52,7 +52,7 @@ def dump(terrain: Terrain, filepath: str, compressed: bool = False) -> None:
     with BlockWriter.open(
         filepath,
         filetype="t",
-        fileversion="6",
+        fileversion=6,
         is_binary=compressed,
         is_unicode=not compressed,
         is_compressed=compressed
@@ -82,7 +82,7 @@ def dumps(terrain: Terrain) -> str:
     terrain_text = BlockWriter.to_string(
         lambda writer: write_terrain(writer, terrain),
         filetype="t",
-        fileversion="6"
+        fileversion=6
     )
 
     return terrain_text

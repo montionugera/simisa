@@ -20,6 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import math
 import pytest
 from simisa import shape
+from tests import compare_objects
 
 
 def test_shape_load(global_storage):
@@ -95,3 +96,29 @@ def test_shape_loads_compressed(global_storage):
         
         with pytest.raises(TypeError):
             shape.loads(shape_bytes)
+
+
+def test_shape_roundtrip_uncompressed(global_storage, tmp_path):
+    import os
+
+    original = shape.load(global_storage["shapefile_path"])
+    output_path = tmp_path / "roundtrip.s"
+    
+    shape.dump(original, str(output_path), compressed=False)
+    roundtripped = shape.load(str(output_path))
+    
+    if not compare_objects(original, roundtripped):
+        assert False
+
+
+def test_shape_roundtrip_compressed(global_storage, tmp_path):
+    import os
+
+    original = shape.load(global_storage["shapefile_path"])
+    output_path = tmp_path / "roundtrip_compressed.s"
+    
+    shape.dump(original, str(output_path), compressed=True)
+    roundtripped = shape.load(str(output_path))
+    
+    if not compare_objects(original, roundtripped):
+        assert False

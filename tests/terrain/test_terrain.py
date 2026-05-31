@@ -20,6 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import math
 import pytest
 from simisa import terrain
+from tests import compare_objects
 
 
 # def test_terrain_load(global_storage):
@@ -95,3 +96,25 @@ def test_terrain_load_compressed(global_storage):
         
 #         with pytest.raises(TypeError):
 #             terrain.loads(terrain_bytes)
+
+
+def test_terrain_roundtrip_uncompressed(global_storage, tmp_path):
+    original = terrain.load(global_storage["terrainfile_compressed_path"])
+    output_path = tmp_path / "roundtrip.t"
+    
+    terrain.dump(original, str(output_path), compressed=False)
+    roundtripped = terrain.load(str(output_path))
+    
+    if not compare_objects(original, roundtripped):
+        assert False
+
+
+def test_terrain_roundtrip_compressed(global_storage, tmp_path):
+    original = terrain.load(global_storage["terrainfile_compressed_path"])
+    output_path = tmp_path / "roundtrip_compressed.t"
+    
+    terrain.dump(original, str(output_path), compressed=True)
+    roundtripped = terrain.load(str(output_path))
+    
+    if not compare_objects(original, roundtripped):
+        assert False
