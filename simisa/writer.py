@@ -44,8 +44,6 @@ class CompressedStreamWriter(io.RawIOBase):
 
     Compatible with Python IO wrappers such as `TextIOWrapper` and `BufferedWriter`.
     """
-    CHUNK_SIZE = 65536
-
     def __init__(self, fileobj):
         self.fileobj = fileobj
         self.compressor = zlib.compressobj(wbits=zlib.MAX_WBITS)
@@ -144,19 +142,14 @@ class BlockWriter(ABC):
 
         f = open(filepath, "wb")
 
+        if is_unicode:
+            f.write(codecs.BOM_UTF16_LE)
+        
         if is_compressed:
-            # Total number of bytes in the file, including the header (when uncompressed)
-            # Not yet known here, so it is patched with the actual value upon calling close()
-            total_length = b"\x00\x00\x00\x00"
-
-            f.write(b"SIMISA@F")
-            f.write(total_length)
-            f.write(b"@@@@")
+            f.write("SIMISA@F\x00\x00\x00\x00@@@@".encode(encoding))
             stream = CompressedStreamWriter(f)
         else:
-            if is_unicode:
-                f.write(codecs.BOM_UTF16_LE)
-            f.write(("SIMISA@@@@@@@@@@").encode(encoding))
+            f.write("SIMISA@@@@@@@@@@".encode(encoding))
             stream = f
 
         stream.write(subheader.encode(encoding))
@@ -198,19 +191,19 @@ class BlockWriter(ABC):
 
     @contextmanager
     def sub_block(self, block_id: TokenID, block_format: Optional[BlockFormat] = None):
-        sub_block = self.begin_block(block_id, block_format)
+        sub_block = self.begin_sub_block(block_id, block_format)
 
         try:
             yield sub_block
         finally:
-            sub_block.end_block()
+            sub_block.end_sub_block()
 
     @abstractmethod
-    def begin_block(self, block_id: TokenID, block_format: Optional[BlockFormat] = None):
+    def begin_sub_block(self, block_id: TokenID, block_format: Optional[BlockFormat] = None):
         pass
 
     @abstractmethod
-    def end_block(self):
+    def end_sub_block(self):
         pass
     
     @abstractmethod
@@ -279,7 +272,7 @@ class TextBlockWriter(BlockWriter):
         self.stream.write(output_bytes)
         self._written_bytes += len(output_bytes)
 
-    def begin_block(self, block_id: TokenID, block_format: BlockFormat = BlockFormat()):
+    def begin_sub_block(self, block_id: TokenID, block_format: BlockFormat = BlockFormat()):
         if self.stream is None:
             raise BlockWriterError("Stream is not initialized")
 
@@ -301,7 +294,7 @@ class TextBlockWriter(BlockWriter):
         self._flush()
         return self
 
-    def end_block(self):
+    def end_sub_block(self):
         if self.stream is None:
             raise BlockWriterError("Stream is not initialized")
 
@@ -379,8 +372,16 @@ class TextBlockWriter(BlockWriter):
         self._flush()
 
     def write_comment(self, text: str):
-        self._emit("# " + text + "\n")
+        self._emit("_SKIP ( " + text + " )\n")
         self._flush()
+
+    def flush(self):
+        if self.stream:
+            self.stream.flush()
+
+    def close(self):
+        if self.stream and not self.stream.closed:
+            self.stream.close()
 
 
 class TextFileWriter(TextBlockWriter):
@@ -416,22 +417,17 @@ class BinaryBlockWriter(BlockWriter):
     def __init__(self):
         self.filename: str = ""
         self.stream: Optional[BinaryIO] = None
-
         self.token_offset: int = 0
         self.id: Optional[TokenID] = None
         self.flags: int = 0
         self.label: Optional[str] = None
 
         self._parent: Optional[BlockWriter] = None
-
         self._buffer = io.BytesIO()
         self._writing_block: bool = False
         self._written_bytes: int = 0
 
-    def begin_block(self, block_id: TokenID, block_format=None):
-        if self._writing_block:
-            raise BlockWriterError("Cannot begin a new block while the current block has not been ended")
-
+    def begin_sub_block(self, block_id: TokenID, block_format=None):
         sub_block = BinaryBlockWriter()
         sub_block.stream = self.stream
         sub_block.token_offset = self.token_offset
@@ -442,7 +438,7 @@ class BinaryBlockWriter(BlockWriter):
 
         return sub_block
 
-    def end_block(self):
+    def end_sub_block(self):
         if not self._writing_block:
             return
 
