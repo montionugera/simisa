@@ -34,16 +34,16 @@ def write_local_tracksections(writer: BlockWriter, tracksections: TrackSections)
     writer.write_uint(tracksections.max_section_index)
 
     for section_index, tracksection in sorted(tracksections.track_sections.items()):
-        with writer.sub_block(TokenID.TrackSection):
-            with writer.sub_block(TokenID.SectionCurve):
-                writer.write_int(0)
+        with writer.sub_block(TokenID.TrackSection) as tracksection_block:
+            with tracksection_block.sub_block(TokenID.SectionCurve) as sectioncurve_block:
+                sectioncurve_block.write_int(0)
 
-            writer.write_uint(tracksection.section_index)
+            tracksection_block.write_uint(tracksection.section_index)
 
             if tracksection.section_size is not None:
-                writer.write_float(tracksection.section_size.length)
-                writer.write_float(0.0)
+                tracksection_block.write_float(tracksection.section_size.length)
+                tracksection_block.write_float(0.0)
             
             elif tracksection.section_curve is not None:
-                writer.write_float(math.radians(tracksection.section_curve.angle))
-                writer.write_float(tracksection.section_curve.radius)
+                tracksection_block.write_float(math.radians(tracksection.section_curve.angle))
+                tracksection_block.write_float(tracksection.section_curve.radius)
