@@ -24,6 +24,13 @@ from .models import *
 
 
 def write_local_tracksections(writer: BlockWriter, tracksections: TrackSections) -> None:
+    if not isinstance(tracksections, TrackSections):
+        raise TypeError(f"DynTrackObj property 'track_sections' must be TrackSections, but got {type(tracksections).__name__}")
+
+    for section_index, tracksection in tracksections.track_sections.items():
+        if not isinstance(tracksection, TrackSection):
+            raise TypeError(f"TrackSections property 'track_sections' must contain TrackSection objects, but got {type(tracksection).__name__}")
+
     writer.write_uint(tracksections.max_section_index)
 
     for section_index, tracksection in sorted(tracksections.track_sections.items()):

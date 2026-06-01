@@ -338,6 +338,9 @@ class TextBlockWriter(BlockWriter):
             self._emit(text + " ")
 
     def write_count(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
+        
         block_format = self._block_format or BlockFormat()
 
         if block_format.newline_before_count:
@@ -352,26 +355,44 @@ class TextBlockWriter(BlockWriter):
         self._flush()
 
     def write_flags(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
+        
         self._write_token(f"{value:08X}")
         self._flush()
 
     def write_int(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
+        
         self._write_token(str(value))
         self._flush()
 
     def write_uint(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
+        
         self._write_token(str(value))
         self._flush()
 
     def write_float(self, value: float):
+        if not isinstance(value, (int, float)):
+            raise TypeError(f"Parameter 'value' must be float or int, but got {type(value).__name__}")
+        
         self._write_token(str(value))
         self._flush()
 
     def write_string(self, value: str):
+        if not isinstance(value, str):
+            raise TypeError(f"Parameter 'value' must be str, but got {type(value).__name__}")
+        
         self._write_token(value)
         self._flush()
 
     def write_comment(self, text: str):
+        if not isinstance(text, str):
+            raise TypeError(f"Parameter 'text' must be str, but got {type(text).__name__}")
+        
         self._emit("_SKIP ( " + text + " )\n")
         self._flush()
 
@@ -473,24 +494,43 @@ class BinaryBlockWriter(BlockWriter):
         self._written_bytes += len(data)
 
     def write_count(self, value: int):
+        if not isinstance(value, int):
+            raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
+        
         self.write_int(value)
 
     def write_flags(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
+        
         self._write(self._UINT32.pack(value))
 
     def write_int(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
+        
         self._write(self._INT32.pack(value))
 
     def write_uint(self, value: int) -> None:
+        if not isinstance(value, int):
+            raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
+        
         self._write(self._UINT32.pack(value))
 
     def write_float(self, value: float) -> None:
+        if not isinstance(value, (int, float)):
+            raise TypeError(f"Parameter 'value' must be float or int, but got {type(value).__name__}")
+        
         self._write(self._FLOAT32.pack(value))
 
     def write_string(self, value: str) -> None:
+        if not isinstance(value, str):
+            raise TypeError(f"Parameter 'value' must be str, but got {type(value).__name__}")
+        
         if not value:
             self._write(self._UINT16.pack(0))
             return
+        
         encoded = value.encode("utf-16-le")
         self._write(self._UINT16.pack(len(value)))
         self._write(encoded)
@@ -519,6 +559,7 @@ class BinaryFileWriter(BinaryBlockWriter):
     def _write(self, data: bytes) -> None:
         if self.stream is None:
             raise BlockWriterError("No output stream set")
+        
         self.stream.write(data)
         self._written_bytes += len(data)
 
