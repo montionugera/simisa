@@ -499,23 +499,23 @@ def write_uv_ops(writer: BlockWriter, uv_ops: List[UVOp]) -> None:
                     uv_op_block.write_int(uv_op.texture_address_mode)
                     uv_op_block.write_int(uv_op.source_uv_index)
             
-            elif isinstance(uv_op, UVOpReflectMapFull) as uv_op_block:
-                with uv_ops_block.sub_block(TokenID.uv_op_reflectmapfull):
+            elif isinstance(uv_op, UVOpReflectMapFull):
+                with uv_ops_block.sub_block(TokenID.uv_op_reflectmapfull) as uv_op_block:
                     uv_op_block.write_int(uv_op.texture_address_mode)
             
-            elif isinstance(uv_op, UVOpReflectMap) as uv_op_block:
-                with uv_ops_block.sub_block(TokenID.uv_op_reflectmap):
+            elif isinstance(uv_op, UVOpReflectMap):
+                with uv_ops_block.sub_block(TokenID.uv_op_reflectmap) as uv_op_block:
                     uv_op_block.write_int(uv_op.texture_address_mode)
             
-            elif isinstance(uv_op, UVOpUniformScale) as uv_op_block:
-                with uv_ops_block.sub_block(TokenID.uv_op_uniformscale):
+            elif isinstance(uv_op, UVOpUniformScale):
+                with uv_ops_block.sub_block(TokenID.uv_op_uniformscale) as uv_op_block:
                     uv_op_block.write_int(uv_op.texture_address_mode)
                     uv_op_block.write_int(uv_op.source_uv_index)
                     uv_op_block.write_int(uv_op.unknown3)
                     uv_op_block.write_int(uv_op.unknown4)
             
-            elif isinstance(uv_op, UVOpNonUniformScale) as uv_op_block:
-                with uv_ops_block.sub_block(TokenID.uv_op_nonuniformscale):
+            elif isinstance(uv_op, UVOpNonUniformScale):
+                with uv_ops_block.sub_block(TokenID.uv_op_nonuniformscale) as uv_op_block:
                     uv_op_block.write_int(uv_op.texture_address_mode)
                     uv_op_block.write_int(uv_op.source_uv_index)
                     uv_op_block.write_int(uv_op.unknown3)

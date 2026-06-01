@@ -32,7 +32,6 @@ from .units import Units
 logger = logging.getLogger(__name__)
 
 # TODO Handle units
-# TODO pass filepath to from_stream and use it in `resolve_include`
 
 
 class StfReaderError(Exception):
@@ -294,14 +293,15 @@ class StfTokenStream:
 class StfReader:
 
     @classmethod
-    def from_stream(cls, stream):
+    def from_stream(cls, stream, filepath: str = ""):
         lexer = StfLexer(stream)
         token_stream = StfTokenStream(lexer)
 
-        return cls(token_stream)
+        return cls(token_stream, filepath)
     
-    def __init__(self, stream: StfTokenStream):
+    def __init__(self, stream: StfTokenStream, filepath: str = ""):
         self.stream = stream
+        self.filepath = filepath
         self.injected: Optional["StfReader"] = None
         self.id = None
         self.label = None
@@ -355,8 +355,8 @@ class StfReader:
 
         self._expect(")")
 
-        include_text = resolve_include(include_path_token.value)
-        sub_reader = StfReader.from_stream(io.StringIO(include_text))
+        include_text = resolve_include(include_path_token.value, self.filepath)
+        sub_reader = StfReader.from_stream(io.StringIO(include_text), self.filepath)
 
         self.inject(sub_reader)
 

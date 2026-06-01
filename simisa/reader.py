@@ -648,7 +648,7 @@ class TextFileReader(TextBlockReader):
         self.stream = stream
         self.is_closed = False
         self.at_end_of_block = False
-        self.stf_reader = StfReader.from_stream(stream)
+        self.stf_reader = StfReader.from_stream(stream, filepath)
 
     def skip(self):
         if self.is_closed:
