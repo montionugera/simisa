@@ -18,6 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import math
+
 from .. import TokenID
 from ..writer import BlockWriter
 from .models import *

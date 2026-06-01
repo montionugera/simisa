@@ -724,7 +724,7 @@ def write_sub_object_header(writer: BlockWriter, header: SubObjectHeader) -> Non
         sub_object_header_block.write_int(header.subobject_id)
 
 
-def write_geometry_info(writer: BlockWriter, info: GeometryInfo) -> None:
+def write_geometry_info(writer: BlockWriter, geometry_info: GeometryInfo) -> None:
     """
     Write geometry info to a BlockWriter.
 
@@ -734,22 +734,22 @@ def write_geometry_info(writer: BlockWriter, info: GeometryInfo) -> None:
         writer (BlockWriter): Writer to write the geometry info block to.
         info (GeometryInfo): The geometry info object to write.
     """
-    if not isinstance(info, GeometryInfo):
-        raise TypeError(f"SubObjectHeader property 'geometry_info' must be GeometryInfo, but got {type(info).__name__}")
+    if not isinstance(geometry_info, GeometryInfo):
+        raise TypeError(f"SubObjectHeader property 'geometry_info' must be GeometryInfo, but got {type(geometry_info).__name__}")
 
     with writer.sub_block(TokenID.geometry_info) as geometry_info_block:
-        geometry_info_block.write_int(info.face_normals)
-        geometry_info_block.write_int(info.tx_light_cmds)
-        geometry_info_block.write_int(info.node_x_tx_light_cmds)
-        geometry_info_block.write_int(info.trilist_indices)
-        geometry_info_block.write_int(info.line_list_indices)
-        geometry_info_block.write_int(info.node_x_trilist_indices)
-        geometry_info_block.write_int(info.trilists)
-        geometry_info_block.write_int(info.line_lists)
-        geometry_info_block.write_int(info.pt_lists)
-        geometry_info_block.write_int(info.node_x_trilists)
-        write_geometry_nodes(geometry_info_block, info.geometry_nodes)
-        write_geometry_node_map(geometry_info_block, info.geometry_node_map)
+        geometry_info_block.write_int(geometry_info.face_normals)
+        geometry_info_block.write_int(geometry_info.tx_light_cmds)
+        geometry_info_block.write_int(geometry_info.node_x_tx_light_cmds)
+        geometry_info_block.write_int(geometry_info.trilist_indices)
+        geometry_info_block.write_int(geometry_info.line_list_indices)
+        geometry_info_block.write_int(geometry_info.node_x_trilist_indices)
+        geometry_info_block.write_int(geometry_info.trilists)
+        geometry_info_block.write_int(geometry_info.line_lists)
+        geometry_info_block.write_int(geometry_info.pt_lists)
+        geometry_info_block.write_int(geometry_info.node_x_trilists)
+        write_geometry_nodes(geometry_info_block, geometry_info.geometry_nodes)
+        write_geometry_node_map(geometry_info_block, geometry_info.geometry_node_map)
 
 
 def write_geometry_nodes(writer: BlockWriter, geometry_nodes: List[GeometryNode]) -> None:
