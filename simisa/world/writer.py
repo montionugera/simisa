@@ -716,10 +716,10 @@ def write_pickup_object(writer: BlockWriter, pickup_obj: PickupObj, detail_level
             picking_surface_y_offset_block.write_float(pickup_obj.picking_surface_y_offset)
         
         if pickup_obj.picking_surface_relative_top_start_position is not None:
-            with pickup_block.sub_block(TokenID.ORTSPickingSurfaceRelativeTopStartPosition) as picking_surface_relative_top_start_position_block:
-                picking_surface_relative_top_start_position_block.write_float(pickup_obj.picking_surface_relative_top_start_position.x)
-                picking_surface_relative_top_start_position_block.write_float(pickup_obj.picking_surface_relative_top_start_position.y)
-                picking_surface_relative_top_start_position_block.write_float(pickup_obj.picking_surface_relative_top_start_position.z)
+            with pickup_block.sub_block(TokenID.ORTSPickingSurfaceRelativeTopStartPosition) as top_start_position_block:
+                top_start_position_block.write_float(pickup_obj.picking_surface_relative_top_start_position.x)
+                top_start_position_block.write_float(pickup_obj.picking_surface_relative_top_start_position.y)
+                top_start_position_block.write_float(pickup_obj.picking_surface_relative_top_start_position.z)
         
         with pickup_block.sub_block(TokenID.ORTSGrabberArmsParts) as grabber_arms_parts_block:
             grabber_arms_parts_block.write_int(pickup_obj.grabber_arms_parts)
