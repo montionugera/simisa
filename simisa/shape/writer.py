@@ -54,7 +54,7 @@ def dump(shape: Shape, filepath: str, compressed: bool = False) -> None:
     with BlockWriter.open(
         filepath,
         filetype="s",
-        fileversion="0",
+        fileversion=0,
         is_binary=compressed,
         is_unicode=not compressed,
         is_compressed=compressed
@@ -84,7 +84,7 @@ def dumps(shape: Shape) -> str:
     shape_text = BlockWriter.to_string(
         lambda writer: write_shape(writer, shape),
         filetype="s",
-        fileversion="0"
+        fileversion=0
     )
 
     return shape_text
@@ -720,7 +720,7 @@ def write_sub_object_header(writer: BlockWriter, header: SubObjectHeader) -> Non
         sub_object_header_block.write_flags(header.destination_vtx_fmt_flags)
         write_geometry_info(sub_object_header_block, header.geometry_info)
         write_subobject_shaders(sub_object_header_block, header.subobject_shaders)
-        write_subobject_light_cfgs(writsub_object_header_blocker, header.subobject_light_cfgs)
+        write_subobject_light_cfgs(sub_object_header_block, header.subobject_light_cfgs)
         sub_object_header_block.write_int(header.subobject_id)
 
 

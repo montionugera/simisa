@@ -358,7 +358,7 @@ class TextBlockWriter(BlockWriter):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
-        self._write_token(f"{value:08X}")
+        self._write_token(f"{value:08x}")
         self._flush()
 
     def write_int(self, value: int):
