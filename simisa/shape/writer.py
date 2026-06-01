@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import List
+
 from .. import TokenID
 from ..writer import BlockWriter
 from .models import *
@@ -133,11 +135,12 @@ def write_shape_header(writer: BlockWriter, header: ShapeHeader) -> None:
     """
     with writer.sub_block(TokenID.shape_header):
         writer.write_flags(header.flags1)
+
         if header.flags2 is not None:
             writer.write_flags(header.flags2)
 
 
-def write_volumes(writer: BlockWriter, volumes: list) -> None:
+def write_volumes(writer: BlockWriter, volumes: List[VolumeSphere]) -> None:
     """
     Write volume spheres to a BlockWriter.
 
@@ -145,10 +148,11 @@ def write_volumes(writer: BlockWriter, volumes: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the volumes block to.
-        volumes (list): List of VolumeSphere objects to write.
+        volumes (List[VolumeSphere]): List of VolumeSphere objects to write.
     """
     with writer.sub_block(TokenID.volumes):
         writer.write_count(len(volumes))
+
         for volume in volumes:
             with writer.sub_block(TokenID.vol_sphere):
                 write_vector(writer, volume.vector)
@@ -171,7 +175,7 @@ def write_vector(writer: BlockWriter, vector: Vector) -> None:
         writer.write_float(vector.z)
 
 
-def write_shader_names(writer: BlockWriter, shader_names: list) -> None:
+def write_shader_names(writer: BlockWriter, shader_names: List[str]) -> None:
     """
     Write shader names to a BlockWriter.
 
@@ -179,16 +183,17 @@ def write_shader_names(writer: BlockWriter, shader_names: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the shader names block to.
-        shader_names (list): List of shader name strings to write.
+        shader_names (List[str]): List of shader name strings to write.
     """
     with writer.sub_block(TokenID.shader_names):
         writer.write_count(len(shader_names))
+
         for shader_name in shader_names:
             with writer.sub_block(TokenID.named_shader):
                 writer.write_string(shader_name)
 
 
-def write_texture_filter_names(writer: BlockWriter, filter_names: list) -> None:
+def write_texture_filter_names(writer: BlockWriter, filter_names: List[str]) -> None:
     """
     Write texture filter names to a BlockWriter.
 
@@ -196,16 +201,17 @@ def write_texture_filter_names(writer: BlockWriter, filter_names: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the texture filter names block to.
-        filter_names (list): List of filter name strings to write.
+        filter_names (List[str]): List of filter name strings to write.
     """
     with writer.sub_block(TokenID.texture_filter_names):
         writer.write_count(len(filter_names))
+
         for filter_name in filter_names:
             with writer.sub_block(TokenID.named_filter_mode):
                 writer.write_string(filter_name)
 
 
-def write_points(writer: BlockWriter, points: list) -> None:
+def write_points(writer: BlockWriter, points: List[Point]) -> None:
     """
     Write 3D points to a BlockWriter.
 
@@ -213,10 +219,11 @@ def write_points(writer: BlockWriter, points: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the points block to.
-        points (list): List of Point objects to write.
+        points (List[Point]): List of Point objects to write.
     """
     with writer.sub_block(TokenID.points):
         writer.write_count(len(points))
+
         for point in points:
             with writer.sub_block(TokenID.point):
                 writer.write_float(point.x)
@@ -224,7 +231,7 @@ def write_points(writer: BlockWriter, points: list) -> None:
                 writer.write_float(point.z)
 
 
-def write_uv_points(writer: BlockWriter, uv_points: list) -> None:
+def write_uv_points(writer: BlockWriter, uv_points: List[UVPoint]) -> None:
     """
     Write UV points to a BlockWriter.
 
@@ -232,17 +239,18 @@ def write_uv_points(writer: BlockWriter, uv_points: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the UV points block to.
-        uv_points (list): List of UV point objects to write.
+        uv_points (List[UVPoint]): List of UV point objects to write.
     """
     with writer.sub_block(TokenID.uv_points):
         writer.write_count(len(uv_points))
+
         for uv_point in uv_points:
             with writer.sub_block(TokenID.uv_point):
                 writer.write_float(uv_point.u)
                 writer.write_float(uv_point.v)
 
 
-def write_normals(writer: BlockWriter, normals: list) -> None:
+def write_normals(writer: BlockWriter, normals: List[Vector]) -> None:
     """
     Write normals to a BlockWriter.
 
@@ -250,15 +258,16 @@ def write_normals(writer: BlockWriter, normals: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the normals block to.
-        normals (list): List of normal vectors to write.
+        normals (List[Vector]): List of normal vectors to write.
     """
     with writer.sub_block(TokenID.normals):
         writer.write_count(len(normals))
+
         for normal in normals:
             write_vector(writer, normal)
 
 
-def write_sort_vectors(writer: BlockWriter, sort_vectors: list) -> None:
+def write_sort_vectors(writer: BlockWriter, sort_vectors: List[Vector]) -> None:
     """
     Write sort vectors to a BlockWriter.
 
@@ -266,15 +275,16 @@ def write_sort_vectors(writer: BlockWriter, sort_vectors: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the sort vectors block to.
-        sort_vectors (list): List of sort vectors to write.
+        sort_vectors (List[Vector]): List of sort vectors to write.
     """
     with writer.sub_block(TokenID.sort_vectors):
         writer.write_count(len(sort_vectors))
+
         for sort_vector in sort_vectors:
             write_vector(writer, sort_vector)
 
 
-def write_colours(writer: BlockWriter, colours: list) -> None:
+def write_colours(writer: BlockWriter, colours: List[Colour]) -> None:
     """
     Write colours to a BlockWriter.
 
@@ -282,10 +292,11 @@ def write_colours(writer: BlockWriter, colours: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the colours block to.
-        colours (list): List of colour objects to write.
+        colours (List[Colour]): List of colour objects to write.
     """
     with writer.sub_block(TokenID.colours):
         writer.write_count(len(colours))
+        
         for colour in colours:
             with writer.sub_block(TokenID.colour):
                 writer.write_float(colour.a)
@@ -294,7 +305,7 @@ def write_colours(writer: BlockWriter, colours: list) -> None:
                 writer.write_float(colour.b)
 
 
-def write_matrices(writer: BlockWriter, matrices: list) -> None:
+def write_matrices(writer: BlockWriter, matrices: List[Matrix]) -> None:
     """
     Write matrices to a BlockWriter.
 
@@ -302,10 +313,11 @@ def write_matrices(writer: BlockWriter, matrices: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the matrices block to.
-        matrices (list): List of matrix objects to write.
+        matrices (List[Matrix]): List of matrix objects to write.
     """
     with writer.sub_block(TokenID.matrices):
         writer.write_count(len(matrices))
+
         for matrix in matrices:
             with writer.sub_block(TokenID.matrix, label=matrix.name):
                 writer.write_float(matrix.ax)
@@ -322,7 +334,7 @@ def write_matrices(writer: BlockWriter, matrices: list) -> None:
                 writer.write_float(matrix.dz)
 
 
-def write_images(writer: BlockWriter, images: list) -> None:
+def write_images(writer: BlockWriter, images: List[str]) -> None:
     """
     Write images to a BlockWriter.
 
@@ -330,16 +342,17 @@ def write_images(writer: BlockWriter, images: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the images block to.
-        images (list): List of image name strings to write.
+        images (List[str]): List of image name strings to write.
     """
     with writer.sub_block(TokenID.images):
         writer.write_count(len(images))
+
         for image in images:
             with writer.sub_block(TokenID.image):
                 writer.write_string(image)
 
 
-def write_textures(writer: BlockWriter, textures: list) -> None:
+def write_textures(writer: BlockWriter, textures: List[Texture]) -> None:
     """
     Write textures to a BlockWriter.
 
@@ -347,20 +360,22 @@ def write_textures(writer: BlockWriter, textures: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the textures block to.
-        textures (list): List of texture objects to write.
+        textures (List[Texture]): List of texture objects to write.
     """
     with writer.sub_block(TokenID.textures):
         writer.write_count(len(textures))
+
         for texture in textures:
             with writer.sub_block(TokenID.texture):
                 writer.write_int(texture.image_index)
                 writer.write_int(texture.filter_mode)
                 writer.write_float(texture.mipmap_lod_bias)
+
                 if texture.border_colour is not None:
                     writer.write_flags(texture.border_colour)
 
 
-def write_light_materials(writer: BlockWriter, light_materials: list) -> None:
+def write_light_materials(writer: BlockWriter, light_materials: List[LightMaterial]) -> None:
     """
     Write light materials to a BlockWriter.
 
@@ -368,10 +383,11 @@ def write_light_materials(writer: BlockWriter, light_materials: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the light materials block to.
-        light_materials (list): List of light material objects to write.
+        light_materials (List[LightMaterial]): List of light material objects to write.
     """
     with writer.sub_block(TokenID.light_materials):
         writer.write_count(len(light_materials))
+
         for light_material in light_materials:
             with writer.sub_block(TokenID.light_material):
                 writer.write_flags(light_material.flags)
@@ -382,7 +398,7 @@ def write_light_materials(writer: BlockWriter, light_materials: list) -> None:
                 writer.write_float(light_material.spec_power)
 
 
-def write_light_model_cfgs(writer: BlockWriter, light_model_cfgs: list) -> None:
+def write_light_model_cfgs(writer: BlockWriter, light_model_cfgs: List[LightModelCfg]) -> None:
     """
     Write light model configurations to a BlockWriter.
 
@@ -390,17 +406,18 @@ def write_light_model_cfgs(writer: BlockWriter, light_model_cfgs: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the light model configurations block to.
-        light_model_cfgs (list): List of light model configuration objects to write.
+        light_model_cfgs (List[LightModelCfg]): List of light model configuration objects to write.
     """
     with writer.sub_block(TokenID.light_model_cfgs):
         writer.write_count(len(light_model_cfgs))
+
         for light_model_cfg in light_model_cfgs:
             with writer.sub_block(TokenID.light_model_cfg):
                 writer.write_flags(light_model_cfg.flags)
                 write_uv_ops(writer, light_model_cfg.uv_ops)
 
 
-def write_uv_ops(writer: BlockWriter, uv_ops: list) -> None:
+def write_uv_ops(writer: BlockWriter, uv_ops: List[UVOp]) -> None:
     """
     Write UV operations to a BlockWriter.
 
@@ -408,27 +425,32 @@ def write_uv_ops(writer: BlockWriter, uv_ops: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the UV operations block to.
-        uv_ops (list): List of UV operation objects to write.
+        uv_ops (List[UVOp]): List of UV operation objects to write.
     """
     with writer.sub_block(TokenID.uv_ops):
         writer.write_count(len(uv_ops))
+
         for uv_op in uv_ops:
             if isinstance(uv_op, UVOpCopy):
                 with writer.sub_block(TokenID.uv_op_copy):
                     writer.write_int(uv_op.texture_address_mode)
                     writer.write_int(uv_op.source_uv_index)
+            
             elif isinstance(uv_op, UVOpReflectMapFull):
                 with writer.sub_block(TokenID.uv_op_reflectmapfull):
                     writer.write_int(uv_op.texture_address_mode)
+            
             elif isinstance(uv_op, UVOpReflectMap):
                 with writer.sub_block(TokenID.uv_op_reflectmap):
                     writer.write_int(uv_op.texture_address_mode)
+            
             elif isinstance(uv_op, UVOpUniformScale):
                 with writer.sub_block(TokenID.uv_op_uniformscale):
                     writer.write_int(uv_op.texture_address_mode)
                     writer.write_int(uv_op.source_uv_index)
                     writer.write_int(uv_op.unknown3)
                     writer.write_int(uv_op.unknown4)
+            
             elif isinstance(uv_op, UVOpNonUniformScale):
                 with writer.sub_block(TokenID.uv_op_nonuniformscale):
                     writer.write_int(uv_op.texture_address_mode)
@@ -437,7 +459,7 @@ def write_uv_ops(writer: BlockWriter, uv_ops: list) -> None:
                     writer.write_int(uv_op.unknown4)
 
 
-def write_vtx_states(writer: BlockWriter, vtx_states: list) -> None:
+def write_vtx_states(writer: BlockWriter, vtx_states: List[VtxState]) -> None:
     """
     Write vertex states to a BlockWriter.
 
@@ -445,10 +467,11 @@ def write_vtx_states(writer: BlockWriter, vtx_states: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the vertex states block to.
-        vtx_states (list): List of vertex state objects to write.
+        vtx_states (List[VtxState]): List of vertex state objects to write.
     """
     with writer.sub_block(TokenID.vtx_states):
         writer.write_count(len(vtx_states))
+
         for vtx_state in vtx_states:
             with writer.sub_block(TokenID.vtx_state):
                 writer.write_flags(vtx_state.flags)
@@ -456,11 +479,12 @@ def write_vtx_states(writer: BlockWriter, vtx_states: list) -> None:
                 writer.write_int(vtx_state.light_material_index)
                 writer.write_int(vtx_state.light_model_cfg_index)
                 writer.write_flags(vtx_state.light_flags)
+
                 if vtx_state.matrix2_index is not None:
                     writer.write_int(vtx_state.matrix2_index)
 
 
-def write_prim_states(writer: BlockWriter, prim_states: list) -> None:
+def write_prim_states(writer: BlockWriter, prim_states: List[PrimState]) -> None:
     """
     Write primitive states to a BlockWriter.
 
@@ -468,10 +492,11 @@ def write_prim_states(writer: BlockWriter, prim_states: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the primitive states block to.
-        prim_states (list): List of primitive state objects to write.
+        prim_states (List[PrimState]): List of primitive state objects to write.
     """
     with writer.sub_block(TokenID.prim_states):
         writer.write_count(len(prim_states))
+
         for prim_state in prim_states:
             with writer.sub_block(TokenID.prim_state, label=prim_state.name):
                 writer.write_flags(prim_state.flags)
@@ -484,7 +509,7 @@ def write_prim_states(writer: BlockWriter, prim_states: list) -> None:
                 writer.write_int(prim_state.z_buffer_mode)
 
 
-def write_tex_idxs(writer: BlockWriter, tex_idxs: list) -> None:
+def write_tex_idxs(writer: BlockWriter, tex_idxs: List[int]) -> None:
     """
     Write texture indices to a BlockWriter.
 
@@ -492,15 +517,16 @@ def write_tex_idxs(writer: BlockWriter, tex_idxs: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the texture indices block to.
-        tex_idxs (list): List of texture index integers to write.
+        tex_idxs (List[int]): List of texture index integers to write.
     """
     with writer.sub_block(TokenID.tex_idxs):
         writer.write_count(len(tex_idxs))
+
         for tex_idx in tex_idxs:
             writer.write_int(tex_idx)
 
 
-def write_lod_controls(writer: BlockWriter, lod_controls: list) -> None:
+def write_lod_controls(writer: BlockWriter, lod_controls: List[LodControl]) -> None:
     """
     Write LOD controls to a BlockWriter.
 
@@ -508,18 +534,20 @@ def write_lod_controls(writer: BlockWriter, lod_controls: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the LOD controls block to.
-        lod_controls (list): List of LOD control objects to write.
+        lod_controls (List[LodControl]): List of LOD control objects to write.
     """
     with writer.sub_block(TokenID.lod_controls):
         writer.write_count(len(lod_controls))
+
         for lod_control in lod_controls:
             with writer.sub_block(TokenID.lod_control):
                 with writer.sub_block(TokenID.distance_levels_header):
                     writer.write_int(lod_control.distance_levels_header)
+                
                 write_distance_levels(writer, lod_control.distance_levels)
 
 
-def write_distance_levels(writer: BlockWriter, distance_levels: list) -> None:
+def write_distance_levels(writer: BlockWriter, distance_levels: List[DistanceLevel]) -> None:
     """
     Write distance levels to a BlockWriter.
 
@@ -527,10 +555,11 @@ def write_distance_levels(writer: BlockWriter, distance_levels: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the distance levels block to.
-        distance_levels (list): List of distance level objects to write.
+        distance_levels (List[DistanceLevel]): List of distance level objects to write.
     """
     with writer.sub_block(TokenID.distance_levels):
         writer.write_count(len(distance_levels))
+
         for distance_level in distance_levels:
             with writer.sub_block(TokenID.distance_level):
                 write_distance_level_header(writer, distance_level.distance_level_header)
@@ -550,13 +579,15 @@ def write_distance_level_header(writer: BlockWriter, header: DistanceLevelHeader
     with writer.sub_block(TokenID.distance_level_header):
         with writer.sub_block(TokenID.dlevel_selection):
             writer.write_float(header.dlevel_selection)
+        
         with writer.sub_block(TokenID.hierarchy):
             writer.write_count(len(header.hierarchy))
+
             for value in header.hierarchy:
                 writer.write_int(value)
 
 
-def write_sub_objects(writer: BlockWriter, sub_objects: list) -> None:
+def write_sub_objects(writer: BlockWriter, sub_objects: List[SubObject]) -> None:
     """
     Write sub-objects to a BlockWriter.
 
@@ -564,10 +595,11 @@ def write_sub_objects(writer: BlockWriter, sub_objects: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the sub-objects block to.
-        sub_objects (list): List of sub-object objects to write.
+        sub_objects (List[SubObject]): List of sub-object objects to write.
     """
     with writer.sub_block(TokenID.sub_objects):
         writer.write_count(len(sub_objects))
+
         for sub_object in sub_objects:
             with writer.sub_block(TokenID.sub_object):
                 write_sub_object_header(writer, sub_object.sub_object_header)
@@ -623,7 +655,7 @@ def write_geometry_info(writer: BlockWriter, info: GeometryInfo) -> None:
         write_geometry_node_map(writer, info.geometry_node_map)
 
 
-def write_geometry_nodes(writer: BlockWriter, geometry_nodes: list) -> None:
+def write_geometry_nodes(writer: BlockWriter, geometry_nodes: List[GeometryNode]) -> None:
     """
     Write geometry nodes to a BlockWriter.
 
@@ -631,10 +663,11 @@ def write_geometry_nodes(writer: BlockWriter, geometry_nodes: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the geometry nodes block to.
-        geometry_nodes (list): List of geometry node objects to write.
+        geometry_nodes (List[GeometryNode]): List of geometry node objects to write.
     """
     with writer.sub_block(TokenID.geometry_nodes):
         writer.write_count(len(geometry_nodes))
+
         for geometry_node in geometry_nodes:
             with writer.sub_block(TokenID.geometry_node):
                 writer.write_int(geometry_node.tx_light_cmds)
@@ -661,7 +694,7 @@ def write_cullable_prims(writer: BlockWriter, cullable_prims: CullablePrims) -> 
         writer.write_int(cullable_prims.num_prim_indices)
 
 
-def write_geometry_node_map(writer: BlockWriter, geometry_node_map: list) -> None:
+def write_geometry_node_map(writer: BlockWriter, geometry_node_map: List[int]) -> None:
     """
     Write a geometry node map to a BlockWriter.
 
@@ -669,15 +702,16 @@ def write_geometry_node_map(writer: BlockWriter, geometry_node_map: list) -> Non
 
     Args:
         writer (BlockWriter): Writer to write the geometry node map block to.
-        geometry_node_map (list): List of geometry node map integers to write.
+        geometry_node_map (List[int]): List of geometry node map integers to write.
     """
     with writer.sub_block(TokenID.geometry_node_map):
         writer.write_count(len(geometry_node_map))
+
         for value in geometry_node_map:
             writer.write_int(value)
 
 
-def write_subobject_shaders(writer: BlockWriter, shaders: list) -> None:
+def write_subobject_shaders(writer: BlockWriter, shaders: List[int]) -> None:
     """
     Write sub-object shaders to a BlockWriter.
 
@@ -685,15 +719,16 @@ def write_subobject_shaders(writer: BlockWriter, shaders: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the sub-object shaders block to.
-        shaders (list): List of shader index integers to write.
+        shaders (List[int]): List of shader index integers to write.
     """
     with writer.sub_block(TokenID.subobject_shaders):
         writer.write_count(len(shaders))
+
         for shader in shaders:
             writer.write_int(shader)
 
 
-def write_subobject_light_cfgs(writer: BlockWriter, light_cfgs: list) -> None:
+def write_subobject_light_cfgs(writer: BlockWriter, light_cfgs: List[int]) -> None:
     """
     Write sub-object light configurations to a BlockWriter.
 
@@ -701,15 +736,16 @@ def write_subobject_light_cfgs(writer: BlockWriter, light_cfgs: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the sub-object light configurations block to.
-        light_cfgs (list): List of light configuration index integers to write.
+        light_cfgs (List[int]): List of light configuration index integers to write.
     """
     with writer.sub_block(TokenID.subobject_light_cfgs):
         writer.write_count(len(light_cfgs))
+
         for light_cfg in light_cfgs:
             writer.write_int(light_cfg)
 
 
-def write_vertices(writer: BlockWriter, vertices: list) -> None:
+def write_vertices(writer: BlockWriter, vertices: List[Vertex]) -> None:
     """
     Write vertices to a BlockWriter.
 
@@ -717,10 +753,11 @@ def write_vertices(writer: BlockWriter, vertices: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the vertices block to.
-        vertices (list): List of vertex objects to write.
+        vertices (List[Vertex]): List of vertex objects to write.
     """
     with writer.sub_block(TokenID.vertices):
         writer.write_count(len(vertices))
+
         for vertex in vertices:
             with writer.sub_block(TokenID.vertex):
                 writer.write_flags(vertex.flags)
@@ -731,7 +768,7 @@ def write_vertices(writer: BlockWriter, vertices: list) -> None:
                 write_vertex_uvs(writer, vertex.vertex_uvs)
 
 
-def write_vertex_uvs(writer: BlockWriter, vertex_uvs: list) -> None:
+def write_vertex_uvs(writer: BlockWriter, vertex_uvs: List[int]) -> None:
     """
     Write vertex UVs to a BlockWriter.
 
@@ -739,15 +776,16 @@ def write_vertex_uvs(writer: BlockWriter, vertex_uvs: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the vertex UVs block to.
-        vertex_uvs (list): List of vertex UV index integers to write.
+        vertex_uvs (List[int]): List of vertex UV index integers to write.
     """
     with writer.sub_block(TokenID.vertex_uvs):
         writer.write_count(len(vertex_uvs))
+
         for vertex_uv in vertex_uvs:
             writer.write_int(vertex_uv)
 
 
-def write_vertex_sets(writer: BlockWriter, vertex_sets: list) -> None:
+def write_vertex_sets(writer: BlockWriter, vertex_sets: List[VertexSet]) -> None:
     """
     Write vertex sets to a BlockWriter.
 
@@ -755,10 +793,11 @@ def write_vertex_sets(writer: BlockWriter, vertex_sets: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the vertex sets block to.
-        vertex_sets (list): List of vertex set objects to write.
+        vertex_sets (List[VertexSet]): List of vertex set objects to write.
     """
     with writer.sub_block(TokenID.vertex_sets):
         writer.write_count(len(vertex_sets))
+
         for vertex_set in vertex_sets:
             with writer.sub_block(TokenID.vertex_set):
                 writer.write_int(vertex_set.vtx_state)
@@ -766,7 +805,7 @@ def write_vertex_sets(writer: BlockWriter, vertex_sets: list) -> None:
                 writer.write_int(vertex_set.vtx_count)
 
 
-def write_primitives(writer: BlockWriter, primitives: list) -> None:
+def write_primitives(writer: BlockWriter, primitives: List[Primitive]) -> None:
     """
     Write primitives to a BlockWriter.
 
@@ -774,20 +813,22 @@ def write_primitives(writer: BlockWriter, primitives: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the primitives block to.
-        primitives (list): List of primitive objects to write.
+        primitives (List[Primitive]): List of primitive objects to write.
     """
     with writer.sub_block(TokenID.primitives):
         writer.write_count(len(primitives))
+
         for primitive in primitives:
             with writer.sub_block(TokenID.prim_state_idx):
                 writer.write_int(primitive.prim_state_index)
+            
             with writer.sub_block(TokenID.indexed_trilist):
                 write_vertex_idxs(writer, primitive.indexed_trilist.vertex_idxs)
                 write_normal_idxs(writer, primitive.indexed_trilist.normal_idxs)
                 write_flags(writer, primitive.indexed_trilist.flags)
 
 
-def write_vertex_idxs(writer: BlockWriter, vertex_idxs: list) -> None:
+def write_vertex_idxs(writer: BlockWriter, vertex_idxs: List[VertexIdx]) -> None:
     """
     Write vertex indices to a BlockWriter.
 
@@ -795,17 +836,18 @@ def write_vertex_idxs(writer: BlockWriter, vertex_idxs: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the vertex indices block to.
-        vertex_idxs (list): List of vertex index objects to write.
+        vertex_idxs (List[VertexIdx]): List of vertex index objects to write.
     """
     with writer.sub_block(TokenID.vertex_idxs):
         writer.write_count(len(vertex_idxs) * 3)
+
         for vertex_idx in vertex_idxs:
             writer.write_int(vertex_idx.vertex1_index)
             writer.write_int(vertex_idx.vertex2_index)
             writer.write_int(vertex_idx.vertex3_index)
 
 
-def write_normal_idxs(writer: BlockWriter, normal_idxs: list) -> None:
+def write_normal_idxs(writer: BlockWriter, normal_idxs: List[NormalIdx]) -> None:
     """
     Write normal indices to a BlockWriter.
 
@@ -813,16 +855,17 @@ def write_normal_idxs(writer: BlockWriter, normal_idxs: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the normal indices block to.
-        normal_idxs (list): List of normal index objects to write.
+        normal_idxs (List[NormalIdx]): List of normal index objects to write.
     """
     with writer.sub_block(TokenID.normal_idxs):
         writer.write_count(len(normal_idxs))
+
         for normal_idx in normal_idxs:
             writer.write_int(normal_idx.index)
             writer.write_int(normal_idx.unknown2)
 
 
-def write_flags(writer: BlockWriter, flags: list) -> None:
+def write_flags(writer: BlockWriter, flags: List[int]) -> None:
     """
     Write flags to a BlockWriter.
 
@@ -830,15 +873,16 @@ def write_flags(writer: BlockWriter, flags: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the flags block to.
-        flags (list): List of flag values to write.
+        flags (List[int]): List of flag values to write.
     """
     with writer.sub_block(TokenID.flags):
         writer.write_count(len(flags))
+
         for flag in flags:
             writer.write_flags(flag)
 
 
-def write_animations(writer: BlockWriter, animations: list) -> None:
+def write_animations(writer: BlockWriter, animations: List[Animation]) -> None:
     """
     Write animations to a BlockWriter.
 
@@ -846,10 +890,11 @@ def write_animations(writer: BlockWriter, animations: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the animations block to.
-        animations (list): List of animation objects to write.
+        animations (List[Animation]): List of animation objects to write.
     """
     with writer.sub_block(TokenID.animations):
         writer.write_count(len(animations))
+
         for animation in animations:
             with writer.sub_block(TokenID.animation):
                 writer.write_int(animation.frame_count)
@@ -857,7 +902,7 @@ def write_animations(writer: BlockWriter, animations: list) -> None:
                 write_anim_nodes(writer, animation.animation_nodes)
 
 
-def write_anim_nodes(writer: BlockWriter, anim_nodes: list) -> None:
+def write_anim_nodes(writer: BlockWriter, anim_nodes: List[AnimationNode]) -> None:
     """
     Write animation nodes to a BlockWriter.
 
@@ -865,16 +910,17 @@ def write_anim_nodes(writer: BlockWriter, anim_nodes: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the animation nodes block to.
-        anim_nodes (list): List of animation node objects to write.
+        anim_nodes (List[AnimationNode]): List of animation node objects to write.
     """
     with writer.sub_block(TokenID.anim_nodes):
         writer.write_count(len(anim_nodes))
+
         for anim_node in anim_nodes:
             with writer.sub_block(TokenID.anim_node, label=anim_node.name):
                 write_controllers(writer, anim_node.controllers)
 
 
-def write_controllers(writer: BlockWriter, controllers: list) -> None:
+def write_controllers(writer: BlockWriter, controllers: List[Controller]) -> None:
     """
     Write controllers to a BlockWriter.
 
@@ -882,23 +928,26 @@ def write_controllers(writer: BlockWriter, controllers: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the controllers block to.
-        controllers (list): List of controller objects to write.
+        controllers (List[Controller]): List of controller objects to write.
     """
     with writer.sub_block(TokenID.controllers):
         writer.write_count(len(controllers))
+
         for controller in controllers:
             if isinstance(controller, TCBRot):
                 with writer.sub_block(TokenID.tcb_rot):
                     write_keypositions(writer, controller.keyframes)
+            
             elif isinstance(controller, LinearPos):
                 with writer.sub_block(TokenID.linear_pos):
                     write_keypositions(writer, controller.keyframes)
+            
             elif isinstance(controller, TCBPos):
                 with writer.sub_block(TokenID.tcb_pos):
                     write_keypositions(writer, controller.keyframes)
 
 
-def write_keypositions(writer: BlockWriter, keypositions: list) -> None:
+def write_keypositions(writer: BlockWriter, keypositions: List[KeyPosition]) -> None:
     """
     Write key positions to a BlockWriter.
 
@@ -906,9 +955,10 @@ def write_keypositions(writer: BlockWriter, keypositions: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the key positions to.
-        keypositions (list): List of key position objects to write.
+        keypositions (List[KeyPosition]): List of key position objects to write.
     """
     writer.write_count(len(keypositions))
+    
     for keyposition in keypositions:
         if isinstance(keyposition, TCBKey):
             with writer.sub_block(TokenID.tcb_key):
@@ -922,12 +972,14 @@ def write_keypositions(writer: BlockWriter, keypositions: list) -> None:
                 writer.write_float(keyposition.bias)
                 writer.write_float(keyposition.ease_in)
                 writer.write_float(keyposition.ease_out)
+        
         elif isinstance(keyposition, LinearKey):
             with writer.sub_block(TokenID.linear_key):
                 writer.write_int(keyposition.frame)
                 writer.write_float(keyposition.x)
                 writer.write_float(keyposition.y)
                 writer.write_float(keyposition.z)
+        
         elif isinstance(keyposition, SlerpRot):
             with writer.sub_block(TokenID.slerp_rot):
                 writer.write_int(keyposition.frame)

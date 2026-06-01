@@ -36,6 +36,7 @@ def write_local_tracksections(writer: BlockWriter, tracksections: TrackSections)
             if tracksection.section_size is not None:
                 writer.write_float(tracksection.section_size.length)
                 writer.write_float(0.0)
+            
             elif tracksection.section_curve is not None:
                 writer.write_float(math.radians(tracksection.section_curve.angle))
                 writer.write_float(tracksection.section_curve.radius)

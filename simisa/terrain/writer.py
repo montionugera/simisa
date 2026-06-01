@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+from typing import List
+
 from .. import TokenID
 from ..writer import BlockWriter
 from .models import *
@@ -132,10 +134,13 @@ def write_terrain_water_height_offset(writer: BlockWriter, offset: TerrainWaterH
     with writer.sub_block(TokenID.terrain_water_height_offset):
         if offset.sw is not None:
             writer.write_float(offset.sw)
+
         if offset.se is not None:
             writer.write_float(offset.se)
+
         if offset.ne is not None:
             writer.write_float(offset.ne)
+        
         if offset.nw is not None:
             writer.write_float(offset.nw)
 
@@ -154,30 +159,37 @@ def write_terrain_samples(writer: BlockWriter, samples: TerrainSamples) -> None:
         if samples.terrain_nsamples is not None:
             with writer.sub_block(TokenID.terrain_nsamples):
                 writer.write_int(samples.terrain_nsamples)
+        
         if samples.terrain_sample_rotation is not None:
             with writer.sub_block(TokenID.terrain_sample_rotation):
                 writer.write_float(samples.terrain_sample_rotation)
+        
         if samples.terrain_sample_floor is not None:
             with writer.sub_block(TokenID.terrain_sample_floor):
                 writer.write_float(samples.terrain_sample_floor)
+        
         if samples.terrain_sample_scale is not None:
             with writer.sub_block(TokenID.terrain_sample_scale):
                 writer.write_float(samples.terrain_sample_scale)
+        
         if samples.terrain_sample_size is not None:
             with writer.sub_block(TokenID.terrain_sample_size):
                 writer.write_float(samples.terrain_sample_size)
+        
         if samples.terrain_sample_ybuffer is not None:
             with writer.sub_block(TokenID.terrain_sample_ybuffer):
                 writer.write_string(samples.terrain_sample_ybuffer)
+        
         if samples.terrain_sample_ebuffer is not None:
             with writer.sub_block(TokenID.terrain_sample_ebuffer):
                 writer.write_string(samples.terrain_sample_ebuffer)
+        
         if samples.terrain_sample_nbuffer is not None:
             with writer.sub_block(TokenID.terrain_sample_nbuffer):
                 writer.write_string(samples.terrain_sample_nbuffer)
 
 
-def write_terrain_shaders(writer: BlockWriter, shaders: list) -> None:
+def write_terrain_shaders(writer: BlockWriter, shaders: List[TerrainShader]) -> None:
     """
     Write terrain shaders to a BlockWriter.
 
@@ -185,20 +197,23 @@ def write_terrain_shaders(writer: BlockWriter, shaders: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the terrain shaders block to.
-        shaders (list): List of terrain shader objects to write.
+        shaders (List[TerrainShader]): List of terrain shader objects to write.
     """
     with writer.sub_block(TokenID.terrain_shaders):
         writer.write_count(len(shaders))
+
         for shader in shaders:
             with writer.sub_block(TokenID.terrain_shader):
                 writer.write_string(shader.shader_name)
+
                 if shader.terrain_texslots:
                     write_terrain_texslots(writer, shader.terrain_texslots)
+                
                 if shader.terrain_uvcalcs:
                     write_terrain_uvcalcs(writer, shader.terrain_uvcalcs)
 
 
-def write_terrain_texslots(writer: BlockWriter, texslots: list) -> None:
+def write_terrain_texslots(writer: BlockWriter, texslots: List[TerrainTexslot]) -> None:
     """
     Write terrain texture slots to a BlockWriter.
 
@@ -206,10 +221,11 @@ def write_terrain_texslots(writer: BlockWriter, texslots: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the terrain texture slots block to.
-        texslots (list): List of terrain texture slot objects to write.
+        texslots (List[TerrainTexslot]): List of terrain texture slot objects to write.
     """
     with writer.sub_block(TokenID.terrain_texslots):
         writer.write_count(len(texslots))
+
         for texslot in texslots:
             with writer.sub_block(TokenID.terrain_texslot):
                 writer.write_string(texslot.filename)
@@ -217,7 +233,7 @@ def write_terrain_texslots(writer: BlockWriter, texslots: list) -> None:
                 writer.write_int(texslot.b)
 
 
-def write_terrain_uvcalcs(writer: BlockWriter, uvcalcs: list) -> None:
+def write_terrain_uvcalcs(writer: BlockWriter, uvcalcs: List[TerrainUVCalc]) -> None:
     """
     Write terrain UV calculations to a BlockWriter.
 
@@ -225,10 +241,11 @@ def write_terrain_uvcalcs(writer: BlockWriter, uvcalcs: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the terrain UV calculations block to.
-        uvcalcs (list): List of terrain UV calculation objects to write.
+        uvcalcs (List[TerrainUVCalc]): List of terrain UV calculation objects to write.
     """
     with writer.sub_block(TokenID.terrain_uvcalcs):
         writer.write_count(len(uvcalcs))
+
         for uvcalc in uvcalcs:
             with writer.sub_block(TokenID.terrain_uvcalc):
                 writer.write_int(uvcalc.a)
@@ -237,7 +254,7 @@ def write_terrain_uvcalcs(writer: BlockWriter, uvcalcs: list) -> None:
                 writer.write_float(float(uvcalc.d))
 
 
-def write_terrain_patchsets(writer: BlockWriter, patchsets: list) -> None:
+def write_terrain_patchsets(writer: BlockWriter, patchsets: List[TerrainPatchset]) -> None:
     """
     Write terrain patchsets to a BlockWriter.
 
@@ -245,20 +262,23 @@ def write_terrain_patchsets(writer: BlockWriter, patchsets: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the terrain patchsets block to.
-        patchsets (list): List of terrain patchset objects to write.
+        patchsets (List[TerrainPatchset]): List of terrain patchset objects to write.
     """
     with writer.sub_block(TokenID.terrain_patchsets):
         writer.write_count(len(patchsets))
+
         for patchset in patchsets:
             with writer.sub_block(TokenID.terrain_patchset):
                 with writer.sub_block(TokenID.terrain_patchset_distance):
                     writer.write_int(patchset.terrain_patchset_distance)
+                
                 with writer.sub_block(TokenID.terrain_patchset_npatches):
                     writer.write_int(patchset.terrain_patchset_npatches)
+                
                 write_terrain_patchset_patches(writer, patchset.terrain_patchset_patches)
 
 
-def write_terrain_patchset_patches(writer: BlockWriter, patches: list) -> None:
+def write_terrain_patchset_patches(writer: BlockWriter, patches: List[TerrainPatchsetPatch]) -> None:
     """
     Write terrain patchset patches to a BlockWriter.
 
@@ -266,7 +286,7 @@ def write_terrain_patchset_patches(writer: BlockWriter, patches: list) -> None:
 
     Args:
         writer (BlockWriter): Writer to write the terrain patchset patches block to.
-        patches (list): List of terrain patchset patch objects to write.
+        patches (List[TerrainPatchsetPatch]): List of terrain patchset patch objects to write.
     """
     with writer.sub_block(TokenID.terrain_patchset_patches):
         for patch in patches:
