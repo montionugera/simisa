@@ -950,9 +950,13 @@ def write_primitives(writer: BlockWriter, primitives: List[Primitive]) -> None:
     with writer.sub_block(TokenID.primitives) as primitives_block:
         primitives_block.write_count(len(primitives))
 
+        last_prim_state_index = 0
+
         for primitive in primitives:
-            with primitives_block.sub_block(TokenID.prim_state_idx) as prim_state_idx_block:
-                prim_state_idx_block.write_int(primitive.prim_state_index)
+            if primitive.prim_state_index != last_prim_state_index:
+                with primitives_block.sub_block(TokenID.prim_state_idx) as prim_state_idx_block:
+                    prim_state_idx_block.write_int(primitive.prim_state_index)
+                last_prim_state_index = primitive.prim_state_index
             
             with primitives_block.sub_block(TokenID.indexed_trilist) as indexed_trilist_block:
                 write_vertex_idxs(indexed_trilist_block, primitive.indexed_trilist.vertex_idxs)
