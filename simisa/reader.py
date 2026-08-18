@@ -225,7 +225,7 @@ class BlockReader(ABC):
                 raise SimisaHeaderError(f"Unrecognized header in {filepath}")
 
             # Fallback path, resolve all includes to make sure the header can be found if inside an include.
-            # Then use 'from_string' to re-do all checks and return the configured reader if header was valid.
+            # Then use 'from_string' to re-do all checks and return the configured reader if a valid header was then found.
             with open(filepath, "rb") as f:
                 bom = f.read(2)
                 is_unicode = (bom == codecs.BOM_UTF16_LE)
