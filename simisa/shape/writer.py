@@ -54,7 +54,7 @@ def dump(shape: Shape, filepath: str, compressed: bool = False) -> None:
     with BlockWriter.open(
         filepath,
         filetype="s",
-        fileversion=0,
+        fileversion=1,
         is_binary=compressed,
         is_unicode=not compressed,
         is_compressed=compressed
@@ -84,7 +84,7 @@ def dumps(shape: Shape) -> str:
     shape_text = BlockWriter.to_string(
         lambda writer: write_shape(writer, shape),
         filetype="s",
-        fileversion=0
+        fileversion=1
     )
 
     return shape_text
@@ -568,16 +568,15 @@ def write_prim_states(writer: BlockWriter, prim_states: List[PrimState]) -> None
         prim_states_block.write_count(len(prim_states))
 
         for prim_state in prim_states:
-            with prim_states_block.sub_block(TokenID.prim_state, block_label=prim_state.name):
-                prim_states_block.label = prim_state.name
-                prim_states_block.write_flags(prim_state.flags)
-                prim_states_block.write_int(prim_state.shader_index)
-                write_tex_idxs(prim_states_block, prim_state.texture_indices)
-                prim_states_block.write_float(prim_state.z_bias)
-                prim_states_block.write_int(prim_state.vtx_state_index)
-                prim_states_block.write_int(prim_state.alpha_test_mode)
-                prim_states_block.write_int(prim_state.light_cfg_index)
-                prim_states_block.write_int(prim_state.z_buffer_mode)
+            with prim_states_block.sub_block(TokenID.prim_state, block_label=prim_state.name) as prim_state_block:
+                prim_state_block.write_flags(prim_state.flags)
+                prim_state_block.write_int(prim_state.shader_index)
+                write_tex_idxs(prim_state_block, prim_state.texture_indices)
+                prim_state_block.write_float(prim_state.z_bias)
+                prim_state_block.write_int(prim_state.vtx_state_index)
+                prim_state_block.write_int(prim_state.alpha_test_mode)
+                prim_state_block.write_int(prim_state.light_cfg_index)
+                prim_state_block.write_int(prim_state.z_buffer_mode)
 
 
 def write_tex_idxs(writer: BlockWriter, tex_idxs: List[int]) -> None:
