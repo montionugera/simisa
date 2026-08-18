@@ -46,7 +46,7 @@ class CompressedStreamWriter(io.RawIOBase):
     """
     def __init__(self, fileobj):
         self.fileobj = fileobj
-        self.compressor = zlib.compressobj(wbits=zlib.MAX_WBITS)
+        self.compressor = zlib.compressobj(level=6, wbits=zlib.MAX_WBITS)
         self._closed = False
 
     def writable(self):
@@ -74,11 +74,6 @@ class CompressedStreamWriter(io.RawIOBase):
         if self._closed:
             return
 
-        tail = self.compressor.flush(zlib.Z_SYNC_FLUSH)
-
-        if tail:
-            self.fileobj.write(tail)
-        
         self.fileobj.flush()
 
     def close(self):
@@ -480,6 +475,7 @@ class BinaryBlockWriter(BlockWriter):
 
         size = len(label_bytes) + len(payload)
         raw_id = self.id.value - self.token_offset
+
         header_bytes = self._BLOCK_HEADER.pack(raw_id, self.flags, size)
 
         block_bytes = header_bytes + label_bytes + payload
