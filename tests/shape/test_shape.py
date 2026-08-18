@@ -17,31 +17,15 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
+import os
 import math
 import pytest
 from simisa import shape
 from tests import compare_objects
 
 
-def test_shape_load(global_storage):
-    s = shape.load(global_storage["shapefile_path"])
-    assert False
 
-
-def test_shape_loads_uncompressed(global_storage):
-    shapefile_path = global_storage["shapefile_path"]
-    with open(shapefile_path, 'r', encoding='utf-16-le') as f:
-        shape_string = f.read()
-        s = shape.loads(shape_string)
-    assert False
-
-
-def test_shape_load_compressed(global_storage):
-    s = shape.load(global_storage["shapefile_compressed_path"])
-    assert False
-
-
-def test_shape_load_compare(global_storage):
+def test_shape_load_uncompressed_vs_compressed_compare(global_storage):
     expected = shape.load(global_storage["shapefile_path"])
     actual = shape.load(global_storage["shapefile_compressed_path"])
 
@@ -89,7 +73,7 @@ def test_shape_load_compare(global_storage):
     assert True
 
 
-def test_shape_loads_compressed(global_storage):
+def test_shape_loads_compressed_bytes_raises(global_storage):
     shapefile_compressed_path = global_storage["shapefile_compressed_path"]
     with open(shapefile_compressed_path, 'rb') as f:
         shape_bytes = f.read()
@@ -99,10 +83,8 @@ def test_shape_loads_compressed(global_storage):
 
 
 def test_shape_roundtrip_uncompressed(global_storage, tmp_path):
-    import os
-
     original = shape.load(global_storage["shapefile_path"])
-    output_path = tmp_path / "roundtrip.s"
+    output_path = "./tests/data/roundtrip.s"#tmp_path / "roundtrip.s"
     
     shape.dump(original, str(output_path), compressed=False)
     roundtripped = shape.load(str(output_path))
@@ -112,10 +94,8 @@ def test_shape_roundtrip_uncompressed(global_storage, tmp_path):
 
 
 def test_shape_roundtrip_compressed(global_storage, tmp_path):
-    import os
-
     original = shape.load(global_storage["shapefile_path"])
-    output_path = tmp_path / "roundtrip_compressed.s"
+    output_path = "./tests/data/roundtrip_compressed.s"#tmp_path / "roundtrip_compressed.s"
     
     shape.dump(original, str(output_path), compressed=True)
     roundtripped = shape.load(str(output_path))

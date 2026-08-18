@@ -190,8 +190,8 @@ class BlockWriter(ABC):
         self.close()
 
     @contextmanager
-    def sub_block(self, block_id: TokenID, block_format: Optional[BlockFormat] = None):
-        sub_block = self.begin_sub_block(block_id, block_format)
+    def sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format: Optional[BlockFormat] = None):
+        sub_block = self.begin_sub_block(block_id, block_label, block_format)
 
         try:
             yield sub_block
@@ -199,7 +199,7 @@ class BlockWriter(ABC):
             sub_block.end_sub_block()
 
     @abstractmethod
-    def begin_sub_block(self, block_id: TokenID, block_format: Optional[BlockFormat] = None):
+    def begin_sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format: Optional[BlockFormat] = None):
         pass
 
     @abstractmethod
@@ -272,7 +272,7 @@ class TextBlockWriter(BlockWriter):
         self.stream.write(output_bytes)
         self._written_bytes += len(output_bytes)
 
-    def begin_sub_block(self, block_id: TokenID, block_format: BlockFormat = BlockFormat()):
+    def begin_sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format: BlockFormat = BlockFormat()):
         if self.stream is None:
             raise BlockWriterError("Stream is not initialized")
 
@@ -283,7 +283,11 @@ class TextBlockWriter(BlockWriter):
             self._emit("\n")
 
         indent = "" if self._block_format.disable_inner_indent else self.indent * self.depth
-        self._emit(f"{indent}{block_id.name} (")
+
+        if block_label is None:
+            self._emit(f"{indent}{block_id.name} (")
+        else:
+            self._emit(f"{indent}{block_id.name} {block_label} (")
 
         if self._block_format.newline_after_start:
             self._emit("\n")
@@ -448,10 +452,11 @@ class BinaryBlockWriter(BlockWriter):
         self._writing_block: bool = False
         self._written_bytes: int = 0
 
-    def begin_sub_block(self, block_id: TokenID, block_format=None):
+    def begin_sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format=None):
         sub_block = BinaryBlockWriter()
         sub_block.stream = self.stream
         sub_block.token_offset = self.token_offset
+        sub_block.label = block_label
         sub_block.id = block_id
         sub_block._parent = self
         sub_block._buffer = io.BytesIO()

@@ -361,8 +361,7 @@ def write_matrices(writer: BlockWriter, matrices: List[Matrix]) -> None:
         matrices_block.write_count(len(matrices))
 
         for matrix in matrices:
-            with matrices_block.sub_block(TokenID.matrix) as matrix_block:
-                matrix_block.label = matrix.name
+            with matrices_block.sub_block(TokenID.matrix, block_label=matrix.name) as matrix_block:
                 matrix_block.write_float(matrix.ax)
                 matrix_block.write_float(matrix.ay)
                 matrix_block.write_float(matrix.az)
@@ -569,7 +568,7 @@ def write_prim_states(writer: BlockWriter, prim_states: List[PrimState]) -> None
         prim_states_block.write_count(len(prim_states))
 
         for prim_state in prim_states:
-            with prim_states_block.sub_block(TokenID.prim_state):
+            with prim_states_block.sub_block(TokenID.prim_state, block_label=prim_state.name):
                 prim_states_block.label = prim_state.name
                 prim_states_block.write_flags(prim_state.flags)
                 prim_states_block.write_int(prim_state.shader_index)
@@ -947,10 +946,20 @@ def write_primitives(writer: BlockWriter, primitives: List[Primitive]) -> None:
         if not isinstance(primitive, Primitive):
             raise TypeError(f"SubObject property 'primitives' must contain Primitive objects, but got {type(primitive).__name__}")
 
-    with writer.sub_block(TokenID.primitives) as primitives_block:
-        primitives_block.write_count(len(primitives))
+    primitives_list_count = 0
+    last_prim_state_index = -1
 
-        last_prim_state_index = 0
+    for primitive in primitives:
+        if primitive.prim_state_index != last_prim_state_index:
+            primitives_list_count += 1
+            last_prim_state_index = primitive.prim_state_index
+        
+        primitives_list_count += 1
+
+    with writer.sub_block(TokenID.primitives) as primitives_block:
+        primitives_block.write_count(primitives_list_count)
+
+        last_prim_state_index = -1
 
         for primitive in primitives:
             if primitive.prim_state_index != last_prim_state_index:
@@ -1072,8 +1081,7 @@ def write_anim_nodes(writer: BlockWriter, anim_nodes: List[AnimationNode]) -> No
         anim_nodes_block.write_count(len(anim_nodes))
 
         for anim_node in anim_nodes:
-            with anim_nodes_block.sub_block(TokenID.anim_node) as anim_node_block:
-                anim_node_block.label = anim_node.name
+            with anim_nodes_block.sub_block(TokenID.anim_node, block_label=anim_node.name) as anim_node_block:
                 write_controllers(anim_node_block, anim_node.controllers)
 
 

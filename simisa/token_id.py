@@ -1456,8 +1456,10 @@ class TokenID(IntEnum):
     DerailScale = 1537
     TimetableTollerance = 1538
     DEMPath = 1539
-    # TODO these are probably for activities, but the worldfile stuff is more important,
-    # so therefore they are commented out. Somehow add it back in if activity stuff is needed at some point.
+    # These are probably for activities, but clash with the worldfile token names.
+    # So therefore they are commented out. Add it back in if activity stuff is needed.
+    # If needed later, then split the relevant token_id.py entries into new files within
+    # the different submodules.
     #CarSpawner = 1540
     #Siding = 1541
     #Dyntrack = 1542
