@@ -852,9 +852,6 @@ def write_signal_object(writer: BlockWriter, signal_obj: SignalObj, detail_level
         if signal_obj.vdb_id is not None:
             with signal_block.sub_block(TokenID.VDbId) as vdb_id_block:
                 vdb_id_block.write_uint(signal_obj.vdb_id)
-    
-        with signal_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(signal_obj.static_flags)
 
         with signal_block.sub_block(TokenID.SignalSubObj) as signal_sub_obj_block:
             signal_sub_obj_block.write_flags(signal_obj.signal_sub_obj)
@@ -883,9 +880,7 @@ def write_signal_units(writer: BlockWriter, signal_units: List[SignalUnit]) -> N
         for signal_unit in signal_units:
             with signal_units_block.sub_block(TokenID.SignalUnit) as signal_unit_block:
                 signal_unit_block.write_int(signal_unit.sub_obj)
-
-                with signal_unit_block.sub_block(TokenID.TrItemId) as tr_item_id_block:
-                    write_tr_item_id(tr_item_id_block, signal_unit.tr_item_id)
+                write_tr_item_id(signal_unit_block, signal_unit.tr_item_id)
 
 
 def write_speedpost_object(writer: BlockWriter, speedpost_obj: SpeedPostObj, detail_level: int) -> None:
