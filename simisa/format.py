@@ -55,5 +55,6 @@ class BlockFormat:
     newline_after_start: bool = False
     newline_before_count: bool = False
     newline_after_count: bool = True
+    enable_zero_count_newline: bool = False
     newline_before_closing: bool = True
     newline_after_closing: bool = True

@@ -277,20 +277,25 @@ class TextBlockWriter(BlockWriter):
             raise BlockWriterError("Stream is not initialized")
 
         self._block_format = block_format or BlockFormat()
-        self._items_on_line = 0
+        #self._items_on_line = 0
 
-        if self._block_format.newline_before_start:
-            self._emit("\n")
+        #if self._block_format.newline_before_start:
+        #    self._emit("\n")
 
-        indent = "" if self._block_format.disable_inner_indent else self.indent * self.depth
+        #indent = "" if self._block_format.disable_inner_indent else self.indent * self.depth
 
+        # if block_label is None:
+        #     self._emit(f"{indent}{block_id.name} (")
+        # else:
+        #     self._emit(f"{indent}{block_id.name} {block_label} (")
+        
         if block_label is None:
-            self._emit(f"{indent}{block_id.name} (")
+            self._emit(f"{block_id.name} ( ")
         else:
-            self._emit(f"{indent}{block_id.name} {block_label} (")
+            self._emit(f"{block_id.name} {block_label} ( ")
 
-        if self._block_format.newline_after_start:
-            self._emit("\n")
+        #if self._block_format.newline_after_start:
+        #    self._emit("\n")
 
         self.depth += 1
         self._writing_block = True
@@ -307,39 +312,42 @@ class TextBlockWriter(BlockWriter):
 
         block_format = self._block_format or BlockFormat()
 
-        if block_format.newline_before_closing:
-            self._emit("\n")
+        #if block_format.newline_before_closing:
+        #    self._emit("\n")
 
         self.depth -= 1
 
-        indent = "" if block_format.disable_inner_indent else self.indent * self.depth
-        self._emit(f"{indent})")
+        #indent = "" if block_format.disable_inner_indent else self.indent * self.depth
+        #self._emit(f"{indent})")
+        self._emit(f") ")
 
-        if block_format.newline_after_closing:
-            self._emit("\n")
+        #if block_format.newline_after_closing:
+        #    self._emit("\n")
 
         if self.depth == 0:
             self._writing_block = False
             self._block_format = None
-            self._items_on_line = 0
+            #self._items_on_line = 0
 
         self._flush()
 
     def _write_token(self, text: str):
         block_format = self._block_format or BlockFormat()
 
-        if block_format.max_items_per_line is not None:
-            if self._items_on_line > 0:
-                self._emit(" ")
+        # if block_format.max_items_per_line is not None:
+        #     if self._items_on_line > 0:
+        #         self._emit(" ")
 
-            self._emit(text)
-            self._items_on_line += 1
+        #     self._emit(text)
+        #     self._items_on_line += 1
 
-            if self._items_on_line >= block_format.max_items_per_line:
-                self._emit("\n")
-                self._items_on_line = 0
-        else:
-            self._emit(text + " ")
+        #     if self._items_on_line >= block_format.max_items_per_line:
+        #         self._emit("\n")
+        #         self._items_on_line = 0
+        # else:
+        #     self._emit(text + " ")
+
+        self._emit(text + " ")
 
     def write_count(self, value: int):
         if not isinstance(value, int):
@@ -347,14 +355,14 @@ class TextBlockWriter(BlockWriter):
         
         block_format = self._block_format or BlockFormat()
 
-        if block_format.newline_before_count:
-            self._emit("\n")
+        #if block_format.newline_before_count:
+        #    self._emit("\n")
 
         self._write_token(str(value))
 
-        if block_format.newline_after_count:
-            self._emit("\n")
-            self._items_on_line = 0
+        #if block_format.newline_after_count:
+        #    self._emit("\n")
+        #    self._items_on_line = 0
 
         self._flush()
 
