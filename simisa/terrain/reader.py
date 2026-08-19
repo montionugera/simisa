@@ -213,7 +213,7 @@ def read_terrain_samples(reader: BlockReader) -> TerrainSamples:
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")
             sub_block.skip()
-    
+
     return terrain_samples
 
 

@@ -118,7 +118,8 @@ def write_terrain(writer: BlockWriter, terrain: Terrain) -> None:
             write_terrain_shaders(terrain_block, terrain.terrain_shaders)
 
         if terrain.terrain_patchsets is not None:
-            write_terrain_patchsets(terrain_block, terrain.terrain_patchsets)
+            with terrain_block.sub_block(TokenID.terrain_patches) as terrain_patches_block:
+                write_terrain_patchsets(terrain_patches_block, terrain.terrain_patchsets)
 
 
 def write_terrain_water_height_offset(writer: BlockWriter, offset: TerrainWaterHeightOffset) -> None:
@@ -210,7 +211,7 @@ def write_terrain_shaders(writer: BlockWriter, shaders: List[TerrainShader]) -> 
             raise TypeError(f"Terrain property 'terrain_shaders' must contain TerrainShader objects, but got {type(shader).__name__}")
 
     with writer.sub_block(TokenID.terrain_shaders) as shaders_block:
-        writer.write_count(len(shaders))
+        shaders_block.write_count(len(shaders))
 
         for shader in shaders:
             with shaders_block.sub_block(TokenID.terrain_shader) as shader_block:

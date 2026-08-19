@@ -1456,10 +1456,10 @@ class TokenID(IntEnum):
     DerailScale = 1537
     TimetableTollerance = 1538
     DEMPath = 1539
-    # These are probably for activities, but clash with the worldfile token names.
-    # So therefore they are commented out. Add it back in if activity stuff is needed.
-    # If needed later, then split the relevant token_id.py entries into new files within
-    # the different submodules.
+    # The ones commented out below are probably for activities, but their names clash with the
+    # worldfile token names. So therefore they are commented out. If activity stuff is needed 
+    # later, add them back in and then split the relevant token_id.py entries into new files within
+    # the different submodules (e.g. shape/token_id.py) and use those enum types with the block reader.
     #CarSpawner = 1540
     #Siding = 1541
     #Dyntrack = 1542
