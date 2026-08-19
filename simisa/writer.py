@@ -174,8 +174,10 @@ class BlockWriter(ABC):
         stream.write(subheader)
         write_fn(writer)
 
+        text = stream.getvalue()
+
         writer.close()
-        return stream.getvalue()
+        return text
 
     def __enter__(self):
         return self
@@ -261,10 +263,13 @@ class TextBlockWriter(BlockWriter):
         self._buffer.clear()
 
         encoding = "utf-16-le"
-
         output_bytes = data.encode(encoding)
 
-        self.stream.write(output_bytes)
+        if isinstance(self.stream, io.TextIOBase):
+            self.stream.write(data)
+        else:
+            self.stream.write(output_bytes)
+        
         self._written_bytes += len(output_bytes)
 
     def begin_sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format: BlockFormat = BlockFormat()):
@@ -406,9 +411,9 @@ class TextBlockWriter(BlockWriter):
 
 class TextFileWriter(TextBlockWriter):
 
-    def __init__(self, output_stream: TextIO, filename: str, encoding="utf-8"):
+    def __init__(self, output_stream: TextIO, filepath: str, encoding="utf-8"):
         super().__init__()
-        self.filename = filename
+        self.filepath = filepath
         self.stream = output_stream
         self.encoding = encoding
         self.is_closed = False
