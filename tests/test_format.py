@@ -23,21 +23,31 @@ from simisa.shape import Vector
 
 
 DEFAULT_FORMAT = BlockFormat()
+MAX_1_ITEM_PER_LINE = BlockFormat(max_items_per_line=1)
+MAX_2_ITEMS_PER_LINE = BlockFormat(max_items_per_line=2)
+MAX_10_ITEMS_PER_LINE = BlockFormat(max_items_per_line=10)
+DISABLE_INNER_INDENT = BlockFormat(newline_before_start=True)
+NEWLINE_BEFORE_START = BlockFormat(newline_after_start=True)
+NEWLINE_AFTER_START = BlockFormat(newline_after_start=True)
+NEWLINE_BEFORE_COUNT = BlockFormat(newline_before_count=True)
+NOT_NEWLINE_AFTER_COUNT = BlockFormat(newline_after_count=False)
+NOT_NEWLINE_BEFORE_CLOSING = BlockFormat(newline_before_closing=False)
+NEWLINE_AFTER_CLOSING = BlockFormat(newline_after_closing=True)
 
 
 
-def write_empty_block(writer, _):
-    with writer.sub_block(TokenID.normals) as normals_block:
+def write_empty_block(writer, block_format):
+    with writer.sub_block(TokenID.normals, block_format=block_format) as normals_block:
         pass
 
 
-def write_empty_count_block(writer, _):
-    with writer.sub_block(TokenID.normals) as normals_block:
+def write_empty_count_block(writer, block_format):
+    with writer.sub_block(TokenID.normals, block_format=block_format) as normals_block:
         normals_block.write_count(0)
 
 
-def write_list_item_block(writer, _):
-    with writer.sub_block(TokenID.normals) as normals_block:
+def write_list_item_block(writer, block_format):
+    with writer.sub_block(TokenID.normals, block_format=block_format) as normals_block:
         normals_block.write_count(3)
 
         normals = [
@@ -47,7 +57,7 @@ def write_list_item_block(writer, _):
         ]
 
         for vector in normals:
-            with normals_block.sub_block(TokenID.vector) as vector_block:
+            with normals_block.sub_block(TokenID.vector, block_format=block_format) as vector_block:
                 vector_block.write_float(vector.x)
                 vector_block.write_float(vector.y)
                 vector_block.write_float(vector.z)
@@ -65,16 +75,25 @@ def test_shape_default_format(global_storage, tmp_path):
 @pytest.mark.parametrize(
     ("block_format", "expected_output"),
     [
-        (DEFAULT_FORMAT, "normals (\n)"),
+        (DEFAULT_FORMAT, "normals ( )"),
+        (MAX_1_ITEM_PER_LINE, "normals ( )"),
+        (MAX_2_ITEMS_PER_LINE, "normals ( )"),
+        (MAX_10_ITEMS_PER_LINE, "normals ( )"),
+        (DISABLE_INNER_INDENT, "normals ( )"),
+        (NEWLINE_BEFORE_START, "normals\n( )"),
+        (NEWLINE_AFTER_START, "normals (\n)"),
+        (NEWLINE_BEFORE_COUNT, "normals ( )"),
+        (NOT_NEWLINE_AFTER_COUNT, "normals ( )"),
+        (NOT_NEWLINE_BEFORE_CLOSING, "normals ( )"),
+        (NEWLINE_AFTER_CLOSING, "normals ( )\n"),
     ],
 )
 def test_empty_block(global_storage, block_format, expected_output):
     formatted_text = BlockWriter.to_string(
-        lambda writer: write_empty_block(writer, None),
+        lambda writer: write_empty_block(writer, block_format),
         filetype="s",
         fileversion=1
     )
-    print(expected_output)
 
     assert formatted_text[32:] == expected_output
 
@@ -82,16 +101,25 @@ def test_empty_block(global_storage, block_format, expected_output):
 @pytest.mark.parametrize(
     ("block_format", "expected_output"),
     [
-        (DEFAULT_FORMAT, "normals ( 0 \n)"),
+        (DEFAULT_FORMAT, "normals ( 0 )"),
+        (MAX_1_ITEM_PER_LINE, "normals ( 0 )"),
+        (MAX_2_ITEMS_PER_LINE, "normals ( 0 )"),
+        (MAX_10_ITEMS_PER_LINE, "normals ( 0 )"),
+        (DISABLE_INNER_INDENT, "normals ( 0 )"),
+        (NEWLINE_BEFORE_START, "normals\n( 0 )"),
+        (NEWLINE_AFTER_START, "normals ( 0 )"),
+        (NEWLINE_BEFORE_COUNT, "normals ( 0 )"),
+        (NOT_NEWLINE_AFTER_COUNT, "normals ( 0 )"),
+        (NOT_NEWLINE_BEFORE_CLOSING, "normals ( 0 )"),
+        (NEWLINE_AFTER_CLOSING, "normals ( 0 )\n"),
     ],
 )
 def test_empty_count_block(global_storage, block_format, expected_output):
     formatted_text = BlockWriter.to_string(
-        lambda writer: write_empty_count_block(writer, None),
+        lambda writer: write_empty_count_block(writer, block_format),
         filetype="s",
         fileversion=1
     )
-    print(expected_output)
 
     assert formatted_text[32:] == expected_output
 
@@ -100,15 +128,23 @@ def test_empty_count_block(global_storage, block_format, expected_output):
     ("block_format", "expected_output"),
     [
         (DEFAULT_FORMAT, "normals ( 3 \n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
+        (MAX_1_ITEM_PER_LINE, "normals ( 3 \n\tvector ( 0.0\n\t0.0\n\t1.0 )\n\tvector ( 0.0\n\t1.0\n\t0.0 )\n\tvector ( 1.0\n\t0.0\n\t0.0 )\n)"),
+        (MAX_2_ITEMS_PER_LINE, "normals ( 3 \n\tvector ( 0.0 0.0\n\t1.0 )\n\tvector ( 0.0 1.0\n\t0.0 )\n\tvector ( 1.0 0.0\n\t0.0 )\n)"),
+        (MAX_10_ITEMS_PER_LINE, "normals ( 3 \n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
+        (DISABLE_INNER_INDENT, "normals ( 3 \nvector ( 0.0 0.0 1.0 )\nvector ( 0.0 1.0 0.0 )\nvector ( 1.0 0.0 0.0 )\n)"),
+        (NEWLINE_BEFORE_START, "normals\n( 3 \n\tvector\n( 0.0 0.0 1.0 )\n\tvector\n( 0.0 1.0 0.0 )\n\tvector\n( 1.0 0.0 0.0 )\n)"),
+        (NEWLINE_AFTER_START, "normals ( 3 \n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
+        (NEWLINE_BEFORE_COUNT, "normals ( 3 \n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
+        (NOT_NEWLINE_AFTER_COUNT, "normals ( 3 \n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
+        (NOT_NEWLINE_BEFORE_CLOSING, "normals ( 3 \n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
+        (NEWLINE_AFTER_CLOSING, "normals ( 3 \n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
     ],
 )
 def test_list_item_block(global_storage, block_format, expected_output):
     formatted_text = BlockWriter.to_string(
-        lambda writer: write_list_item_block(writer, None),
+        lambda writer: write_list_item_block(writer, block_format),
         filetype="s",
         fileversion=1
     )
-
-    print(expected_output)
 
     assert formatted_text[32:] == expected_output
