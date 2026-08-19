@@ -35,22 +35,22 @@ from simisa import tracksections
 #     assert False
 
 
-def test_tracksections_load_tsectionlocal(global_storage):
-    t = tracksections.load(global_storage["tsectionlocal_path"])
-    print(t)
-    assert False
+# def test_tracksections_load_tsectionlocal(global_storage):
+#     t = tracksections.load(global_storage["tsectionlocal_path"])
+#     print(t)
+#     assert False
 
 
-def test_tracksections_load_tsectionglobal(global_storage):
-    t = tracksections.load(global_storage["tsectionglobal_path"])
-    print(t)
-    assert False
+# def test_tracksections_load_tsectionglobal(global_storage):
+#     t = tracksections.load(global_storage["tsectionglobal_path"])
+#     print(t)
+#     assert False
 
 
-def test_tracksections_load_tsectionext(global_storage):
-    t = tracksections.load(global_storage["tsectionext_nested_path"])
-    print(t)
-    assert False
+# def test_tracksections_load_tsectionext(global_storage):
+#     t = tracksections.load(global_storage["tsectionext_nested_path"])
+#     print(t)
+#     assert False
 
 
 # def test_tracksections_load_compare(global_storage):

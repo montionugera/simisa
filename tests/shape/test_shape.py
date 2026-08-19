@@ -84,7 +84,7 @@ def test_shape_loads_compressed_bytes_raises(global_storage):
 
 def test_shape_roundtrip_uncompressed(global_storage, tmp_path):
     original = shape.load(global_storage["shapefile_path"])
-    output_path = "./tests/data/roundtrip.s"#tmp_path / "roundtrip.s"
+    output_path = tmp_path / "roundtrip.s"
     
     shape.dump(original, str(output_path), compressed=False)
     roundtripped = shape.load(str(output_path))
@@ -95,7 +95,7 @@ def test_shape_roundtrip_uncompressed(global_storage, tmp_path):
 
 def test_shape_roundtrip_compressed(global_storage, tmp_path):
     original = shape.load(global_storage["shapefile_path"])
-    output_path = "./tests/data/roundtrip_compressed.s"#tmp_path / "roundtrip_compressed.s"
+    output_path = tmp_path / "roundtrip_compressed.s"
     
     shape.dump(original, str(output_path), compressed=True)
     roundtripped = shape.load(str(output_path))

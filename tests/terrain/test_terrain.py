@@ -36,9 +36,9 @@ from tests import compare_objects
 #     assert False
 
 
-def test_terrain_load_compressed(global_storage):
-    s = terrain.load(global_storage["terrainfile_compressed_path"])
-    assert False
+# def test_terrain_load_compressed(global_storage):
+#     s = terrain.load(global_storage["terrainfile_compressed_path"])
+#     assert False
 
 
 # def test_terrain_load_compare(global_storage):

@@ -35,15 +35,15 @@ from simisa import roaddatabase
 #     assert False
 
 
-def test_roaddatabase_load(global_storage):
-    t = roaddatabase.load(global_storage["roaddatabase_path"])
-    print(t)
-    assert False
+# def test_roaddatabase_load(global_storage):
+#     t = roaddatabase.load(global_storage["roaddatabase_path"])
+#     print(t)
+#     assert False
 
-def test_roaddatabase_load_empty(global_storage):
-    t = roaddatabase.load(global_storage["roaddatabase_empty_path"])
-    print(t)
-    assert False
+# def test_roaddatabase_load_empty(global_storage):
+#     t = roaddatabase.load(global_storage["roaddatabase_empty_path"])
+#     print(t)
+#     assert False
 
 
 # def test_tracksections_load_compare(global_storage):

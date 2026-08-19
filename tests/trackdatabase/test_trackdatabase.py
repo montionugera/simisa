@@ -35,10 +35,10 @@ from simisa import trackdatabase
 #     assert False
 
 
-def test_trackdatabase_load(global_storage):
-    t = trackdatabase.load(global_storage["trackdatabase_path"])
-    print(t)
-    assert False
+# def test_trackdatabase_load(global_storage):
+#     t = trackdatabase.load(global_storage["trackdatabase_path"])
+#     print(t)
+#     assert False
 
 
 # def test_tracksections_load_compare(global_storage):
