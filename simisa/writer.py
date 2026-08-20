@@ -242,41 +242,30 @@ class BlockWriter(ABC):
 
 class TextBlockWriter(BlockWriter):
 
-    def __init__(self):
-        self.stream: Optional[TextIO] = None
-        self.depth = 0
+    def __init__(self, output_stream: Optional[TextIO] = None, parent: Optional['TextBlockWriter'] = None, encoding: str = "utf-8"):
+        self._stream = output_stream
+        self._parent = parent
+        self._encoding = encoding
+        self.depth = (parent.depth + 1) if parent else 0
         self.indent = "\t"
         self._block_format: Optional[BlockFormat] = None
+
+        self._buffer = io.StringIO()
         self._writing_block = False
         self._items_on_line = 0
-        self._written_bytes = 0
-        self._buffer = []
+        self._closed = False
 
     def _emit(self, text: str):
-        self._buffer.append(text)
+        self._buffer.write(text)
 
-    def _flush(self):
-        if self.stream is None:
-            raise BlockWriterError("Stream is not initialized")
+    def begin_sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format: Optional[BlockFormat] = None):
+        if self._closed:
+            raise ValueError("Cannot begin sub-block on a closed writer")
 
-        data = "".join(self._buffer)
-        self._buffer.clear()
-
-        encoding = "utf-16-le"
-        output_bytes = data.encode(encoding)
-
-        if isinstance(self.stream, io.TextIOBase):
-            self.stream.write(data)
-        else:
-            self.stream.write(output_bytes)
+        sub_block = TextBlockWriter(output_stream=self._stream, parent=self, encoding=self._encoding)
+        sub_block._block_format = block_format or BlockFormat()
+        sub_block._writing_block = True
         
-        self._written_bytes += len(output_bytes)
-
-    def begin_sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format: BlockFormat = BlockFormat()):
-        if self.stream is None:
-            raise BlockWriterError("Stream is not initialized")
-
-        self._block_format = block_format or BlockFormat()
         #self._items_on_line = 0
 
         #if self._block_format.newline_before_start:
@@ -285,37 +274,29 @@ class TextBlockWriter(BlockWriter):
         #indent = "" if self._block_format.disable_inner_indent else self.indent * self.depth
 
         # if block_label is None:
-        #     self._emit(f"{indent}{block_id.name} (")
+        #     sub_block._emit(f"{indent}{block_id.name} (")
         # else:
-        #     self._emit(f"{indent}{block_id.name} {block_label} (")
-        
+        #     sub_block._emit(f"{indent}{block_id.name} {block_label} (")
+
         if block_label is None:
-            self._emit(f"{block_id.name} ( ")
+            sub_block._emit(f"{block_id.name} ( ")
         else:
-            self._emit(f"{block_id.name} {block_label} ( ")
+            sub_block._emit(f"{block_id.name} {block_label} ( ")
 
         #if self._block_format.newline_after_start:
-        #    self._emit("\n")
+        #    sub_block._emit("\n")
 
-        self.depth += 1
-        self._writing_block = True
-
-        self._flush()
-        return self
+        return sub_block
 
     def end_sub_block(self):
-        if self.stream is None:
-            raise BlockWriterError("Stream is not initialized")
+        if not self._writing_block or self._closed:
+            return
 
-        if self.depth == 0:
-            raise BlockWriterError("No open block")
-
-        block_format = self._block_format or BlockFormat()
+        self._writing_block = False
+        self._closed = True
 
         #if block_format.newline_before_closing:
         #    self._emit("\n")
-
-        self.depth -= 1
 
         #indent = "" if block_format.disable_inner_indent else self.indent * self.depth
         #self._emit(f"{indent})")
@@ -324,16 +305,22 @@ class TextBlockWriter(BlockWriter):
         #if block_format.newline_after_closing:
         #    self._emit("\n")
 
-        if self.depth == 0:
-            self._writing_block = False
-            self._block_format = None
-            #self._items_on_line = 0
+        #    #self._items_on_line = 0
 
-        self._flush()
+        block_content = self._buffer.getvalue()
+        self._buffer.close()
+
+        if self._parent is not None:
+            self._parent._emit(block_content)
+        elif self._stream is not None:
+            self._stream.write(block_content)
+        else:
+            raise BlockWriterError("No output stream set for root writer, and no parent for sub-writer.")
 
     def _write_token(self, text: str):
-        block_format = self._block_format or BlockFormat()
-
+        if not self._writing_block:
+            raise BlockWriterError("Cannot write token outside of an active block.")
+        
         # if block_format.max_items_per_line is not None:
         #     if self._items_on_line > 0:
         #         self._emit(" ")
@@ -353,8 +340,6 @@ class TextBlockWriter(BlockWriter):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
-        block_format = self._block_format or BlockFormat()
-
         #if block_format.newline_before_count:
         #    self._emit("\n")
 
@@ -364,80 +349,89 @@ class TextBlockWriter(BlockWriter):
         #    self._emit("\n")
         #    self._items_on_line = 0
 
-        self._flush()
-
     def write_flags(self, value: int):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
         self._write_token(f"{value:08x}")
-        self._flush()
 
     def write_int(self, value: int):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
         self._write_token(str(value))
-        self._flush()
 
     def write_uint(self, value: int):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
         self._write_token(str(value))
-        self._flush()
 
     def write_float(self, value: float):
         if not isinstance(value, (int, float)):
             raise TypeError(f"Parameter 'value' must be float or int, but got {type(value).__name__}")
         
         self._write_token(str(value))
-        self._flush()
 
     def write_string(self, value: str):
         if not isinstance(value, str):
             raise TypeError(f"Parameter 'value' must be str, but got {type(value).__name__}")
         
         self._write_token(value)
-        self._flush()
 
     def write_comment(self, text: str):
         if not isinstance(text, str):
             raise TypeError(f"Parameter 'text' must be str, but got {type(text).__name__}")
         
         self._emit("_SKIP ( " + text + " )\n")
-        self._flush()
 
     def flush(self):
-        if self.stream:
-            self.stream.flush()
+        if self._closed:
+            return
+
+        if self._stream is not None:
+            content = self._buffer.getvalue()
+            self._buffer.close()
+            self._buffer = io.StringIO()
+
+            if content:
+                if isinstance(self._stream, io.TextIOBase):
+                    self._stream.write(content)
+                else:
+                    self._stream.write(content.encode(self._encoding))
+                
+            self._stream.flush()
 
     def close(self):
-        if self.stream and not self.stream.closed:
-            self.stream.close()
+        if self._closed:
+            return
+
+        self.flush()
+        self._closed = True
 
 
 class TextFileWriter(TextBlockWriter):
 
     def __init__(self, output_stream: TextIO, filepath: str, encoding="utf-8"):
-        super().__init__()
+        super().__init__(output_stream=output_stream, parent=None, encoding=encoding)
         self.filepath = filepath
-        self.stream = output_stream
-        self.encoding = encoding
         self.is_closed = False
 
     def flush(self):
-        if not self.is_closed and self.stream:
-            self.stream.flush()
+        super().flush()
+        self.is_closed = self._closed
 
     def close(self):
-        if not self.is_closed and self.stream:
+        super().close()
+        
+        if self._stream is not None and not self._stream.closed:
             # TODO patch size in header if compressed
-            # with open(filepath, "r+b") as f:
-            #     f.seek(8)  # after "SIMISA@F"
-            #     f.write(writer._simisa_size.to_bytes(4, "little"))
-            self.stream.close()
-            self.is_closed = True
+                # with open(filepath, "r+b") as f:
+                #     f.seek(8)  # after "SIMISA@F"
+                #     f.write(writer._simisa_size.to_bytes(4, "little"))
+            self._stream.close()
+        
+        self.is_closed = self._closed
 
 
 class BinaryBlockWriter(BlockWriter):
@@ -589,4 +583,3 @@ class BinaryFileWriter(BinaryBlockWriter):
             self.stream.write(self._buffer.getvalue())
 
         self.stream.close()
-        self.is_closed = True
