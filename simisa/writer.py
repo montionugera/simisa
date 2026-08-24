@@ -22,6 +22,7 @@ import zlib
 import codecs
 import struct
 import logging
+import inspect
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from typing import Optional, BinaryIO, TextIO, Callable, Any
@@ -160,8 +161,32 @@ class BlockWriter(ABC):
         write_fn: Callable[["BlockWriter"], Any],
         *,
         filetype: str,
-        fileversion: str
+        fileversion: int
     ) -> str:
+        check_params = (
+            ("filetype", filetype, str),
+            ("fileversion", fileversion, int),
+        )
+
+        for name, value, typ in check_params:
+            if isinstance(value, typ):
+                continue
+
+            raise TypeError(
+                f"Parameter '{name}' must be {typ.__name__}, "
+                f"but got {type(value).__name__}"
+            )
+        
+        write_fn_params = list(inspect.signature(write_fn).parameters.values())
+
+        positional_params = (
+            inspect.Parameter.POSITIONAL_ONLY,
+            inspect.Parameter.POSITIONAL_OR_KEYWORD,
+        )
+
+        if not write_fn_params or write_fn_params[0].kind not in positional_params:
+            raise TypeError("'write_fn' must accept a BlockWriter as its first parameter")
+
         stream = io.StringIO()
 
         writer = TextFileWriter(stream, filepath="<string>", encoding="utf-8")
