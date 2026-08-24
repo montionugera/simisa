@@ -113,7 +113,8 @@ class BlockWriter(ABC):
         is_binary: bool = False,
         is_unicode: bool = True,
         is_compressed: bool = False
-    ):
+    ) -> TextFileWriter | BinaryFileWriter:
+
         check_params = (
             ("filepath", filepath, str),
             ("filetype", filetype, str),
@@ -163,6 +164,7 @@ class BlockWriter(ABC):
         filetype: str,
         fileversion: int
     ) -> str:
+    
         check_params = (
             ("filetype", filetype, str),
             ("fileversion", fileversion, int),
@@ -301,10 +303,6 @@ class TextBlockWriter(BlockWriter):
 
     def _write_newline(self):
         self._trim_trailing_space()
-
-        if not self._buffer:
-            raise BlockWriterError("Cannot write newline on an uninitialized sub-block buffer.")
-        
         self._buffer.append("\n")
         self._write_indent()
 
