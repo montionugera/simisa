@@ -287,9 +287,12 @@ class TextBlockWriter(BlockWriter):
         self._items_on_line = 0
         self._closed = False
 
-    def _trim_trailing_whitespace(self):
+    def _trim_trailing_whitespace(self, trim_chars=None): 
         while self._buffer:
-            trimmed = self._buffer[-1].rstrip()
+            if trim_chars is not None:
+                trimmed = self._buffer[-1].rstrip(trim_chars)
+            else:
+                trimmed = self._buffer[-1].rstrip()
 
             if trimmed:
                 self._buffer[-1] = trimmed
@@ -302,7 +305,7 @@ class TextBlockWriter(BlockWriter):
             self._buffer.append(f"{self.indent_char * self.depth}")
 
     def _write_newline(self):
-        #self.parent._trim_trailing_whitespace()
+        self.parent._trim_trailing_whitespace(trim_chars=' ')
         self._trim_trailing_whitespace()
         self._buffer.append("\n")
         self._write_indent()
@@ -339,6 +342,10 @@ class TextBlockWriter(BlockWriter):
         if self._closed:
             raise ValueError("Cannot begin sub-block on a closed writer")
 
+        if self.block_format.max_items_per_line is not None:
+            if self._items_on_line >= self.block_format.max_items_per_line:
+                self._write_newline()
+
         self._items_on_line = self._items_on_line + 1
 
         sub_block = TextBlockWriter(stream=self.stream, parent=self, encoding=self.encoding)
@@ -357,11 +364,11 @@ class TextBlockWriter(BlockWriter):
             sub_block._write_newline()
 
         sub_block._write_token("(")
+
+        sub_block.depth = self.depth + 1
         
         if sub_block.block_format.newline_after_start:
             sub_block._write_newline()
-
-        sub_block.depth = self.depth + 1
 
         return sub_block
         
@@ -375,17 +382,8 @@ class TextBlockWriter(BlockWriter):
             self._write_newline()
 
         self._write_token(")")
-
-        end_with_newline = False
-
-        if self.block_format.max_items_per_line is not None:
-            if self._items_on_line >= self.block_format.max_items_per_line:
-                end_with_newline = True
         
         if self.block_format.newline_after_closing:
-            end_with_newline = True
-        
-        if end_with_newline:
             self._write_newline()
 
         self._writing_block = False
@@ -413,12 +411,12 @@ class TextBlockWriter(BlockWriter):
             self.block_format.enable_zero_count_newline
         )
 
-        if enable_count_newlines and self.block_format.newline_before_count:
+        if enable_count_newlines or self.block_format.newline_before_count:
             self._write_newline()
 
         self._write_token(str(value))
 
-        if enable_count_newlines and self.block_format.newline_after_count:
+        if enable_count_newlines or self.block_format.newline_after_count:
             self._write_newline()
 
     def write_flags(self, value: int):
@@ -483,6 +481,7 @@ class TextBlockWriter(BlockWriter):
             self._trim_trailing_whitespace()
 
             content = "".join(self._buffer)
+            print(f"final content: {content}")
             self._buffer = []
 
             if isinstance(self.stream, io.TextIOBase):

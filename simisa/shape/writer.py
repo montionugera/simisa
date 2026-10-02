@@ -93,10 +93,27 @@ def dumps(shape: Shape) -> str:
 
 DEFAULT_LIST = BlockFormat(
    max_items_per_line=1,
-   disable_inner_indent=True,
+   disable_inner_indent=False,
    newline_after_start=False,
    newline_after_count=True,
-   newline_before_closing=False
+   newline_before_closing=True,
+   newline_after_closing=True
+)
+
+SHAPE_BLOCK = BlockFormat(
+   max_items_per_line=1,
+   disable_inner_indent=False,
+   newline_after_start=True,
+   newline_before_closing=False,
+   newline_after_closing=True
+)
+
+VOL_SPHERE_BLOCK = BlockFormat(
+   max_items_per_line=None,
+   disable_inner_indent=False,
+   newline_after_start=True,
+   newline_before_closing=True,
+   newline_after_closing=True
 )
 
 
@@ -110,7 +127,7 @@ def write_shape(writer: BlockWriter, shape: Shape) -> None:
         writer (BlockWriter): Writer to write the shape block to.
         shape (Shape): The shape object to write.
     """
-    with writer.sub_block(TokenID.shape) as shape_block:
+    with writer.sub_block(TokenID.shape, block_format=SHAPE_BLOCK) as shape_block:
         write_shape_header(shape_block, shape.shape_header)
         write_volumes(shape_block, shape.volumes)
         write_shader_names(shape_block, shape.shader_names)
@@ -167,11 +184,11 @@ def write_volumes(writer: BlockWriter, volumes: List[VolumeSphere]) -> None:
         if not isinstance(volume, VolumeSphere):
             raise TypeError(f"Shape property 'volumes' must contain VolumeSphere objects, but got {type(volume).__name__}")
 
-    with writer.sub_block(TokenID.volumes) as volumes_block:
+    with writer.sub_block(TokenID.volumes, block_format=DEFAULT_LIST) as volumes_block:
         volumes_block.write_count(len(volumes))
 
         for volume in volumes:
-            with volumes_block.sub_block(TokenID.vol_sphere) as vol_sphere_block:
+            with volumes_block.sub_block(TokenID.vol_sphere, block_format=VOL_SPHERE_BLOCK) as vol_sphere_block:
                 write_vector(vol_sphere_block, volume.vector)
                 vol_sphere_block.write_float(volume.radius)
 
@@ -209,7 +226,7 @@ def write_shader_names(writer: BlockWriter, shader_names: List[str]) -> None:
         if not isinstance(shader_name, str):
             raise TypeError(f"Shape property 'shader_names' must contain str values, but got {type(shader_name).__name__}")
 
-    with writer.sub_block(TokenID.shader_names) as shader_names_block:
+    with writer.sub_block(TokenID.shader_names, block_format=DEFAULT_LIST) as shader_names_block:
         shader_names_block.write_count(len(shader_names))
 
         for shader_name in shader_names:
@@ -231,7 +248,7 @@ def write_texture_filter_names(writer: BlockWriter, filter_names: List[str]) -> 
         if not isinstance(filter_name, str):
             raise TypeError(f"Shape property 'texture_filter_names' must contain str values, but got {type(filter_name).__name__}")
 
-    with writer.sub_block(TokenID.texture_filter_names) as filter_names_block:
+    with writer.sub_block(TokenID.texture_filter_names, block_format=DEFAULT_LIST) as filter_names_block:
         filter_names_block.write_count(len(filter_names))
 
         for filter_name in filter_names:
@@ -253,11 +270,11 @@ def write_points(writer: BlockWriter, points: List[Point]) -> None:
         if not isinstance(point, Point):
             raise TypeError(f"Shape property 'points' must contain Point objects, but got {type(point).__name__}")
 
-    with writer.sub_block(TokenID.points) as points_block:
+    with writer.sub_block(TokenID.points, block_format=DEFAULT_LIST) as points_block:
         points_block.write_count(len(points))
 
         for point in points:
-            with points_block.sub_block(TokenID.point, block_format=DEFAULT_LIST) as point_block:
+            with points_block.sub_block(TokenID.point) as point_block:
                 point_block.write_float(point.x)
                 point_block.write_float(point.y)
                 point_block.write_float(point.z)
