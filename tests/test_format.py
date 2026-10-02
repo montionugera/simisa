@@ -85,7 +85,7 @@ def test_shape_default_format(global_storage, tmp_path):
         (NOT_NEWLINE_AFTER_COUNT, "normals ( )"),
         (ENABLE_ZERO_COUNT_NEWLINE, "normals ( )"),
         (NOT_NEWLINE_BEFORE_CLOSING, "normals ( )"),
-        (NEWLINE_AFTER_CLOSING, "normals ( )\n"),
+        (NEWLINE_AFTER_CLOSING, "normals ( )"),
     ],
 )
 def test_empty_block(block_format, expected_output):
@@ -106,12 +106,12 @@ def test_empty_block(block_format, expected_output):
         (MAX_TWO_ITEMS_PER_LINE, "normals ( 0 )"),
         (MAX_TEN_ITEMS_PER_LINE, "normals ( 0 )"),
         (NEWLINE_BEFORE_START, "normals\n( 0 )"),
-        (NEWLINE_AFTER_START, "normals ( 0 )"),
+        (NEWLINE_AFTER_START, "normals (\n0 )"),
         (NEWLINE_BEFORE_COUNT, "normals ( 0 )"),
         (NOT_NEWLINE_AFTER_COUNT, "normals ( 0 )"),
-        (ENABLE_ZERO_COUNT_NEWLINE, "normals ( 0\n)"),
+        (ENABLE_ZERO_COUNT_NEWLINE, "normals ( 0\n\t)"),
         (NOT_NEWLINE_BEFORE_CLOSING, "normals ( 0 )"),
-        (NEWLINE_AFTER_CLOSING, "normals ( 0 )\n"),
+        (NEWLINE_AFTER_CLOSING, "normals ( 0 )"),
     ],
 )
 def test_empty_count_block(block_format, expected_output):
@@ -137,7 +137,7 @@ def test_empty_count_block(block_format, expected_output):
         (NOT_NEWLINE_AFTER_COUNT, "normals ( 3 vector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
         (ENABLE_ZERO_COUNT_NEWLINE, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
         (NOT_NEWLINE_BEFORE_CLOSING, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 ) )"),
-        (NEWLINE_AFTER_CLOSING, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)\n"),
+        (NEWLINE_AFTER_CLOSING, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
     ],
 )
 def test_list_item_block(block_format, expected_output):

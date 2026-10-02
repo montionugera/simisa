@@ -44,7 +44,7 @@ class BlockFormat:
         ...     vertex_block.write_flags(color1)
         ...     vertex_block.write_flags(color2)
         ...
-        ...     with vertex_block.sub_block(TokenID.vertex_uvs, format=UV_LIST) as vertex_uvs_block:
+        ...     with vertex_block.sub_block(TokenID.vertex_uvs, block_format=UV_LIST) as vertex_uvs_block:
         ...         vertex_uvs_block.write_count(len(uvs))
         ...         for uv_index in uvs:
         ...             vertex_uvs_block.write_int(uv_index)

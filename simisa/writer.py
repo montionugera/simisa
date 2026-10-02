@@ -113,7 +113,7 @@ class BlockWriter(ABC):
         is_binary: bool = False,
         is_unicode: bool = True,
         is_compressed: bool = False
-    ) -> TextFileWriter | BinaryFileWriter:
+    ) -> "BlockWriter":
 
         check_params = (
             ("filepath", filepath, str),
@@ -164,7 +164,7 @@ class BlockWriter(ABC):
         filetype: str,
         fileversion: int
     ) -> str:
-    
+
         check_params = (
             ("filetype", filetype, str),
             ("fileversion", fileversion, int),
@@ -279,7 +279,7 @@ class TextBlockWriter(BlockWriter):
         self.stream = stream
         self.parent = parent
         self.encoding = encoding
-        self.depth = (parent.depth + 1) if parent else 0
+        self.depth = parent.depth if parent else 0
         self.indent_char = "\t"
         self.block_format: Optional[BlockFormat] = BlockFormat()
         self._buffer: List[str] = []
@@ -287,54 +287,49 @@ class TextBlockWriter(BlockWriter):
         self._items_on_line = 0
         self._closed = False
 
-    def _trim_trailing_space(self):
-        if not self._buffer:
-            return
+    def _trim_trailing_whitespace(self):
+        while self._buffer:
+            trimmed = self._buffer[-1].rstrip()
 
-        if self._buffer[-1].endswith(" "):
-            if self._buffer[-1] == " ":
-                self._buffer.pop()
-            else:
-                self._buffer[-1] = self._buffer[-1].rstrip(" ")
+            if trimmed:
+                self._buffer[-1] = trimmed
+                break
+
+            self._buffer.pop()
 
     def _write_indent(self):
         if not self.block_format.disable_inner_indent:
             self._buffer.append(f"{self.indent_char * self.depth}")
 
     def _write_newline(self):
-        self._trim_trailing_space()
+        #self.parent._trim_trailing_whitespace()
+        self._trim_trailing_whitespace()
         self._buffer.append("\n")
         self._write_indent()
+        self._items_on_line = 0
+        print(f"write newline, current buffer = {self._buffer}")
+
+    def _write_value(self, text: str):
+        if not isinstance(text, str):
+            raise TypeError(f"Parameter 'text' must be str, but got {type(value).__name__}")
+        
+        if self.block_format.max_items_per_line is not None:
+            if self._items_on_line >= self.block_format.max_items_per_line:
+                self._write_newline()
+
+        self._write_token(text)
+
+        self._items_on_line += 1
+
+        print(f"[value] _items_on_line: {self._items_on_line}")
 
     def _write_token(self, text: str):
         if not isinstance(text, str):
             raise TypeError(f"Parameter 'text' must be str, but got {type(value).__name__}")
         
-        if not self._writing_block:
-            raise BlockWriterError("Cannot write token outside of an active block.")
-        
-        #if self.block_format.newline_after_start:
-        #    sub_block._write_newline()
-
-        #if self.block_format.newline_before_closing:
-        #    self._write_newline()
-
-        # if block_format.max_items_per_line is not None:
-        #     if self._items_on_line > 0:
-        #         self._buffer.append(" ")
-
-        #     self._buffer.append(text)
-        #     self._items_on_line += 1
-
-        #     if self._items_on_line >= block_format.max_items_per_line:
-        #         self._buffer.append("\n")
-        #         self._items_on_line = 0
-        # else:
-        #     self._buffer.append(text + " ")
-
         self._buffer.append(text)
         self._buffer.append(" ")
-
+        
     def begin_sub_block(
         self,
         block_id: TokenID,
@@ -344,34 +339,54 @@ class TextBlockWriter(BlockWriter):
         if self._closed:
             raise ValueError("Cannot begin sub-block on a closed writer")
 
+        self._items_on_line = self._items_on_line + 1
+
         sub_block = TextBlockWriter(stream=self.stream, parent=self, encoding=self.encoding)
         sub_block.block_format = block_format or BlockFormat()
         sub_block._writing_block = True
+        sub_block._items_on_line = 0
         
-        #self._items_on_line = 0
-
         sub_block._write_token(f"{block_id.name}")
+
+        print(f"{block_id.name} _items_on_line: {self._items_on_line}")
 
         if block_label is not None:
             sub_block._write_token(f"{block_label}")
 
-        if self.block_format.newline_before_start:
-            self._write_newline()
-        
+        if sub_block.block_format.newline_before_start:
+            sub_block._write_newline()
+
         sub_block._write_token("(")
+        
+        if sub_block.block_format.newline_after_start:
+            sub_block._write_newline()
+
+        sub_block.depth = self.depth + 1
 
         return sub_block
-
+        
     def end_sub_block(self):
         if not self._writing_block or self._closed:
             return
 
-        self._write_token(")")
-
-        if self.block_format.newline_after_closing:
+        self.depth = self.depth - 1
+        
+        if self.block_format.newline_before_closing:
             self._write_newline()
 
-        #self._items_on_line = 0
+        self._write_token(")")
+
+        end_with_newline = False
+
+        if self.block_format.max_items_per_line is not None:
+            if self._items_on_line >= self.block_format.max_items_per_line:
+                end_with_newline = True
+        
+        if self.block_format.newline_after_closing:
+            end_with_newline = True
+        
+        if end_with_newline:
+            self._write_newline()
 
         self._writing_block = False
         self._closed = True
@@ -410,47 +425,62 @@ class TextBlockWriter(BlockWriter):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
-        self._write_token(f"{value:08x}")
+        self._write_value(f"{value:08x}")
 
     def write_int(self, value: int):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
-        self._write_token(str(value))
+        self._write_value(str(value))
 
     def write_uint(self, value: int):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
-        self._write_token(str(value))
+        self._write_value(str(value))
 
     def write_float(self, value: float):
         if not isinstance(value, (int, float)):
             raise TypeError(f"Parameter 'value' must be float or int, but got {type(value).__name__}")
         
-        self._write_token(str(value))
+        self._write_value(str(value))
 
     def write_string(self, value: str):
         if not isinstance(value, str):
             raise TypeError(f"Parameter 'value' must be str, but got {type(value).__name__}")
         
-        self._write_token(value)
+        self._write_value(value)
 
     def write_comment(self, text: str):
         if not isinstance(text, str):
             raise TypeError(f"Parameter 'text' must be str, but got {type(text).__name__}")
         
         self._write_token("_SKIP")
+
+        if self.block_format.newline_before_start:
+            self._write_newline()
+
         self._write_token("(")
+        
+        if self.block_format.newline_after_start:
+            self._write_newline()
+        
         self._write_token(f"{text}")
+
+        if self.block_format.newline_before_closing:
+            self._write_newline()
+
         self._write_token(")")
+
+        if self.block_format.newline_after_closing:
+            self._write_newline()
 
     def flush(self):
         if self._closed:
             return
 
         if self.stream is not None and self._buffer:
-            self._trim_trailing_space()
+            self._trim_trailing_whitespace()
 
             content = "".join(self._buffer)
             self._buffer = []

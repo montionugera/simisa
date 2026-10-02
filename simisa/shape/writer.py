@@ -20,6 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 from typing import List
 
 from .. import TokenID
+from ..format import BlockFormat
 from ..writer import BlockWriter
 from .models import *
 
@@ -88,6 +89,15 @@ def dumps(shape: Shape) -> str:
     )
 
     return shape_text
+
+
+DEFAULT_LIST = BlockFormat(
+   max_items_per_line=1,
+   disable_inner_indent=True,
+   newline_after_start=False,
+   newline_after_count=True,
+   newline_before_closing=False
+)
 
 
 def write_shape(writer: BlockWriter, shape: Shape) -> None:
@@ -247,7 +257,7 @@ def write_points(writer: BlockWriter, points: List[Point]) -> None:
         points_block.write_count(len(points))
 
         for point in points:
-            with points_block.sub_block(TokenID.point) as point_block:
+            with points_block.sub_block(TokenID.point, block_format=DEFAULT_LIST) as point_block:
                 point_block.write_float(point.x)
                 point_block.write_float(point.y)
                 point_block.write_float(point.z)
@@ -267,7 +277,7 @@ def write_uv_points(writer: BlockWriter, uv_points: List[UVPoint]) -> None:
         if not isinstance(uv_point, UVPoint):
             raise TypeError(f"Shape property 'uv_points' must contain UVPoint objects, but got {type(uv_point).__name__}")
 
-    with writer.sub_block(TokenID.uv_points) as uv_points_block:
+    with writer.sub_block(TokenID.uv_points, block_format=DEFAULT_LIST) as uv_points_block:
         uv_points_block.write_count(len(uv_points))
 
         for uv_point in uv_points:
