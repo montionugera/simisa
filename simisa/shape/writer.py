@@ -93,8 +93,6 @@ def dumps(shape: Shape) -> str:
 
 DEFAULT_LIST = BlockFormat(
    max_items_per_line=1,
-   disable_inner_indent=False,
-   newline_after_start=False,
    newline_after_count=True,
    newline_before_closing=True,
    newline_after_closing=True
@@ -102,18 +100,22 @@ DEFAULT_LIST = BlockFormat(
 
 SHAPE_BLOCK = BlockFormat(
    max_items_per_line=1,
-   disable_inner_indent=False,
    newline_after_start=True,
-   newline_before_closing=False,
    newline_after_closing=True
 )
 
 VOL_SPHERE_BLOCK = BlockFormat(
-   max_items_per_line=None,
-   disable_inner_indent=False,
    newline_after_start=True,
    newline_before_closing=True,
    newline_after_closing=True
+)
+
+PRIM_STATE_BLOCK = BlockFormat(
+   newline_before_closing=True
+)
+
+TEX_IDXS_BLOCK = BlockFormat(
+   newline_before_block=True
 )
 
 
@@ -317,7 +319,7 @@ def write_normals(writer: BlockWriter, normals: List[Vector]) -> None:
         if not isinstance(normal, Vector):
             raise TypeError(f"Shape property 'normals' must contain Vector objects, but got {type(normal).__name__}")
 
-    with writer.sub_block(TokenID.normals) as normals_block:
+    with writer.sub_block(TokenID.normals, block_format=DEFAULT_LIST) as normals_block:
         normals_block.write_count(len(normals))
 
         for normal in normals:
@@ -338,7 +340,7 @@ def write_sort_vectors(writer: BlockWriter, sort_vectors: List[Vector]) -> None:
         if not isinstance(sort_vector, Vector):
             raise TypeError(f"Shape property 'sort_vectors' must contain Vector objects, but got {type(sort_vector).__name__}")
 
-    with writer.sub_block(TokenID.sort_vectors) as sort_vectors_block:
+    with writer.sub_block(TokenID.sort_vectors, block_format=DEFAULT_LIST) as sort_vectors_block:
         sort_vectors_block.write_count(len(sort_vectors))
 
         for sort_vector in sort_vectors:
@@ -359,7 +361,7 @@ def write_colours(writer: BlockWriter, colours: List[Colour]) -> None:
         if not isinstance(colour, Colour):
             raise TypeError(f"Shape property 'colours' must contain Colour objects, but got {type(colour).__name__}")
 
-    with writer.sub_block(TokenID.colours) as colours_block:
+    with writer.sub_block(TokenID.colours, block_format=DEFAULT_LIST) as colours_block:
         colours_block.write_count(len(colours))
         
         for colour in colours:
@@ -384,7 +386,7 @@ def write_matrices(writer: BlockWriter, matrices: List[Matrix]) -> None:
         if not isinstance(matrix, Matrix):
             raise TypeError(f"Shape property 'matrices' must contain Matrix objects, but got {type(matrix).__name__}")
 
-    with writer.sub_block(TokenID.matrices) as matrices_block:
+    with writer.sub_block(TokenID.matrices, block_format=DEFAULT_LIST) as matrices_block:
         matrices_block.write_count(len(matrices))
 
         for matrix in matrices:
@@ -417,7 +419,7 @@ def write_images(writer: BlockWriter, images: List[str]) -> None:
         if not isinstance(image, str):
             raise TypeError(f"Shape property 'images' must contain str values, but got {type(image).__name__}")
 
-    with writer.sub_block(TokenID.images) as images_block:
+    with writer.sub_block(TokenID.images, block_format=DEFAULT_LIST) as images_block:
         images_block.write_count(len(images))
 
         for image in images:
@@ -439,7 +441,7 @@ def write_textures(writer: BlockWriter, textures: List[Texture]) -> None:
         if not isinstance(texture, Texture):
             raise TypeError(f"Shape property 'textures' must contain Texture objects, but got {type(texture).__name__}")
 
-    with writer.sub_block(TokenID.textures) as textures_block:
+    with writer.sub_block(TokenID.textures, block_format=DEFAULT_LIST) as textures_block:
         textures_block.write_count(len(textures))
 
         for texture in textures:
@@ -466,7 +468,7 @@ def write_light_materials(writer: BlockWriter, light_materials: List[LightMateri
         if not isinstance(light_material, LightMaterial):
             raise TypeError(f"Shape property 'light_materials' must contain LightMaterial objects, but got {type(light_material).__name__}")
 
-    with writer.sub_block(TokenID.light_materials) as light_materials_block:
+    with writer.sub_block(TokenID.light_materials, block_format=DEFAULT_LIST) as light_materials_block:
         light_materials_block.write_count(len(light_materials))
 
         for light_material in light_materials:
@@ -493,7 +495,7 @@ def write_light_model_cfgs(writer: BlockWriter, light_model_cfgs: List[LightMode
         if not isinstance(light_model_cfg, LightModelCfg):
             raise TypeError(f"Shape property 'light_model_cfgs' must contain LightModelCfg objects, but got {type(light_model_cfg).__name__}")
 
-    with writer.sub_block(TokenID.light_model_cfgs) as light_model_cfgs_block:
+    with writer.sub_block(TokenID.light_model_cfgs, block_format=DEFAULT_LIST) as light_model_cfgs_block:
         light_model_cfgs_block.write_count(len(light_model_cfgs))
 
         for light_model_cfg in light_model_cfgs:
@@ -562,7 +564,7 @@ def write_vtx_states(writer: BlockWriter, vtx_states: List[VtxState]) -> None:
         if not isinstance(vtx_state, VtxState):
             raise TypeError(f"Shape property 'vtx_states' must contain VtxState objects, but got {type(vtx_state).__name__}")
 
-    with writer.sub_block(TokenID.vtx_states) as vtx_states_block:
+    with writer.sub_block(TokenID.vtx_states, block_format=DEFAULT_LIST) as vtx_states_block:
         vtx_states_block.write_count(len(vtx_states))
 
         for vtx_state in vtx_states:
@@ -591,11 +593,11 @@ def write_prim_states(writer: BlockWriter, prim_states: List[PrimState]) -> None
         if not isinstance(prim_state, PrimState):
             raise TypeError(f"Shape property 'prim_states' must contain PrimState objects, but got {type(prim_state).__name__}")
 
-    with writer.sub_block(TokenID.prim_states) as prim_states_block:
+    with writer.sub_block(TokenID.prim_states, block_format=DEFAULT_LIST) as prim_states_block:
         prim_states_block.write_count(len(prim_states))
 
         for prim_state in prim_states:
-            with prim_states_block.sub_block(TokenID.prim_state, block_label=prim_state.name) as prim_state_block:
+            with prim_states_block.sub_block(TokenID.prim_state, block_label=prim_state.name, block_format=PRIM_STATE_BLOCK) as prim_state_block:
                 prim_state_block.write_flags(prim_state.flags)
                 prim_state_block.write_int(prim_state.shader_index)
                 write_tex_idxs(prim_state_block, prim_state.texture_indices)
@@ -620,7 +622,7 @@ def write_tex_idxs(writer: BlockWriter, tex_idxs: List[int]) -> None:
         if not isinstance(tex_idx, int):
             raise TypeError(f"PrimState property 'texture_indices' must contain int values, but got {type(tex_idx).__name__}")
 
-    with writer.sub_block(TokenID.tex_idxs) as tex_idxs_block:
+    with writer.sub_block(TokenID.tex_idxs, block_format=TEX_IDXS_BLOCK) as tex_idxs_block:
         tex_idxs_block.write_count(len(tex_idxs))
 
         for tex_idx in tex_idxs:
@@ -641,7 +643,7 @@ def write_lod_controls(writer: BlockWriter, lod_controls: List[LodControl]) -> N
         if not isinstance(lod_control, LodControl):
             raise TypeError(f"Shape property 'lod_controls' must contain LodControl objects, but got {type(lod_control).__name__}")
 
-    with writer.sub_block(TokenID.lod_controls) as lod_control_block:
+    with writer.sub_block(TokenID.lod_controls, block_format=DEFAULT_LIST) as lod_control_block:
         lod_control_block.write_count(len(lod_controls))
 
         for lod_control in lod_controls:
@@ -1079,7 +1081,7 @@ def write_animations(writer: BlockWriter, animations: List[Animation]) -> None:
         if not isinstance(animation, Animation):
             raise TypeError(f"Shape property 'animations' must contain Animation objects, but got {type(animation).__name__}")
 
-    with writer.sub_block(TokenID.animations) as animations_block:
+    with writer.sub_block(TokenID.animations, block_format=DEFAULT_LIST) as animations_block:
         animations_block.write_count(len(animations))
 
         for animation in animations:

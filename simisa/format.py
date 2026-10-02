@@ -51,6 +51,7 @@ class BlockFormat:
     """
     max_items_per_line: Optional[int] = None
     disable_inner_indent: bool = False
+    newline_before_block: bool = False
     newline_before_start: bool = False
     newline_after_start: bool = False
     newline_before_count: bool = False

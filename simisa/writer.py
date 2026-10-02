@@ -305,12 +305,14 @@ class TextBlockWriter(BlockWriter):
             self._buffer.append(f"{self.indent_char * self.depth}")
 
     def _write_newline(self):
-        self.parent._trim_trailing_whitespace(trim_chars=' ')
+        if self.parent is not None:
+            self.parent._trim_trailing_whitespace(trim_chars=' ')
+
         self._trim_trailing_whitespace()
         self._buffer.append("\n")
+
         self._write_indent()
         self._items_on_line = 0
-        print(f"write newline, current buffer = {self._buffer}")
 
     def _write_value(self, text: str):
         if not isinstance(text, str):
@@ -321,10 +323,7 @@ class TextBlockWriter(BlockWriter):
                 self._write_newline()
 
         self._write_token(text)
-
         self._items_on_line += 1
-
-        print(f"[value] _items_on_line: {self._items_on_line}")
 
     def _write_token(self, text: str):
         if not isinstance(text, str):
@@ -337,11 +336,17 @@ class TextBlockWriter(BlockWriter):
         self,
         block_id: TokenID,
         block_label: Optional[str] = None,
-        block_format: Optional[BlockFormat] = None
+        block_format: Optional[BlockFormat] = BlockFormat()
     ):
         if self._closed:
             raise ValueError("Cannot begin sub-block on a closed writer")
 
+        if block_format is None:
+            block_format = BlockFormat()
+
+        if block_format.newline_before_block:
+            self._write_newline()
+        
         if self.block_format.max_items_per_line is not None:
             if self._items_on_line >= self.block_format.max_items_per_line:
                 self._write_newline()
@@ -349,13 +354,11 @@ class TextBlockWriter(BlockWriter):
         self._items_on_line = self._items_on_line + 1
 
         sub_block = TextBlockWriter(stream=self.stream, parent=self, encoding=self.encoding)
-        sub_block.block_format = block_format or BlockFormat()
+        sub_block.block_format = block_format
         sub_block._writing_block = True
         sub_block._items_on_line = 0
         
         sub_block._write_token(f"{block_id.name}")
-
-        print(f"{block_id.name} _items_on_line: {self._items_on_line}")
 
         if block_label is not None:
             sub_block._write_token(f"{block_label}")
@@ -364,11 +367,12 @@ class TextBlockWriter(BlockWriter):
             sub_block._write_newline()
 
         sub_block._write_token("(")
-
         sub_block.depth = self.depth + 1
         
         if sub_block.block_format.newline_after_start:
             sub_block._write_newline()
+
+        print(self._buffer)
 
         return sub_block
         
@@ -394,6 +398,7 @@ class TextBlockWriter(BlockWriter):
 
         if self.parent is not None:
             self.parent._buffer.append(block_text)
+        
         elif self.stream is not None:
             if isinstance(self.stream, io.TextIOBase):
                 self.stream.write(block_text)
@@ -481,7 +486,6 @@ class TextBlockWriter(BlockWriter):
             self._trim_trailing_whitespace()
 
             content = "".join(self._buffer)
-            print(f"final content: {content}")
             self._buffer = []
 
             if isinstance(self.stream, io.TextIOBase):
@@ -588,8 +592,10 @@ class BinaryBlockWriter(BlockWriter):
 
         if self.parent is not None:
             self.parent._buffer.write(block_bytes)
+
         elif self.stream is not None:
             self.stream.write(block_bytes)
+        
         else:
             raise BlockWriterError("No output stream set for root writer, and no parent-writer.")
 
