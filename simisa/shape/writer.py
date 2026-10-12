@@ -101,6 +101,7 @@ DEFAULT_LIST = BlockFormat(
 
 SHAPE_BLOCK = BlockFormat(
     max_items_per_line=1,
+    newline_before_block=True,
     newline_after_start=True,
     newline_before_closing=True
 )
@@ -192,14 +193,20 @@ INDEXED_TRILIST_BLOCK = BlockFormat(
 )
 
 VERTEX_IDXS_BLOCK = BlockFormat(
+    # TODO override max_items_per_line for first line with 186
+    # TODO disable inner depth increment
     max_items_per_line=197
 )
 
 NORMAL_IDXS_BLOCK = BlockFormat(
+    # TODO override max_items_per_line for first line with 266
+    # TODO disable inner depth increment
     max_items_per_line=276
 )
 
 FLAGS_BLOCK = BlockFormat(
+    # TODO override max_items_per_line for first line with 80
+    # TODO disable inner depth increment
     max_items_per_line=100
 )
 

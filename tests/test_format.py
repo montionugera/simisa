@@ -18,7 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import pytest
-from simisa import shape, BlockFormat, BlockWriter, TokenID
+from simisa import shape, world, BlockFormat, BlockWriter, TokenID
 from simisa.shape import Vector
 
 
@@ -70,6 +70,14 @@ def test_shape_default_format(global_storage, tmp_path):
     output_path = "./tests/data/default_format.s"
     
     shape.dump(original, str(output_path), compressed=False)
+    
+    assert False
+
+def test_world_default_format(global_storage, tmp_path):
+    original = world.load(global_storage["worldfile2_path"])
+    output_path = "./tests/data/default_format.w"
+    
+    world.dump(original, str(output_path), compressed=False)
     
     assert False
 
