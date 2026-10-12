@@ -20,6 +20,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 from typing import List
 
 from .. import TokenID
+from ..format import BlockFormat
 from ..writer import BlockWriter
 from .models import *
 
@@ -90,6 +91,50 @@ def dumps(terrain: Terrain) -> str:
     return terrain_text
 
 
+DEFAULT_LIST = BlockFormat(
+    max_items_per_line=1,
+    newline_before_block=True,
+    newline_after_count=True,
+    newline_before_closing=True,
+    newline_after_closing=True
+)
+
+TERRAIN_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_before_block=True,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+TERRAIN_SAMPLES_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+TERRAIN_SHADER_BLOCK = BlockFormat(
+    newline_before_closing=True
+)
+
+TERRAIN_PATCHES_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+TERRAIN_PATCHSET_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+TERRAIN_PATCHSET_PATCHES_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+
 def write_terrain(writer: BlockWriter, terrain: Terrain) -> None:
     """
     Write a terrain block to a BlockWriter.
@@ -100,7 +145,7 @@ def write_terrain(writer: BlockWriter, terrain: Terrain) -> None:
         writer (BlockWriter): Writer to write the terrain block to.
         terrain (Terrain): The terrain object to write.
     """
-    with writer.sub_block(TokenID.terrain) as terrain_block:
+    with writer.sub_block(TokenID.terrain, block_format=TERRAIN_BLOCK) as terrain_block:
         with terrain_block.sub_block(TokenID.terrain_errthreshold_scale) as errthreshold_scale_block:
             errthreshold_scale_block.write_float(terrain.terrain_errthreshold_scale)
 
@@ -118,7 +163,7 @@ def write_terrain(writer: BlockWriter, terrain: Terrain) -> None:
             write_terrain_shaders(terrain_block, terrain.terrain_shaders)
 
         if terrain.terrain_patchsets is not None:
-            with terrain_block.sub_block(TokenID.terrain_patches) as terrain_patches_block:
+            with terrain_block.sub_block(TokenID.terrain_patches, block_format=TERRAIN_PATCHES_BLOCK) as terrain_patches_block:
                 write_terrain_patchsets(terrain_patches_block, terrain.terrain_patchsets)
 
 
@@ -162,7 +207,7 @@ def write_terrain_samples(writer: BlockWriter, samples: TerrainSamples) -> None:
     if not isinstance(samples, TerrainSamples):
         raise TypeError(f"Terrain property 'terrain_samples' must be TerrainSamples, but got {type(samples).__name__}")
 
-    with writer.sub_block(TokenID.terrain_samples) as samples_block:
+    with writer.sub_block(TokenID.terrain_samples, block_format=TERRAIN_SAMPLES_BLOCK) as samples_block:
         if samples.terrain_nsamples is not None:
             with samples_block.sub_block(TokenID.terrain_nsamples) as nsamples_block:
                 nsamples_block.write_int(samples.terrain_nsamples)
@@ -210,11 +255,11 @@ def write_terrain_shaders(writer: BlockWriter, shaders: List[TerrainShader]) -> 
         if not isinstance(shader, TerrainShader):
             raise TypeError(f"Terrain property 'terrain_shaders' must contain TerrainShader objects, but got {type(shader).__name__}")
 
-    with writer.sub_block(TokenID.terrain_shaders) as shaders_block:
+    with writer.sub_block(TokenID.terrain_shaders, block_format=DEFAULT_LIST) as shaders_block:
         shaders_block.write_count(len(shaders))
 
         for shader in shaders:
-            with shaders_block.sub_block(TokenID.terrain_shader) as shader_block:
+            with shaders_block.sub_block(TokenID.terrain_shader, block_format=TERRAIN_SHADER_BLOCK) as shader_block:
                 shader_block.write_string(shader.shader_name)
 
                 if shader.terrain_texslots:
@@ -238,7 +283,7 @@ def write_terrain_texslots(writer: BlockWriter, texslots: List[TerrainTexslot]) 
         if not isinstance(texslot, TerrainTexslot):
             raise TypeError(f"TerrainShader property 'terrain_texslots' must contain TerrainTexslot objects, but got {type(texslot).__name__}")
 
-    with writer.sub_block(TokenID.terrain_texslots) as texslots_block:
+    with writer.sub_block(TokenID.terrain_texslots, block_format=DEFAULT_LIST) as texslots_block:
         texslots_block.write_count(len(texslots))
 
         for texslot in texslots:
@@ -262,7 +307,7 @@ def write_terrain_uvcalcs(writer: BlockWriter, uvcalcs: List[TerrainUVCalc]) -> 
         if not isinstance(uvcalc, TerrainUVCalc):
             raise TypeError(f"TerrainShader property 'terrain_uvcalcs' must contain TerrainUVCalc objects, but got {type(uvcalc).__name__}")
 
-    with writer.sub_block(TokenID.terrain_uvcalcs) as uvcalcs_block:
+    with writer.sub_block(TokenID.terrain_uvcalcs, block_format=DEFAULT_LIST) as uvcalcs_block:
         uvcalcs_block.write_count(len(uvcalcs))
 
         for uvcalc in uvcalcs:
@@ -287,11 +332,11 @@ def write_terrain_patchsets(writer: BlockWriter, patchsets: List[TerrainPatchset
         if not isinstance(patchset, TerrainPatchset):
             raise TypeError(f"Terrain property 'terrain_patchsets' must contain TerrainPatchset objects, but got {type(patchset).__name__}")
 
-    with writer.sub_block(TokenID.terrain_patchsets) as patchsets_block:
+    with writer.sub_block(TokenID.terrain_patchsets, block_format=DEFAULT_LIST) as patchsets_block:
         patchsets_block.write_count(len(patchsets))
 
         for patchset in patchsets:
-            with patchsets_block.sub_block(TokenID.terrain_patchset) as patchset_block:
+            with patchsets_block.sub_block(TokenID.terrain_patchset, block_format=TERRAIN_PATCHSET_BLOCK) as patchset_block:
                 with patchset_block.sub_block(TokenID.terrain_patchset_distance) as patchset_distance_block:
                     patchset_distance_block.write_int(patchset.terrain_patchset_distance)
                 
@@ -315,7 +360,7 @@ def write_terrain_patchset_patches(writer: BlockWriter, patches: List[TerrainPat
         if not isinstance(patch, TerrainPatchsetPatch):
             raise TypeError(f"TerrainPatchset property 'patches' must contain TerrainPatchsetPatch objects, but got {type(patch).__name__}")
 
-    with writer.sub_block(TokenID.terrain_patchset_patches) as patchset_patches_block:
+    with writer.sub_block(TokenID.terrain_patchset_patches, block_format=TERRAIN_PATCHSET_PATCHES_BLOCK) as patchset_patches_block:
         for patch in patches:
             with patchset_patches_block.sub_block(TokenID.terrain_patchset_patch) as patchset_patch_block:
                 patchset_patch_block.write_flags(patch.flags)

@@ -18,7 +18,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import pytest
-from simisa import shape, world, BlockFormat, BlockWriter, TokenID
+from simisa import shape, world, terrain, BlockFormat, BlockWriter, TokenID
 from simisa.shape import Vector
 
 
@@ -81,6 +81,13 @@ def test_world_default_format(global_storage, tmp_path):
     
     assert False
 
+def test_terrain_default_format(global_storage, tmp_path):
+    original = terrain.load(global_storage["terrainfile_compressed_path"])
+    output_path = "./tests/data/default_format.t"
+    
+    terrain.dump(original, str(output_path), compressed=False)
+    
+    assert False
 
 @pytest.mark.parametrize(
     ("block_format", "expected_output"),
