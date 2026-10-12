@@ -285,6 +285,7 @@ class TextBlockWriter(BlockWriter):
         self._buffer: List[str] = []
         self._writing_block = False
         self._items_on_line = 0
+        self._items_total = 0
         self._closed = False
 
     def _trim_trailing_whitespace(self, trim_chars=None): 
@@ -324,6 +325,7 @@ class TextBlockWriter(BlockWriter):
 
         self._write_token(text)
         self._items_on_line += 1
+        self._items_total += 1
 
     def _write_token(self, text: str):
         if not isinstance(text, str):
@@ -336,7 +338,7 @@ class TextBlockWriter(BlockWriter):
         self,
         block_id: TokenID,
         block_label: Optional[str] = None,
-        block_format: Optional[BlockFormat] = BlockFormat()
+        block_format: Optional[BlockFormat] = None
     ):
         if self._closed:
             raise ValueError("Cannot begin sub-block on a closed writer")
@@ -352,11 +354,13 @@ class TextBlockWriter(BlockWriter):
                 self._write_newline()
 
         self._items_on_line = self._items_on_line + 1
+        self._items_total = self._items_total + 1
 
         sub_block = TextBlockWriter(stream=self.stream, parent=self, encoding=self.encoding)
         sub_block.block_format = block_format
         sub_block._writing_block = True
         sub_block._items_on_line = 0
+        sub_block._items_total = 0
         
         sub_block._write_token(f"{block_id.name}")
 
@@ -372,8 +376,6 @@ class TextBlockWriter(BlockWriter):
         if sub_block.block_format.newline_after_start:
             sub_block._write_newline()
 
-        print(self._buffer)
-
         return sub_block
         
     def end_sub_block(self):
@@ -383,7 +385,8 @@ class TextBlockWriter(BlockWriter):
         self.depth = self.depth - 1
         
         if self.block_format.newline_before_closing:
-            self._write_newline()
+            if self._items_total != 0 and not self.block_format.enable_zero_count_newline:
+                self._write_newline()
 
         self._write_token(")")
         
@@ -411,18 +414,17 @@ class TextBlockWriter(BlockWriter):
         if not isinstance(value, int):
             raise TypeError(f"Parameter 'value' must be int, but got {type(value).__name__}")
         
-        enable_count_newlines = (
-            value == 0 and
-            self.block_format.enable_zero_count_newline
-        )
+        if value == 0 and not self.block_format.enable_zero_count_newline:
+            self._write_token(str(value))
 
-        if enable_count_newlines or self.block_format.newline_before_count:
-            self._write_newline()
+        else:
+            if self.block_format.newline_before_count:
+                self._write_newline()
 
-        self._write_token(str(value))
+            self._write_token(str(value))
 
-        if enable_count_newlines or self.block_format.newline_after_count:
-            self._write_newline()
+            if self.block_format.newline_after_count:
+                self._write_newline()
 
     def write_flags(self, value: int):
         if not isinstance(value, int):

@@ -29,9 +29,10 @@ MAX_TEN_ITEMS_PER_LINE = BlockFormat(max_items_per_line=10)
 NEWLINE_BEFORE_BLOCK = BlockFormat(newline_before_block=True)
 NEWLINE_BEFORE_START = BlockFormat(newline_before_start=True)
 NEWLINE_AFTER_START = BlockFormat(newline_after_start=True)
+NEWLINE_AFTER_START_NO_INDENT = BlockFormat(newline_after_start=True, disable_inner_indent=True)
 NEWLINE_BEFORE_COUNT = BlockFormat(newline_before_count=True)
 NEWLINE_AFTER_COUNT = BlockFormat(newline_after_count=True)
-ENABLE_ZERO_COUNT_NEWLINE = BlockFormat(enable_zero_count_newline=True)
+ENABLE_ZERO_COUNT_NEWLINE = BlockFormat(enable_zero_count_newline=True, newline_after_count=True)
 NEWLINE_BEFORE_CLOSING = BlockFormat(newline_before_closing=True)
 NEWLINE_AFTER_CLOSING = BlockFormat(newline_after_closing=True)
 
@@ -82,11 +83,12 @@ def test_shape_default_format(global_storage, tmp_path):
         (MAX_TEN_ITEMS_PER_LINE, "normals ( )"),
         (NEWLINE_BEFORE_BLOCK, "\nnormals ( )"),
         (NEWLINE_BEFORE_START, "normals\n( )"),
-        (NEWLINE_AFTER_START, "normals (\n)"),
+        (NEWLINE_AFTER_START, "normals (\n\t)"),
+        (NEWLINE_AFTER_START_NO_INDENT, "normals (\n)"),
         (NEWLINE_BEFORE_COUNT, "normals ( )"),
         (NEWLINE_AFTER_COUNT, "normals ( )"),
         (ENABLE_ZERO_COUNT_NEWLINE, "normals ( )"),
-        (NEWLINE_BEFORE_CLOSING, "normals (\n)"),
+        (NEWLINE_BEFORE_CLOSING, "normals ( )"),
         (NEWLINE_AFTER_CLOSING, "normals ( )"),
     ],
 )
@@ -109,11 +111,12 @@ def test_empty_block(block_format, expected_output):
         (MAX_TEN_ITEMS_PER_LINE, "normals ( 0 )"),
         (NEWLINE_BEFORE_BLOCK, "\nnormals ( 0 )"),
         (NEWLINE_BEFORE_START, "normals\n( 0 )"),
-        (NEWLINE_AFTER_START, "normals (\n0 )"),
-        (NEWLINE_BEFORE_COUNT, "normals (\n0 )"),
-        (NEWLINE_AFTER_COUNT, "normals ( 0\n)"),
-        (ENABLE_ZERO_COUNT_NEWLINE, "normals ( 0\n)"),
-        (NEWLINE_BEFORE_CLOSING, "normals ( 0\n)"),
+        (NEWLINE_AFTER_START, "normals (\n\t0 )"),
+        (NEWLINE_AFTER_START_NO_INDENT, "normals (\n0 )"),
+        (NEWLINE_BEFORE_COUNT, "normals ( 0 )"),
+        (NEWLINE_AFTER_COUNT, "normals ( 0 )"),
+        (ENABLE_ZERO_COUNT_NEWLINE, "normals ( 0\n\t)"),
+        (NEWLINE_BEFORE_CLOSING, "normals ( 0 )"),
         (NEWLINE_AFTER_CLOSING, "normals ( 0 )"),
     ],
 )
@@ -130,18 +133,19 @@ def test_empty_count_block(block_format, expected_output):
 @pytest.mark.parametrize(
     ("block_format", "expected_output"),
     [
-        (DEFAULT_FORMAT, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
-        (MAX_ONE_ITEM_PER_LINE, "normals ( 3\n\tvector ( 0.0\n\t0.0\n\t1.0 )\n\tvector ( 0.0\n\t1.0\n\t0.0 )\n\tvector ( 1.0\n\t0.0\n\t0.0 )\n)"),
-        (MAX_TWO_ITEMS_PER_LINE, "normals ( 3\n\tvector ( 0.0 0.0\n\t1.0 )\n\tvector ( 0.0 1.0\n\t0.0 )\n\tvector ( 1.0 0.0\n\t0.0 )\n)"),
-        (MAX_TEN_ITEMS_PER_LINE, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
-        (NEWLINE_BEFORE_BLOCK, "\nnormals ( 3\n\tvector\n( 0.0 0.0 1.0 )\n\tvector\n( 0.0 1.0 0.0 )\n\tvector\n( 1.0 0.0 0.0 )\n)"),
-        (NEWLINE_BEFORE_START, "normals\n( 3\n\tvector\n( 0.0 0.0 1.0 )\n\tvector\n( 0.0 1.0 0.0 )\n\tvector\n( 1.0 0.0 0.0 )\n)"),
-        (NEWLINE_AFTER_START, "normals (\n3\n\tvector (\n0.0 0.0 1.0 )\n\tvector (\n0.0 1.0 0.0 )\n\tvector (\n1.0 0.0 0.0 )\n)"),
-        (NEWLINE_BEFORE_COUNT, "normals (\n3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
-        (NEWLINE_AFTER_COUNT, "normals ( 3 vector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
-        (ENABLE_ZERO_COUNT_NEWLINE, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
-        (NEWLINE_BEFORE_CLOSING, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 ) )"),
-        (NEWLINE_AFTER_CLOSING, "normals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n)"),
+        (DEFAULT_FORMAT, "normals ( 3 vector ( 0.0 0.0 1.0 ) vector ( 0.0 1.0 0.0 ) vector ( 1.0 0.0 0.0 ) )"),
+        (MAX_ONE_ITEM_PER_LINE, "normals ( 3 vector ( 0.0\n\t\t0.0\n\t\t1.0 )\n\tvector ( 0.0\n\t\t1.0\n\t\t0.0 )\n\tvector ( 1.0\n\t\t0.0\n\t\t0.0 ) )"),
+        (MAX_TWO_ITEMS_PER_LINE, "normals ( 3 vector ( 0.0 0.0\n\t\t1.0 )vector ( 0.0 1.0\n\t\t0.0 )\n\tvector ( 1.0 0.0\n\t\t0.0 ) )"),
+        (MAX_TEN_ITEMS_PER_LINE, "normals ( 3 vector ( 0.0 0.0 1.0 ) vector ( 0.0 1.0 0.0 ) vector ( 1.0 0.0 0.0 ) )"),
+        (NEWLINE_BEFORE_BLOCK, "\nnormals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 ) )"),
+        (NEWLINE_BEFORE_START, "normals\n( 3 vector\n\t( 0.0 0.0 1.0 ) vector\n\t( 0.0 1.0 0.0 ) vector\n\t( 1.0 0.0 0.0 ) )"),
+        (NEWLINE_AFTER_START, "normals (\n\t3 vector (\n\t\t0.0 0.0 1.0 ) vector (\n\t\t0.0 1.0 0.0 ) vector (\n\t\t1.0 0.0 0.0 ) )"),
+        (NEWLINE_AFTER_START_NO_INDENT, "normals (\n3 vector (\n0.0 0.0 1.0 ) vector (\n0.0 1.0 0.0 ) vector (\n1.0 0.0 0.0 ) )"),
+        (NEWLINE_BEFORE_COUNT, "normals (\n\t3 vector ( 0.0 0.0 1.0 ) vector ( 0.0 1.0 0.0 ) vector ( 1.0 0.0 0.0 ) )"),
+        (NEWLINE_AFTER_COUNT, "normals ( 3\n\tvector ( 0.0 0.0 1.0 ) vector ( 0.0 1.0 0.0 ) vector ( 1.0 0.0 0.0 ) )"),
+        (ENABLE_ZERO_COUNT_NEWLINE, "normals ( 3\n\tvector ( 0.0 0.0 1.0 ) vector ( 0.0 1.0 0.0 ) vector ( 1.0 0.0 0.0 ) )"),
+        (NEWLINE_BEFORE_CLOSING, "normals ( 3 vector ( 0.0 0.0 1.0\n\t) vector ( 0.0 1.0 0.0\n\t) vector ( 1.0 0.0 0.0\n\t)\n)"),
+        (NEWLINE_AFTER_CLOSING, "normals ( 3 vector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 )\n\t)"),
     ],
 )
 def test_list_item_block(block_format, expected_output):
