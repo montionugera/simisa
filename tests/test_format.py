@@ -135,7 +135,7 @@ def test_empty_count_block(block_format, expected_output):
     [
         (DEFAULT_FORMAT, "normals ( 3 vector ( 0.0 0.0 1.0 ) vector ( 0.0 1.0 0.0 ) vector ( 1.0 0.0 0.0 ) )"),
         (MAX_ONE_ITEM_PER_LINE, "normals ( 3 vector ( 0.0\n\t\t0.0\n\t\t1.0 )\n\tvector ( 0.0\n\t\t1.0\n\t\t0.0 )\n\tvector ( 1.0\n\t\t0.0\n\t\t0.0 ) )"),
-        (MAX_TWO_ITEMS_PER_LINE, "normals ( 3 vector ( 0.0 0.0\n\t\t1.0 )vector ( 0.0 1.0\n\t\t0.0 )\n\tvector ( 1.0 0.0\n\t\t0.0 ) )"),
+        (MAX_TWO_ITEMS_PER_LINE, "normals ( 3 vector ( 0.0 0.0\n\t\t1.0 ) vector ( 0.0 1.0\n\t\t0.0 )\n\tvector ( 1.0 0.0\n\t\t0.0 ) )"),
         (MAX_TEN_ITEMS_PER_LINE, "normals ( 3 vector ( 0.0 0.0 1.0 ) vector ( 0.0 1.0 0.0 ) vector ( 1.0 0.0 0.0 ) )"),
         (NEWLINE_BEFORE_BLOCK, "\nnormals ( 3\n\tvector ( 0.0 0.0 1.0 )\n\tvector ( 0.0 1.0 0.0 )\n\tvector ( 1.0 0.0 0.0 ) )"),
         (NEWLINE_BEFORE_START, "normals\n( 3 vector\n\t( 0.0 0.0 1.0 ) vector\n\t( 0.0 1.0 0.0 ) vector\n\t( 1.0 0.0 0.0 ) )"),

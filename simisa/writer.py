@@ -288,7 +288,7 @@ class TextBlockWriter(BlockWriter):
         self._items_total = 0
         self._closed = False
 
-    def _trim_trailing_whitespace(self, trim_chars=None): 
+    def _trim_trailing_whitespace(self, trim_chars=None):
         while self._buffer:
             if trim_chars is not None:
                 trimmed = self._buffer[-1].rstrip(trim_chars)
@@ -303,11 +303,14 @@ class TextBlockWriter(BlockWriter):
 
     def _write_indent(self):
         if not self.block_format.disable_inner_indent:
-            self._buffer.append(f"{self.indent_char * self.depth}")
+            indent = self.indent_char * self.depth
+            
+            if indent:
+                self._buffer.append(indent)
 
     def _write_newline(self):
         if self.parent is not None:
-            self.parent._trim_trailing_whitespace(trim_chars=' ')
+            self.parent._trim_trailing_whitespace(trim_chars=" ")
 
         self._trim_trailing_whitespace()
         self._buffer.append("\n")
@@ -327,12 +330,20 @@ class TextBlockWriter(BlockWriter):
         self._items_on_line += 1
         self._items_total += 1
 
+
     def _write_token(self, text: str):
         if not isinstance(text, str):
-            raise TypeError(f"Parameter 'text' must be str, but got {type(value).__name__}")
-        
+            raise TypeError(f"Parameter 'text' must be str, but got {type(text).__name__}")
+
+        self._trim_trailing_whitespace(trim_chars=" ")
+
+        if self._buffer:
+            last = self._buffer[-1]
+
+            if last and not last[-1].isspace():
+                self._buffer.append(" ")
+
         self._buffer.append(text)
-        self._buffer.append(" ")
         
     def begin_sub_block(
         self,
@@ -353,8 +364,8 @@ class TextBlockWriter(BlockWriter):
             if self._items_on_line >= self.block_format.max_items_per_line:
                 self._write_newline()
 
-        self._items_on_line = self._items_on_line + 1
-        self._items_total = self._items_total + 1
+        self._items_on_line += 1
+        self._items_total += 1
 
         sub_block = TextBlockWriter(stream=self.stream, parent=self, encoding=self.encoding)
         sub_block.block_format = block_format
@@ -381,27 +392,34 @@ class TextBlockWriter(BlockWriter):
     def end_sub_block(self):
         if not self._writing_block or self._closed:
             return
-
-        self.depth = self.depth - 1
         
+        self.depth -= 1
+
         if self.block_format.newline_before_closing:
             if self._items_total != 0 and not self.block_format.enable_zero_count_newline:
                 self._write_newline()
 
         self._write_token(")")
-        
+
         if self.block_format.newline_after_closing:
             self._write_newline()
 
         self._writing_block = False
         self._closed = True
 
-        block_text = "".join(self._buffer)
-        self._buffer = []
+        block_text = "".join(self._buffer).rstrip(" ")
 
         if self.parent is not None:
+            self.parent._trim_trailing_whitespace(trim_chars=" ")
+
+            if self.parent._buffer and block_text:
+                last = self.parent._buffer[-1]
+
+                if last and not last[-1].isspace() and not block_text[0].isspace():
+                    self.parent._buffer.append(" ")
+
             self.parent._buffer.append(block_text)
-        
+
         elif self.stream is not None:
             if isinstance(self.stream, io.TextIOBase):
                 self.stream.write(block_text)
@@ -409,6 +427,8 @@ class TextBlockWriter(BlockWriter):
                 self.stream.write(block_text.encode(self.encoding))
         else:
             raise BlockWriterError("No output stream set for root writer, and no parent-writer.")
+
+        self._buffer = []
 
     def write_count(self, value: int):
         if not isinstance(value, int):
