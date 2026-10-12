@@ -71,7 +71,7 @@ def test_shape_default_format(global_storage, tmp_path):
     
     shape.dump(original, str(output_path), compressed=False)
     
-    assert True
+    assert False
 
 
 @pytest.mark.parametrize(

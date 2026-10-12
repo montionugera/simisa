@@ -92,30 +92,124 @@ def dumps(shape: Shape) -> str:
 
 
 DEFAULT_LIST = BlockFormat(
-   max_items_per_line=1,
-   newline_after_count=True,
-   newline_before_closing=True,
-   newline_after_closing=True
+    max_items_per_line=1,
+    newline_before_block=True,
+    newline_after_count=True,
+    newline_before_closing=True,
+    newline_after_closing=True
 )
 
 SHAPE_BLOCK = BlockFormat(
-   max_items_per_line=1,
-   newline_after_start=True,
-   newline_after_closing=True
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
 )
 
 VOL_SPHERE_BLOCK = BlockFormat(
-   newline_after_start=True,
-   newline_before_closing=True,
-   newline_after_closing=True
+    newline_after_start=True,
+    newline_before_closing=True,
+    newline_after_closing=True
 )
 
 PRIM_STATE_BLOCK = BlockFormat(
-   newline_before_closing=True
+    newline_before_closing=True
 )
 
 TEX_IDXS_BLOCK = BlockFormat(
-   newline_before_block=True
+    newline_before_block=True
+)
+
+LIGHT_CFG_BLOCK = BlockFormat(
+    newline_before_closing=True
+)
+
+UV_OPS_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_before_block=True,
+    newline_after_count=True,
+    newline_before_closing=True
+)
+
+LOD_CONTROL_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+DIST_LEVEL_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+DLEVEL_HEADER_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+SUB_OBJECT_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+SUBOBJ_HEADER_BLOCK = BlockFormat(
+    newline_before_closing=True
+)
+
+GEOMETRY_INFO_BLOCK = BlockFormat(
+    newline_before_block=True,
+    newline_before_closing=True,
+    newline_after_closing=True
+)
+
+GEOMETRY_NODE_BLOCK = BlockFormat(
+    newline_before_closing=True
+)
+
+CULLABLE_PRIMS_BLOCK = BlockFormat(
+    newline_before_block=True
+)
+
+SUBOBJ_SHADERS_BLOCK = BlockFormat(
+    newline_after_closing=True
+)
+
+VERTEX_BLOCK = BlockFormat(
+    newline_before_closing=True,
+    newline_after_closing=True
+)
+
+VERTEX_UVS_BLOCK = BlockFormat(
+    newline_before_block=True
+)
+
+INDEXED_TRILIST_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+VERTEX_IDXS_BLOCK = BlockFormat(
+    max_items_per_line=197
+)
+
+NORMAL_IDXS_BLOCK = BlockFormat(
+    max_items_per_line=276
+)
+
+FLAGS_BLOCK = BlockFormat(
+    max_items_per_line=100
+)
+
+ANIMATION_BLOCK = BlockFormat(
+    newline_before_closing=True
+)
+
+ANIM_NODES_BLOCK = BlockFormat(
+    newline_before_block=True,
+    newline_before_closing=True
 )
 
 
@@ -499,7 +593,7 @@ def write_light_model_cfgs(writer: BlockWriter, light_model_cfgs: List[LightMode
         light_model_cfgs_block.write_count(len(light_model_cfgs))
 
         for light_model_cfg in light_model_cfgs:
-            with light_model_cfgs_block.sub_block(TokenID.light_model_cfg) as light_model_cfg_block:
+            with light_model_cfgs_block.sub_block(TokenID.light_model_cfg, block_format=LIGHT_CFG_BLOCK) as light_model_cfg_block:
                 light_model_cfg_block.write_flags(light_model_cfg.flags)
                 write_uv_ops(light_model_cfg_block, light_model_cfg.uv_ops)
 
@@ -518,7 +612,7 @@ def write_uv_ops(writer: BlockWriter, uv_ops: List[UVOp]) -> None:
         if not isinstance(uv_op, UVOp):
             raise TypeError(f"LightModelCfg property 'uv_ops' must contain UVOp objects, but got {type(uv_op).__name__}")
 
-    with writer.sub_block(TokenID.uv_ops) as uv_ops_block:
+    with writer.sub_block(TokenID.uv_ops, block_format=UV_OPS_BLOCK) as uv_ops_block:
         uv_ops_block.write_count(len(uv_ops))
 
         for uv_op in uv_ops:
@@ -647,7 +741,7 @@ def write_lod_controls(writer: BlockWriter, lod_controls: List[LodControl]) -> N
         lod_control_block.write_count(len(lod_controls))
 
         for lod_control in lod_controls:
-            with lod_control_block.sub_block(TokenID.lod_control) as lod_control_block:
+            with lod_control_block.sub_block(TokenID.lod_control, block_format=LOD_CONTROL_BLOCK) as lod_control_block:
                 with lod_control_block.sub_block(TokenID.distance_levels_header) as dist_level_header_block:
                     dist_level_header_block.write_int(lod_control.distance_levels_header)
                 
@@ -668,11 +762,11 @@ def write_distance_levels(writer: BlockWriter, distance_levels: List[DistanceLev
         if not isinstance(distance_level, DistanceLevel):
             raise TypeError(f"LodControl property 'distance_levels' must contain DistanceLevel objects, but got {type(distance_level).__name__}")
 
-    with writer.sub_block(TokenID.distance_levels) as distance_levels_block:
+    with writer.sub_block(TokenID.distance_levels, block_format=DEFAULT_LIST) as distance_levels_block:
         distance_levels_block.write_count(len(distance_levels))
 
         for distance_level in distance_levels:
-            with distance_levels_block.sub_block(TokenID.distance_level) as distance_level_block:
+            with distance_levels_block.sub_block(TokenID.distance_level, block_format=DIST_LEVEL_BLOCK) as distance_level_block:
                 write_distance_level_header(distance_level_block, distance_level.distance_level_header)
                 write_sub_objects(distance_level_block, distance_level.sub_objects)
 
@@ -690,9 +784,9 @@ def write_distance_level_header(writer: BlockWriter, header: DistanceLevelHeader
     if not isinstance(header, DistanceLevelHeader):
         raise TypeError(f"DistanceLevel property 'distance_level_header' must be DistanceLevelHeader, but got {type(header).__name__}")
 
-    with writer.sub_block(TokenID.distance_level_header) as dist_level_header_block:
+    with writer.sub_block(TokenID.distance_level_header, block_format=DLEVEL_HEADER_BLOCK) as dist_level_header_block:
         with dist_level_header_block.sub_block(TokenID.dlevel_selection) as dlevel_selection_block:
-            dlevel_selection_block.write_float(header.dlevel_selection)
+            dlevel_selection_block.write_int(int(header.dlevel_selection))
         
         with dist_level_header_block.sub_block(TokenID.hierarchy) as hierarchy_block:
             hierarchy_block.write_count(len(header.hierarchy))
@@ -715,11 +809,11 @@ def write_sub_objects(writer: BlockWriter, sub_objects: List[SubObject]) -> None
         if not isinstance(sub_object, SubObject):
             raise TypeError(f"DistanceLevel property 'sub_objects' must contain SubObject objects, but got {type(sub_object).__name__}")
 
-    with writer.sub_block(TokenID.sub_objects) as sub_objects_block:
+    with writer.sub_block(TokenID.sub_objects, block_format=DEFAULT_LIST) as sub_objects_block:
         sub_objects_block.write_count(len(sub_objects))
 
         for sub_object in sub_objects:
-            with sub_objects_block.sub_block(TokenID.sub_object) as sub_object_block:
+            with sub_objects_block.sub_block(TokenID.sub_object, block_format=SUB_OBJECT_BLOCK) as sub_object_block:
                 write_sub_object_header(sub_object_block, sub_object.sub_object_header)
                 write_vertices(sub_object_block, sub_object.vertices)
                 write_vertex_sets(sub_object_block, sub_object.vertex_sets)
@@ -739,7 +833,7 @@ def write_sub_object_header(writer: BlockWriter, header: SubObjectHeader) -> Non
     if not isinstance(header, SubObjectHeader):
         raise TypeError(f"SubObject property 'sub_object_header' must be SubObjectHeader, but got {type(header).__name__}")
 
-    with writer.sub_block(TokenID.sub_object_header) as sub_object_header_block:
+    with writer.sub_block(TokenID.sub_object_header, block_format=SUBOBJ_HEADER_BLOCK) as sub_object_header_block:
         sub_object_header_block.write_flags(header.flags)
         sub_object_header_block.write_int(header.sort_vector_index)
         sub_object_header_block.write_int(header.volume_index)
@@ -764,7 +858,7 @@ def write_geometry_info(writer: BlockWriter, geometry_info: GeometryInfo) -> Non
     if not isinstance(geometry_info, GeometryInfo):
         raise TypeError(f"SubObjectHeader property 'geometry_info' must be GeometryInfo, but got {type(geometry_info).__name__}")
 
-    with writer.sub_block(TokenID.geometry_info) as geometry_info_block:
+    with writer.sub_block(TokenID.geometry_info, block_format=GEOMETRY_INFO_BLOCK) as geometry_info_block:
         geometry_info_block.write_int(geometry_info.face_normals)
         geometry_info_block.write_int(geometry_info.tx_light_cmds)
         geometry_info_block.write_int(geometry_info.node_x_tx_light_cmds)
@@ -793,11 +887,11 @@ def write_geometry_nodes(writer: BlockWriter, geometry_nodes: List[GeometryNode]
         if not isinstance(geometry_node, GeometryNode):
             raise TypeError(f"GeometryInfo property 'geometry_nodes' must contain GeometryNode objects, but got {type(geometry_node).__name__}")
 
-    with writer.sub_block(TokenID.geometry_nodes) as geometry_nodes_block:
+    with writer.sub_block(TokenID.geometry_nodes, block_format=DEFAULT_LIST) as geometry_nodes_block:
         geometry_nodes_block.write_count(len(geometry_nodes))
 
         for geometry_node in geometry_nodes:
-            with geometry_nodes_block.sub_block(TokenID.geometry_node) as geometry_node_block:
+            with geometry_nodes_block.sub_block(TokenID.geometry_node, block_format=GEOMETRY_NODE_BLOCK) as geometry_node_block:
                 geometry_node_block.write_int(geometry_node.tx_light_cmds)
                 geometry_node_block.write_int(geometry_node.node_x_tx_light_cmds)
                 geometry_node_block.write_int(geometry_node.trilists)
@@ -819,7 +913,7 @@ def write_cullable_prims(writer: BlockWriter, cullable_prims: CullablePrims) -> 
     if not isinstance(cullable_prims, CullablePrims):
         raise TypeError(f"GeometryNode property 'cullable_prims' must be CullablePrims, but got {type(cullable_prims).__name__}")
 
-    with writer.sub_block(TokenID.cullable_prims) as cullable_prims_block:
+    with writer.sub_block(TokenID.cullable_prims, block_format=CULLABLE_PRIMS_BLOCK) as cullable_prims_block:
         cullable_prims_block.write_int(cullable_prims.num_prims)
         cullable_prims_block.write_int(cullable_prims.num_flat_sections)
         cullable_prims_block.write_int(cullable_prims.num_prim_indices)
@@ -860,7 +954,7 @@ def write_subobject_shaders(writer: BlockWriter, shaders: List[int]) -> None:
         if not isinstance(shader, int):
             raise TypeError(f"SubObjectHeader property 'subobject_shaders' must contain int values, but got {type(shader).__name__}")
 
-    with writer.sub_block(TokenID.subobject_shaders) as subobject_shaders_block:
+    with writer.sub_block(TokenID.subobject_shaders, block_format=SUBOBJ_SHADERS_BLOCK) as subobject_shaders_block:
         subobject_shaders_block.write_count(len(shaders))
 
         for shader in shaders:
@@ -902,11 +996,11 @@ def write_vertices(writer: BlockWriter, vertices: List[Vertex]) -> None:
         if not isinstance(vertex, Vertex):
             raise TypeError(f"SubObject property 'vertices' must contain Vertex objects, but got {type(vertex).__name__}")
 
-    with writer.sub_block(TokenID.vertices) as vertices_block:
+    with writer.sub_block(TokenID.vertices, block_format=DEFAULT_LIST) as vertices_block:
         vertices_block.write_count(len(vertices))
 
         for vertex in vertices:
-            with vertices_block.sub_block(TokenID.vertex) as vertex_block:
+            with vertices_block.sub_block(TokenID.vertex, block_format=VERTEX_BLOCK) as vertex_block:
                 vertex_block.write_flags(vertex.flags)
                 vertex_block.write_int(vertex.point_index)
                 vertex_block.write_int(vertex.normal_index)
@@ -929,7 +1023,7 @@ def write_vertex_uvs(writer: BlockWriter, vertex_uvs: List[int]) -> None:
         if not isinstance(vertex_uv, int):
             raise TypeError(f"Vertex property 'vertex_uvs' must contain int values, but got {type(vertex_uv).__name__}")
 
-    with writer.sub_block(TokenID.vertex_uvs) as vertex_uvs_block:
+    with writer.sub_block(TokenID.vertex_uvs, block_format=VERTEX_UVS_BLOCK) as vertex_uvs_block:
         vertex_uvs_block.write_count(len(vertex_uvs))
 
         for vertex_uv in vertex_uvs:
@@ -950,7 +1044,7 @@ def write_vertex_sets(writer: BlockWriter, vertex_sets: List[VertexSet]) -> None
         if not isinstance(vertex_set, VertexSet):
             raise TypeError(f"SubObject property 'vertex_sets' must contain VertexSet objects, but got {type(vertex_set).__name__}")
 
-    with writer.sub_block(TokenID.vertex_sets) as vertex_sets_block:
+    with writer.sub_block(TokenID.vertex_sets, block_format=DEFAULT_LIST) as vertex_sets_block:
         vertex_sets_block.write_count(len(vertex_sets))
 
         for vertex_set in vertex_sets:
@@ -984,7 +1078,7 @@ def write_primitives(writer: BlockWriter, primitives: List[Primitive]) -> None:
         
         primitives_list_count += 1
 
-    with writer.sub_block(TokenID.primitives) as primitives_block:
+    with writer.sub_block(TokenID.primitives, block_format=DEFAULT_LIST) as primitives_block:
         primitives_block.write_count(primitives_list_count)
 
         last_prim_state_index = -1
@@ -995,7 +1089,7 @@ def write_primitives(writer: BlockWriter, primitives: List[Primitive]) -> None:
                     prim_state_idx_block.write_int(primitive.prim_state_index)
                 last_prim_state_index = primitive.prim_state_index
             
-            with primitives_block.sub_block(TokenID.indexed_trilist) as indexed_trilist_block:
+            with primitives_block.sub_block(TokenID.indexed_trilist, block_format=INDEXED_TRILIST_BLOCK) as indexed_trilist_block:
                 write_vertex_idxs(indexed_trilist_block, primitive.indexed_trilist.vertex_idxs)
                 write_normal_idxs(indexed_trilist_block, primitive.indexed_trilist.normal_idxs)
                 write_flags(indexed_trilist_block, primitive.indexed_trilist.flags)
@@ -1015,7 +1109,7 @@ def write_vertex_idxs(writer: BlockWriter, vertex_idxs: List[VertexIdx]) -> None
         if not isinstance(vertex_idx, VertexIdx):
             raise TypeError(f"IndexedTrilist property 'vertex_idxs' must contain VertexIdx objects, but got {type(vertex_idx).__name__}")
 
-    with writer.sub_block(TokenID.vertex_idxs) as vertex_idxs_block:
+    with writer.sub_block(TokenID.vertex_idxs, block_format=VERTEX_IDXS_BLOCK) as vertex_idxs_block:
         vertex_idxs_block.write_count(len(vertex_idxs) * 3)
 
         for vertex_idx in vertex_idxs:
@@ -1038,7 +1132,7 @@ def write_normal_idxs(writer: BlockWriter, normal_idxs: List[NormalIdx]) -> None
         if not isinstance(normal_idx, NormalIdx):
             raise TypeError(f"IndexedTrilist property 'normal_idxs' must contain NormalIdx objects, but got {type(normal_idx).__name__}")
 
-    with writer.sub_block(TokenID.normal_idxs) as normal_idxs_block:
+    with writer.sub_block(TokenID.normal_idxs, block_format=NORMAL_IDXS_BLOCK) as normal_idxs_block:
         normal_idxs_block.write_count(len(normal_idxs))
 
         for normal_idx in normal_idxs:
@@ -1060,7 +1154,7 @@ def write_flags(writer: BlockWriter, flags: List[int]) -> None:
         if not isinstance(flag, int):
             raise TypeError(f"IndexedTrilist property 'flags' must contain int values, but got {type(flag).__name__}")
 
-    with writer.sub_block(TokenID.flags) as flags_block:
+    with writer.sub_block(TokenID.flags, block_format=FLAGS_BLOCK) as flags_block:
         flags_block.write_count(len(flags))
 
         for flag in flags:
@@ -1085,7 +1179,7 @@ def write_animations(writer: BlockWriter, animations: List[Animation]) -> None:
         animations_block.write_count(len(animations))
 
         for animation in animations:
-            with animations_block.sub_block(TokenID.animation) as animation_block:
+            with animations_block.sub_block(TokenID.animation, block_format=ANIMATION_BLOCK) as animation_block:
                 animation_block.write_int(animation.frame_count)
                 animation_block.write_int(animation.frame_rate)
                 write_anim_nodes(animation_block, animation.animation_nodes)
@@ -1105,11 +1199,11 @@ def write_anim_nodes(writer: BlockWriter, anim_nodes: List[AnimationNode]) -> No
         if not isinstance(anim_node, AnimationNode):
             raise TypeError(f"Animation property 'animation_nodes' must contain AnimationNode objects, but got {type(anim_node).__name__}")
 
-    with writer.sub_block(TokenID.anim_nodes) as anim_nodes_block:
+    with writer.sub_block(TokenID.anim_nodes, block_format=ANIM_NODES_BLOCK) as anim_nodes_block:
         anim_nodes_block.write_count(len(anim_nodes))
 
         for anim_node in anim_nodes:
-            with anim_nodes_block.sub_block(TokenID.anim_node, block_label=anim_node.name) as anim_node_block:
+            with anim_nodes_block.sub_block(TokenID.anim_node, block_label=anim_node.name, block_format=DEFAULT_LIST) as anim_node_block:
                 write_controllers(anim_node_block, anim_node.controllers)
 
 
@@ -1127,20 +1221,20 @@ def write_controllers(writer: BlockWriter, controllers: List[Controller]) -> Non
         if not isinstance(controller, Controller):
             raise TypeError(f"AnimationNode property 'controllers' must contain Controller objects, but got {type(controller).__name__}")
 
-    with writer.sub_block(TokenID.controllers) as controllers_block:
+    with writer.sub_block(TokenID.controllers, block_format=DEFAULT_LIST) as controllers_block:
         controllers_block.write_count(len(controllers))
 
         for controller in controllers:
             if isinstance(controller, TCBRot):
-                with controllers_block.sub_block(TokenID.tcb_rot) as tcb_rot_block:
+                with controllers_block.sub_block(TokenID.tcb_rot, block_format=DEFAULT_LIST) as tcb_rot_block:
                     write_keypositions(tcb_rot_block, controller.keyframes)
             
             elif isinstance(controller, LinearPos):
-                with controllers_block.sub_block(TokenID.linear_pos) as linear_pos_block:
+                with controllers_block.sub_block(TokenID.linear_pos, block_format=DEFAULT_LIST) as linear_pos_block:
                     write_keypositions(linear_pos_block, controller.keyframes)
             
             elif isinstance(controller, TCBPos):
-                with controllers_block.sub_block(TokenID.tcb_pos) as tcb_pos_block:
+                with controllers_block.sub_block(TokenID.tcb_pos, block_format=DEFAULT_LIST) as tcb_pos_block:
                     write_keypositions(tcb_pos_block, controller.keyframes)
 
 

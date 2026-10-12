@@ -304,7 +304,7 @@ class TextBlockWriter(BlockWriter):
     def _write_indent(self):
         if not self.block_format.disable_inner_indent:
             indent = self.indent_char * self.depth
-            
+
             if indent:
                 self._buffer.append(indent)
 
@@ -329,7 +329,6 @@ class TextBlockWriter(BlockWriter):
         self._write_token(text)
         self._items_on_line += 1
         self._items_total += 1
-
 
     def _write_token(self, text: str):
         if not isinstance(text, str):
