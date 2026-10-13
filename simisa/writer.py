@@ -710,6 +710,7 @@ class BinaryBlockWriter(BlockWriter):
             return
         
         encoded = value.encode("utf-16-le")
+        
         self._write_bytes(self._UINT16.pack(len(value)))
         self._write_bytes(encoded)
 
