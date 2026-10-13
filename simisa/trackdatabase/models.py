@@ -306,16 +306,16 @@ class UiD:
     def __repr__(self):
         return (
             f"UiD(tile_x={self.tile_x}, "
-            f"tile_z={self.tile_z}), "
-            f"x={self.x}), "
-            f"y={self.y}), "
-            f"z={self.z}), "
-            f"ax={self.ax}), "
-            f"ay={self.ay}), "
-            f"az={self.az}), "
-            f"world_tile_x={self.world_tile_x}), "
-            f"world_tile_z={self.world_tile_z}), "
-            f"world_id={self.world_id}))"
+            f"tile_z={self.tile_z}, "
+            f"x={self.x}, "
+            f"y={self.y}, "
+            f"z={self.z}, "
+            f"ax={self.ax}, "
+            f"ay={self.ay}, "
+            f"az={self.az}, "
+            f"world_tile_x={self.world_tile_x}, "
+            f"world_tile_z={self.world_tile_z}, "
+            f"world_id={self.world_id})"
         )
 
 @dataclass

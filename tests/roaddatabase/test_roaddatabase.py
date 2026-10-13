@@ -19,85 +19,40 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import math
 import pytest
-from simisa import roaddatabase
+from simisa import roaddatabase, SimisaSubheaderError
 
 
-# def test_tracksections_load(global_storage):
-#     s = tracksections.load(global_storage["tracksectionsfile_path"])
-#     assert False
+def test_rdb_load(global_storage):
+    rdb = roaddatabase.load(global_storage["roaddatabase_path"])
+
+    assert rdb.serial == 0
+    assert len(rdb.track_nodes) == 297
+    assert len(rdb.tr_item_table) == 0
+    assert rdb.track_nodes[23].index == 24
+    assert rdb.track_nodes[23].uid.tile_x == -5636
+    assert rdb.track_nodes[23].uid.tile_z == 15116
+    assert rdb.track_nodes[23].uid.x == -455.34
+    assert rdb.track_nodes[23].uid.y == 1.650479
+    assert rdb.track_nodes[23].uid.z == -929.7409
+    assert rdb.track_nodes[23].tr_end_node == True
+    assert rdb.track_nodes[23].tr_vector_node is None
+    assert len(rdb.track_nodes[23].tr_pins) == 1
+    assert rdb.track_nodes[23].tr_pins[0].link == 23
+    assert rdb.track_nodes[23].tr_pins[0].direction == 1
 
 
-# def test_tracksections_loads_uncompressed(global_storage):
-#     tracksectionsfile_path = global_storage["tracksectionsfile_path"]
-#     with open(tracksectionsfile_path, 'r', encoding='utf-16-le') as f:
-#         tracksections_string = f.read()
-#         s = tracksections.loads(tracksections_string)
-#     assert False
+def test_rdb_load_shape_raises(global_storage):
+    shapefile_path = global_storage["shapefile_path"]
+
+    with pytest.raises(SimisaSubheaderError):
+        roaddatabase.load(shapefile_path)
 
 
-# def test_roaddatabase_load(global_storage):
-#     t = roaddatabase.load(global_storage["roaddatabase_path"])
-#     print(t)
-#     assert False
+def test_rdb_loads_bytes_raises(global_storage):
+    roaddatabase_path = global_storage["roaddatabase_path"]
 
-# def test_roaddatabase_load_empty(global_storage):
-#     t = roaddatabase.load(global_storage["roaddatabase_empty_path"])
-#     print(t)
-#     assert False
-
-
-# def test_tracksections_load_compare(global_storage):
-#     expected = tracksections.load(global_storage["tracksectionsfile_path"])
-#     actual = tracksections.load(global_storage["tracksectionsfile_compressed_path"])
-
-#     stack = [(expected, actual, "root")]
-
-#     while stack:
-#         left, right, path = stack.pop()
-
-#         if isinstance(left, float) or isinstance(right, float):
-#             if not math.isclose(float(left), float(right), rel_tol=1e-5, abs_tol=1e-5):
-#                 print(f"Float mismatch at {path}: {left} != {right}")
-#                 assert False
-#             continue
-
-#         if isinstance(left, (int, str, bool)) or left is None:
-#             if left != right:
-#                 print(f"Value mismatch at {path}: {left} != {right}")
-#                 assert False
-#             continue
-
-#         if isinstance(left, (list, tuple)):
-#             if len(left) != len(right):
-#                 print(f"Length mismatch at {path}: {len(left)} != {len(right)}")
-#                 assert False
-#             for i, (l_item, r_item) in enumerate(zip(left, right)):
-#                 stack.append((l_item, r_item, f"{path}[{i}]"))
-#             continue
-
-#         if isinstance(left, dict):
-#             if left.keys() != right.keys():
-#                 print(f"Key mismatch at {path}")
-#                 assert False
-#             for key in left:
-#                 stack.append((left[key], right[key], f"{path}.{key}"))
-#             continue
-
-#         if hasattr(left, "__dict__"):
-#             stack.append((left.__dict__, right.__dict__, path))
-#             continue
-
-#         if left != right:
-#             print(f"Mismatch at {path}: {left} != {right}")
-#             assert False
-
-#     assert True
-
-
-# def test_tracksections_loads_compressed(global_storage):
-#     tracksectionsfile_compressed_path = global_storage["tracksectionsfile_compressed_path"]
-#     with open(tracksectionsfile_compressed_path, 'rb') as f:
-#         tracksections_bytes = f.read()
+    with open(roaddatabase_path, 'rb') as f:
+        roaddatabase_bytes = f.read()
         
-#         with pytest.raises(TypeError):
-#             tracksections.loads(tracksections_bytes)
+        with pytest.raises(TypeError):
+            roaddatabase.loads(roaddatabase_bytes)

@@ -122,7 +122,7 @@ class SectionIdx:
             f"y={self.y}, "
             f"z={self.z}, "
             f"a={self.a}, "
-            f"track_sections (len={len(self.a)}))"
+            f"track_sections (len={len(self.track_sections)}))"
         )
 
 @dataclass
@@ -183,14 +183,17 @@ class TrackShape:
     manual_junction_shape: bool = False
 
     def __repr__(self):
+        section_count = len(self.section_idxs) if self.section_idxs is not None else 0
+        xover_count = len(self.xover_pts) if self.xover_pts is not None else 0
+
         return (
             f"TrackShape(shape_index={self.shape_index}, "
             f"file_name={self.file_name}, "
             f"num_paths={self.num_paths}, "
             f"main_route={self.main_route}, "
             f"clearance_distance={self.clearance_distance}, "
-            f"section_idxs (len={len(self.section_idxs)}), "
-            f"xover_pts (len={len(self.xover_pts)}), "
+            f"section_idxs (len={section_count}), "
+            f"xover_pts (len={xover_count}), "
             f"tunnel_shape={self.tunnel_shape}, "
             f"road_shape={self.road_shape}, "
             f"crossover_shape={self.crossover_shape}, "
