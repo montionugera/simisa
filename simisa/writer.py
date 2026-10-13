@@ -153,9 +153,9 @@ class BlockWriter(ABC):
 
         if is_binary:
             token_offset = 300 if filetype == "w" else 0
-            return BinaryFileWriter(stream, filepath, token_offset)
+            return BinaryFileWriter(stream, filepath, token_offset, is_compressed)
 
-        return TextFileWriter(stream, filepath, encoding)
+        return TextFileWriter(stream, filepath, encoding, is_compressed)
     
     @staticmethod
     def to_string(
@@ -191,7 +191,7 @@ class BlockWriter(ABC):
 
         stream = io.StringIO()
 
-        writer = TextFileWriter(stream, filepath="<string>", encoding="utf-8")
+        writer = TextFileWriter(stream, filepath="<string>", encoding="utf-8", is_compressed=False)
 
         header = "SIMISA@@@@@@@@@@"
         subheader = f"JINX0{filetype}{fileversion}t______\r\n"
@@ -287,6 +287,7 @@ class TextBlockWriter(BlockWriter):
         self._items_on_line = 0
         self._items_total = 0
         self._lines_written = 0
+        self._written_bytes = 0
         self._closed = False
 
     def _trim_trailing_whitespace(self, trim_chars=None):
@@ -435,10 +436,15 @@ class TextBlockWriter(BlockWriter):
             self.parent._buffer.append(block_text)
 
         elif self.stream is not None:
+            encoded_text = block_text.encode(self.encoding)
+
             if isinstance(self.stream, io.TextIOBase):
                 self.stream.write(block_text)
             else:
-                self.stream.write(block_text.encode(self.encoding))
+                self.stream.write(encoded_text)
+            
+            self._written_bytes += len(encoded_text)
+        
         else:
             raise BlockWriterError("No output stream set for root writer, and no parent-writer.")
 
@@ -524,11 +530,15 @@ class TextBlockWriter(BlockWriter):
             content = "".join(self._buffer)
             self._buffer = []
 
+            encoded_text = content.encode(self.encoding)
+
             if isinstance(self.stream, io.TextIOBase):
                 self.stream.write(content)
             else:
-                self.stream.write(content.encode(self.encoding))
-                
+                self.stream.write(encoded_text)
+            
+            self._written_bytes += len(encoded_text)
+
             self.stream.flush()
 
     def close(self):
@@ -545,11 +555,17 @@ class TextFileWriter(TextBlockWriter):
         self,
         stream: io.TextIOBase | io.StringIO,
         filepath: str,
-        encoding="utf-8"
+        encoding="utf-8",
+        is_compressed: bool = False
     ):
-        super().__init__(stream=stream, parent=None, encoding=encoding)
+        super().__init__(
+            stream=stream,
+            parent=None,
+            encoding=encoding
+        )
         self.stream = stream
         self.filepath = filepath
+        self.is_compressed = is_compressed
         self.is_closed = False
 
     def flush(self):
@@ -557,16 +573,27 @@ class TextFileWriter(TextBlockWriter):
         self.is_closed = self._closed
 
     def close(self):
+        if self.is_closed:
+            return
+
         super().close()
-        
+
         if self.stream is not None and not self.stream.closed:
-            # TODO patch size in header if compressed
-            # with open(filepath, "r+b") as f:
-            #     f.seek(8)  # after "SIMISA@F"
-            #     f.write(writer._simisa_size.to_bytes(4, "little"))
             self.stream.close()
-        
-        self.is_closed = self._closed
+
+        self.is_closed = True
+
+        if self.is_compressed:
+            if self.encoding in ("utf-16-le", "UTF-16-LE"):
+                header_size = 64 + 2
+            else:
+                header_size = 32
+            
+            uncompressed_size = header_size + self._written_bytes
+
+            with open(self.filepath, "r+b") as f:
+                f.seek(8) # After SIMISA@F
+                f.write(uncompressed_size.to_bytes(4, "little"))
 
 
 class BinaryBlockWriter(BlockWriter):
@@ -590,7 +617,6 @@ class BinaryBlockWriter(BlockWriter):
 
     def _write_bytes(self, data: bytes) -> None:
         self._buffer.write(data)
-        self._written_bytes += len(data)
 
     def begin_sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format=None):
         sub_block = BinaryBlockWriter()
@@ -623,8 +649,6 @@ class BinaryBlockWriter(BlockWriter):
 
         header_bytes = self._BLOCK_HEADER.pack(raw_id, self.flags, size)
         block_bytes = header_bytes + label_bytes + payload
-
-        self._written_bytes += len(block_bytes)
 
         if self.parent is not None:
             self.parent._buffer.write(block_bytes)
@@ -691,11 +715,18 @@ class BinaryBlockWriter(BlockWriter):
 
 class BinaryFileWriter(BinaryBlockWriter):
 
-    def __init__(self, stream: BinaryIO, filename: str, token_offset=0):
+    def __init__(
+        self,
+        stream: BinaryIO,
+        filepath: str,
+        token_offset: int = 0,
+        is_compressed: bool = False
+    ):
         super().__init__()
-        self.filename = filename
         self.stream = stream
+        self.filepath = filepath
         self.token_offset = token_offset
+        self.is_compressed = is_compressed
         self.is_closed = False
 
     def _write(self, data: bytes) -> None:
@@ -703,7 +734,6 @@ class BinaryFileWriter(BinaryBlockWriter):
             raise BlockWriterError("No output stream set")
         
         self.stream.write(data)
-        self._written_bytes += len(data)
 
     def flush(self):
         if not self.is_closed and self.stream:
@@ -713,11 +743,19 @@ class BinaryFileWriter(BinaryBlockWriter):
         if self.is_closed or self.stream is None:
             return
 
-        if self._buffer:
-            # TODO patch size in header if compressed
-            # with open(filepath, "r+b") as f:
-            #     f.seek(8)  # after "SIMISA@F"
-            #     f.write(writer._simisa_size.to_bytes(4, "little"))
-            self.stream.write(self._buffer.getvalue())
+        buffered_data = self._buffer.getvalue()
 
+        if buffered_data:
+            self.stream.write(buffered_data)
+
+        self.stream.flush()
         self.stream.close()
+        self.is_closed = True
+
+        if self.is_compressed:
+            header_size = 32
+            uncompressed_size = header_size + len(buffered_data)
+
+            with open(self.filepath, "r+b") as f:
+                f.seek(8) # After SIMISA@F
+                f.write(uncompressed_size.to_bytes(4, "little"))

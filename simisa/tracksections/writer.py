@@ -25,6 +25,16 @@ from .models import *
 
 
 def write_local_tracksections(writer: BlockWriter, tracksections: TrackSections) -> None:
+    """
+    Write local track sections to a BlockWriter.
+
+    Writes the `TrackSection` sub-blocks and their child blocks.
+
+    Args:
+        writer (BlockWriter): Writer to write the local track sections to.
+        tracksections (TrackSections): Track sections object containing the
+            maximum section index and track section objects.
+    """
     if not isinstance(tracksections, TrackSections):
         raise TypeError(f"DynTrackObj property 'track_sections' must be TrackSections, but got {type(tracksections).__name__}")
 

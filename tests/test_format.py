@@ -69,25 +69,25 @@ def test_shape_default_format(global_storage, tmp_path):
     original = shape.load(global_storage["shapefile_path"])
     output_path = "./tests/data/default_format.s"
     
-    shape.dump(original, str(output_path), compressed=False)
+    shape.dump(original, str(output_path), compressed=True)
     
     assert False
 
-def test_world_default_format(global_storage, tmp_path):
-    original = world.load(global_storage["worldfile2_path"])
-    output_path = "./tests/data/default_format.w"
+# def test_world_default_format(global_storage, tmp_path):
+#     original = world.load(global_storage["worldfile2_path"])
+#     output_path = "./tests/data/default_format.w"
     
-    world.dump(original, str(output_path), compressed=False)
+#     world.dump(original, str(output_path), compressed=True)
     
-    assert False
+#     assert False
 
-def test_terrain_default_format(global_storage, tmp_path):
-    original = terrain.load(global_storage["terrainfile_compressed_path"])
-    output_path = "./tests/data/default_format.t"
+# def test_terrain_default_format(global_storage, tmp_path):
+#     original = terrain.load(global_storage["terrainfile_compressed_path"])
+#     output_path = "./tests/data/default_format.t"
     
-    terrain.dump(original, str(output_path), compressed=False)
+#     terrain.dump(original, str(output_path), compressed=True)
     
-    assert False
+#     assert False
 
 @pytest.mark.parametrize(
     ("block_format", "expected_output"),
