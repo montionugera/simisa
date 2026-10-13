@@ -188,26 +188,24 @@ VERTEX_UVS_BLOCK = BlockFormat(
 
 INDEXED_TRILIST_BLOCK = BlockFormat(
     max_items_per_line=1,
+    disable_inner_depth_increment=True,
     newline_after_start=True,
     newline_before_closing=True
 )
 
 VERTEX_IDXS_BLOCK = BlockFormat(
-    # TODO override max_items_per_line for first line with 186
-    # TODO disable inner depth increment
-    max_items_per_line=197
+    max_items_per_line=197,
+    max_items_first_line=186
 )
 
 NORMAL_IDXS_BLOCK = BlockFormat(
-    # TODO override max_items_per_line for first line with 266
-    # TODO disable inner depth increment
-    max_items_per_line=276
+    max_items_per_line=276,
+    max_items_first_line=266
 )
 
 FLAGS_BLOCK = BlockFormat(
-    # TODO override max_items_per_line for first line with 80
-    # TODO disable inner depth increment
-    max_items_per_line=100
+    max_items_per_line=100,
+    max_items_first_line=80
 )
 
 ANIMATION_BLOCK = BlockFormat(

@@ -50,7 +50,9 @@ class BlockFormat:
         ...             vertex_uvs_block.write_int(uv_index)
     """
     max_items_per_line: Optional[int] = None
+    max_items_first_line: Optional[int] = None
     disable_inner_indent: bool = False
+    disable_inner_depth_increment: bool = False
     newline_before_block: bool = False
     newline_before_start: bool = False
     newline_after_start: bool = False
