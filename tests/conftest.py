@@ -51,7 +51,7 @@ def global_storage():
         "tsectionext_commentsbeforeinclude_path": "./tests/data/tsectionext_commentsbeforeinclude.dat",
         "tsectionglobal_path": "./tests/data/tsectionglobal.dat",
         "tsectionlocal_path": "./tests/data/tsectionlocal.dat",
-        "terrainfile_compressed_path": "./tests/data/-11dc0894.t",
+        "terrainfile_binary_path": "./tests/data/-11dc0894.t",
         "worldfile_path": "./tests/data/w-005655+015119.w",
         "worldfile2_path": "./tests/data/w-005579+015131.w",
         "worldfile_compressed_path": "./tests/data/w-005655+015119_compressed.w",

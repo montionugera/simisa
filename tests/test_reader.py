@@ -16,3 +16,10 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
+
+# TODO Does the unicode/ascii split work?
+# TODO Does the text/binary split work?
+# TODO Does the text/binary split work?
+# TODO error handling in open/to_string
+# TODO Does writing values of different types work for text/binary?
+# TODO error handling in reading different values

@@ -195,17 +195,20 @@ INDEXED_TRILIST_BLOCK = BlockFormat(
 
 VERTEX_IDXS_BLOCK = BlockFormat(
     max_items_per_line=197,
-    max_items_first_line=186
+    max_items_first_line=186,
+    allow_space_at_line_end=True
 )
 
 NORMAL_IDXS_BLOCK = BlockFormat(
-    max_items_per_line=276,
-    max_items_first_line=266
+    max_items_per_line=282,
+    max_items_first_line=266,
+    allow_space_at_line_end=True
 )
 
 FLAGS_BLOCK = BlockFormat(
-    max_items_per_line=100,
-    max_items_first_line=80
+    max_items_per_line=109,
+    max_items_first_line=104,
+    allow_space_at_line_end=True
 )
 
 ANIMATION_BLOCK = BlockFormat(

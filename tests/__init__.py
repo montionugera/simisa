@@ -18,6 +18,8 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import math
+import difflib
+from pathlib import Path
 
 
 def compare_objects(left, right, path="root"):

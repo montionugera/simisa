@@ -20,43 +20,10 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import pytest
 from simisa import BlockWriter, TokenID
 
-
-# def test_writer_text(global_storage):
-
-#     with BlockWriter.open("./tests/data/output.txt", fileversion=0, filetype='s') as writer:
-#         with writer.sub_block(TokenID.shape) as shape_block:
-#             shape_block.write_int(2134)
-#             with shape_block.sub_block(TokenID.shape) as shape_block2:
-#                 shape_block2.write_int(2134)
-
-#     assert False
-
-
-# def test_writer_text_compressed(global_storage):
-
-#     with BlockWriter.open("./tests/data/output_compressed.txt", fileversion=0, filetype='s', is_unicode=False, is_compressed=True) as writer:
-#         with writer.sub_block(TokenID.shape) as shape_block:
-#             shape_block.write_int(2134)
-
-#     assert False
-
-
-# def test_writer_binary(global_storage):
-
-#     with BlockWriter.open("./tests/data/output.bin", fileversion=0, filetype='s', is_binary=True, is_unicode=False) as writer:
-#         with writer.sub_block(TokenID.shape) as shape_block:
-#             shape_block.write_int(2134)
-#             with shape_block.sub_block(TokenID.shape) as shape_block2:
-#                 shape_block2.write_int(2134)
-
-#     assert False
-
-
-
-# def test_writer_binary_compressed(global_storage):
-
-#     with BlockWriter.open("./tests/data/output_compressed.bin", fileversion=0, filetype='s', is_binary=True, is_unicode=False, is_compressed=True) as writer:
-#         with writer.sub_block(TokenID.shape) as shape_block:
-#             shape_block.write_int(2134)
-
-#     assert False
+# TODO Does the unicode/ascii split work?
+# TODO Does the text/binary split work?
+# TODO Does the text/binary split work?
+# TODO error handling in open/to_string
+# TODO Does writing values of different types work for text/binary?
+# TODO error handling in writing different values
+# TODO Does the uncompressed size patching work for text/binary?

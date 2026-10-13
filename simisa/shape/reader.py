@@ -934,7 +934,7 @@ def read_distance_level_header(reader: BlockReader) -> DistanceLevelHeader:
         hierarchy: List[int] = []
         
         with dlevel_header_block.sub_block(TokenID.dlevel_selection) as dlevel_selection_block:
-            dlevel_selection = dlevel_selection_block.read_float()
+            dlevel_selection = float(dlevel_selection_block.read_uint())
 
         with dlevel_header_block.sub_block(TokenID.hierarchy) as hierarchy_block:
             count = hierarchy_block.read_int()
@@ -945,8 +945,8 @@ def read_distance_level_header(reader: BlockReader) -> DistanceLevelHeader:
             hierarchy_block.verify_count(count, len(hierarchy))
 
         return DistanceLevelHeader(
-            dlevel_selection,
-            hierarchy
+            dlevel_selection=dlevel_selection,
+            hierarchy=hierarchy
         )
 
 

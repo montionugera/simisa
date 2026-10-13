@@ -23,83 +23,18 @@ from simisa import terrain
 from tests import compare_objects
 
 
-# def test_terrain_load(global_storage):
-#     s = terrain.load(global_storage["terrainfile_path"])
-#     assert False
-
-
-# def test_terrain_loads_uncompressed(global_storage):
-#     terrainfile_path = global_storage["terrainfile_path"]
-#     with open(terrainfile_path, 'r', encoding='utf-16-le') as f:
-#         terrain_string = f.read()
-#         s = terrain.loads(terrain_string)
-#     assert False
-
-
-# def test_terrain_load_compressed(global_storage):
-#     s = terrain.load(global_storage["terrainfile_compressed_path"])
-#     assert False
-
-
-# def test_terrain_load_compare(global_storage):
-#     expected = terrain.load(global_storage["terrainfile_path"])
-#     actual = terrain.load(global_storage["terrainfile_compressed_path"])
-
-#     stack = [(expected, actual, "root")]
-
-#     while stack:
-#         left, right, path = stack.pop()
-
-#         if isinstance(left, float) or isinstance(right, float):
-#             if not math.isclose(float(left), float(right), rel_tol=1e-5, abs_tol=1e-5):
-#                 print(f"Float mismatch at {path}: {left} != {right}")
-#                 assert False
-#             continue
-
-#         if isinstance(left, (int, str, bool)) or left is None:
-#             if left != right:
-#                 print(f"Value mismatch at {path}: {left} != {right}")
-#                 assert False
-#             continue
-
-#         if isinstance(left, (list, tuple)):
-#             if len(left) != len(right):
-#                 print(f"Length mismatch at {path}: {len(left)} != {len(right)}")
-#                 assert False
-#             for i, (l_item, r_item) in enumerate(zip(left, right)):
-#                 stack.append((l_item, r_item, f"{path}[{i}]"))
-#             continue
-
-#         if isinstance(left, dict):
-#             if left.keys() != right.keys():
-#                 print(f"Key mismatch at {path}")
-#                 assert False
-#             for key in left:
-#                 stack.append((left[key], right[key], f"{path}.{key}"))
-#             continue
-
-#         if hasattr(left, "__dict__"):
-#             stack.append((left.__dict__, right.__dict__, path))
-#             continue
-
-#         if left != right:
-#             print(f"Mismatch at {path}: {left} != {right}")
-#             assert False
-
-#     assert True
-
-
-# def test_terrain_loads_compressed(global_storage):
-#     terrainfile_compressed_path = global_storage["terrainfile_compressed_path"]
-#     with open(terrainfile_compressed_path, 'rb') as f:
-#         terrain_bytes = f.read()
+def test_terrain_loads_bytes_raises(global_storage):
+    terrainfile_binary_path = global_storage["terrainfile_binary_path"]
+    
+    with open(terrainfile_binary_path, 'rb') as f:
+        terrain_bytes = f.read()
         
-#         with pytest.raises(TypeError):
-#             terrain.loads(terrain_bytes)
+        with pytest.raises(TypeError):
+            terrain.loads(terrain_bytes)
 
 
 def test_terrain_roundtrip_uncompressed(global_storage, tmp_path):
-    original = terrain.load(global_storage["terrainfile_compressed_path"])
+    original = terrain.load(global_storage["terrainfile_binary_path"])
     output_path = tmp_path / "roundtrip.t"
     
     terrain.dump(original, str(output_path), compressed=False)
@@ -110,7 +45,7 @@ def test_terrain_roundtrip_uncompressed(global_storage, tmp_path):
 
 
 def test_terrain_roundtrip_compressed(global_storage, tmp_path):
-    original = terrain.load(global_storage["terrainfile_compressed_path"])
+    original = terrain.load(global_storage["terrainfile_binary_path"])
     output_path = tmp_path / "roundtrip_compressed.t"
     
     terrain.dump(original, str(output_path), compressed=True)

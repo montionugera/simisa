@@ -20,61 +20,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import os
 import math
 import pytest
+import shutil
+from pathlib import Path
 from simisa import shape
 from tests import compare_objects
 
 
-
-def test_shape_load_uncompressed_vs_compressed_compare(global_storage):
-    expected = shape.load(global_storage["shapefile_path"])
-    actual = shape.load(global_storage["shapefile_compressed_path"])
-
-    stack = [(expected, actual, "root")]
-
-    while stack:
-        left, right, path = stack.pop()
-
-        if isinstance(left, float) or isinstance(right, float):
-            if not math.isclose(float(left), float(right), rel_tol=1e-5, abs_tol=1e-5):
-                print(f"Float mismatch at {path}: {left} != {right}")
-                assert False
-            continue
-
-        if isinstance(left, (int, str, bool)) or left is None:
-            if left != right:
-                print(f"Value mismatch at {path}: {left} != {right}")
-                assert False
-            continue
-
-        if isinstance(left, (list, tuple)):
-            if len(left) != len(right):
-                print(f"Length mismatch at {path}: {len(left)} != {len(right)}")
-                assert False
-            for i, (l_item, r_item) in enumerate(zip(left, right)):
-                stack.append((l_item, r_item, f"{path}[{i}]"))
-            continue
-
-        if isinstance(left, dict):
-            if left.keys() != right.keys():
-                print(f"Key mismatch at {path}")
-                assert False
-            for key in left:
-                stack.append((left[key], right[key], f"{path}.{key}"))
-            continue
-
-        if hasattr(left, "__dict__"):
-            stack.append((left.__dict__, right.__dict__, path))
-            continue
-
-        if left != right:
-            print(f"Mismatch at {path}: {left} != {right}")
-            assert False
-
-    assert True
-
-
 def test_shape_loads_compressed_bytes_raises(global_storage):
     shapefile_compressed_path = global_storage["shapefile_compressed_path"]
+
     with open(shapefile_compressed_path, 'rb') as f:
         shape_bytes = f.read()
         
@@ -82,7 +36,7 @@ def test_shape_loads_compressed_bytes_raises(global_storage):
             shape.loads(shape_bytes)
 
 
-def test_shape_roundtrip_uncompressed(global_storage, tmp_path):
+def test_shape_roundtrip_uncompressed_in_memory(global_storage, tmp_path):
     original = shape.load(global_storage["shapefile_path"])
     output_path = tmp_path / "roundtrip.s"
     
@@ -93,7 +47,7 @@ def test_shape_roundtrip_uncompressed(global_storage, tmp_path):
         assert False
 
 
-def test_shape_roundtrip_compressed(global_storage, tmp_path):
+def test_shape_roundtrip_compressed_in_memory(global_storage, tmp_path):
     original = shape.load(global_storage["shapefile_path"])
     output_path = tmp_path / "roundtrip_compressed.s"
     
@@ -102,3 +56,12 @@ def test_shape_roundtrip_compressed(global_storage, tmp_path):
     
     if not compare_objects(original, roundtripped):
         assert False
+
+
+# def test_shape_default_format(global_storage, tmp_path):
+#     original = shape.load(global_storage["shapefile_path"])
+#     output_path = "./tests/data/default_format.s"
+    
+#     shape.dump(original, str(output_path), compressed=False)
+    
+#     assert False

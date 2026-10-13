@@ -291,6 +291,12 @@ class TextBlockWriter(BlockWriter):
         self._closed = False
 
     def _trim_trailing_whitespace(self, trim_chars=None):
+        if self.block_format.allow_space_at_line_end:
+            if trim_chars is not None:
+                trim_chars = trim_chars.replace(" ", "")
+            else:
+                trim_chars = "\t\r\n\v\f"
+
         while self._buffer:
             if trim_chars is not None:
                 trimmed = self._buffer[-1].rstrip(trim_chars)
@@ -314,11 +320,18 @@ class TextBlockWriter(BlockWriter):
         if self.parent is not None:
             self.parent._trim_trailing_whitespace(trim_chars=" ")
 
-        self._trim_trailing_whitespace()
-        self._buffer.append("\n")
+        if self.block_format.allow_space_at_line_end:
+            if self._buffer and self._buffer[-1] and not self._buffer[-1].endswith(" "):
+                self._buffer.append(" ")
+            
+            self._trim_trailing_whitespace(trim_chars="\t\r\n\v\f")
+        else:
+            self._trim_trailing_whitespace()
 
+        self._buffer.append("\r\n")
         self._write_indent()
         self._items_on_line = 0
+
 
     def _write_value(self, text: str):
         if not isinstance(text, str):
@@ -342,11 +355,11 @@ class TextBlockWriter(BlockWriter):
         if not isinstance(text, str):
             raise TypeError(f"Parameter 'text' must be str, but got {type(text).__name__}")
 
-        self._trim_trailing_whitespace(trim_chars=" ")
+        if not self.block_format.allow_space_at_line_end:
+            self._trim_trailing_whitespace(trim_chars=" ")
 
         if self._buffer:
             last = self._buffer[-1]
-
             if last and not last[-1].isspace():
                 self._buffer.append(" ")
 
@@ -491,7 +504,16 @@ class TextBlockWriter(BlockWriter):
         if not isinstance(value, (int, float)):
             raise TypeError(f"Parameter 'value' must be float or int, but got {type(value).__name__}")
         
-        self._write_value(str(value))
+        if float(value).is_integer(): # Allow .0 fractions to be omitted
+            text = str(int(value))
+        else:
+            text = str(value)
+
+            if "e" in text.lower(): # Convert scientific notation exponent to three decimal places
+                mantissa, exponent = text.lower().split("e")
+                text = f"{mantissa}e{int(exponent):+04d}".replace("e+", "e")
+
+        self._write_value(text)
 
     def write_string(self, value: str):
         if not isinstance(value, str):
@@ -628,7 +650,7 @@ class BinaryBlockWriter(BlockWriter):
         self,
         block_id: TokenID,
         block_label: Optional[str] = None,
-        block_format=None
+        block_format: Optional[BlockFormat] = None
     ):
         sub_block = BinaryBlockWriter(
             stream=self.stream,
@@ -710,7 +732,7 @@ class BinaryBlockWriter(BlockWriter):
             return
         
         encoded = value.encode("utf-16-le")
-        
+
         self._write_bytes(self._UINT16.pack(len(value)))
         self._write_bytes(encoded)
 

@@ -19,22 +19,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 import pytest
 
-import io
-# from simisa.stf3 import Lexer, TokenStream, Parser, ParserContext, IncludeResolver, UnitParser
-
-
-# def test_parse_real_file():
-#     file_path = "./data/DK10f_A1tPnt5dLft.sd"
-
-#     include_resolver = IncludeResolver()
-#     unit_parser = UnitParser()
-#     context = ParserContext(include_resolver, unit_parser)
-
-#     with open(file_path, "r", encoding="utf-16-le", errors="replace") as f:
-#         lexer = Lexer(f, file_path)
-#         stream = TokenStream(lexer)
-#         parser = Parser(stream, context)
-
-#         parser.parse()
-
-#     assert False  # replace with real assertions later
+# TODO Does the lexer consume comments?
+# TODO Does the lexer parse ( ) word and eof correctly?
+# TODO Does stfreader handle includes correctly?
+# TODO Can we read values of different types from the reader?
