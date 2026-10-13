@@ -380,11 +380,14 @@ class TextBlockWriter(BlockWriter):
         self._items_on_line += 1
         self._items_total += 1
 
-        sub_block = TextBlockWriter(stream=self.stream, parent=self, encoding=self.encoding)
+        sub_block = TextBlockWriter(
+            stream=self.stream,
+            parent=self,
+            encoding=self.encoding
+        )
+
         sub_block.block_format = block_format
         sub_block._writing_block = True
-        sub_block._items_on_line = 0
-        sub_block._items_total = 0
         
         sub_block._write_token(f"{block_id.name}")
 
@@ -563,7 +566,6 @@ class TextFileWriter(TextBlockWriter):
             parent=None,
             encoding=encoding
         )
-        self.stream = stream
         self.filepath = filepath
         self.is_compressed = is_compressed
         self.is_closed = False
@@ -603,14 +605,18 @@ class BinaryBlockWriter(BlockWriter):
     _FLOAT32 = struct.Struct("<f")
     _BLOCK_HEADER = struct.Struct("<HHI")
 
-    def __init__(self):
-        self.filename: str = ""
-        self.stream: Optional[BinaryIO] = None
-        self.token_offset: int = 0
+    def __init__(
+        self,
+        stream: Optional[io.BinaryIO],
+        parent: Optional["BinaryBlockWriter"] = None,
+        token_offset: int = 0
+    ):
+        self.stream = stream
+        self.parent = parent
+        self.token_offset = token_offset
         self.id: Optional[TokenID] = None
         self.flags: int = 0
         self.label: Optional[str] = None
-        self.parent: Optional["BinaryBlockWriter"] = None
         self._buffer = io.BytesIO()
         self._writing_block: bool = False
         self._written_bytes: int = 0
@@ -618,14 +624,20 @@ class BinaryBlockWriter(BlockWriter):
     def _write_bytes(self, data: bytes) -> None:
         self._buffer.write(data)
 
-    def begin_sub_block(self, block_id: TokenID, block_label: Optional[str] = None, block_format=None):
-        sub_block = BinaryBlockWriter()
-        sub_block.stream = self.stream
-        sub_block.token_offset = self.token_offset
+    def begin_sub_block(
+        self,
+        block_id: TokenID,
+        block_label: Optional[str] = None,
+        block_format=None
+    ):
+        sub_block = BinaryBlockWriter(
+            stream=self.stream,
+            parent=self,
+            token_offset=self.token_offset
+        )
+
         sub_block.label = block_label
         sub_block.id = block_id
-        sub_block.parent = self
-        sub_block._buffer = io.BytesIO()
         sub_block._writing_block = True
 
         return sub_block
@@ -722,10 +734,12 @@ class BinaryFileWriter(BinaryBlockWriter):
         token_offset: int = 0,
         is_compressed: bool = False
     ):
-        super().__init__()
-        self.stream = stream
+        super().__init__(
+            stream=stream,
+            parent=None,
+            token_offset=token_offset
+        )
         self.filepath = filepath
-        self.token_offset = token_offset
         self.is_compressed = is_compressed
         self.is_closed = False
 

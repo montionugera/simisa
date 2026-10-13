@@ -69,7 +69,7 @@ def test_shape_default_format(global_storage, tmp_path):
     original = shape.load(global_storage["shapefile_path"])
     output_path = "./tests/data/default_format.s"
     
-    shape.dump(original, str(output_path), compressed=True)
+    shape.dump(original, str(output_path), compressed=False)
     
     assert False
 
