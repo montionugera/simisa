@@ -24,6 +24,7 @@ from simisa.shape import Vector
 
 DEFAULT_FORMAT = BlockFormat()
 MAX_ONE_ITEM_PER_LINE = BlockFormat(max_items_per_line=1)
+MAX_ONE_ITEM_PER_LINE_ALLOW_SPACES = BlockFormat(max_items_per_line=1, allow_space_at_line_end=True)
 MAX_TWO_ITEMS_PER_LINE = BlockFormat(max_items_per_line=2)
 MAX_TEN_ITEMS_PER_LINE = BlockFormat(max_items_per_line=10)
 MAX_ONE_ITEM_FIRST_LINE = BlockFormat(max_items_per_line=2, max_items_first_line=1)
@@ -72,6 +73,7 @@ def write_list_item_block(writer, block_format):
     [
         (DEFAULT_FORMAT, "normals ( )"),
         (MAX_ONE_ITEM_PER_LINE, "normals ( )"),
+        (MAX_ONE_ITEM_PER_LINE_ALLOW_SPACES, "normals ( )"),
         (MAX_TWO_ITEMS_PER_LINE, "normals ( )"),
         (MAX_TEN_ITEMS_PER_LINE, "normals ( )"),
         (MAX_ONE_ITEM_FIRST_LINE, "normals ( )"),
@@ -102,6 +104,7 @@ def test_empty_block(block_format, expected_output):
     [
         (DEFAULT_FORMAT, "normals ( 0 )"),
         (MAX_ONE_ITEM_PER_LINE, "normals ( 0 )"),
+        (MAX_ONE_ITEM_PER_LINE_ALLOW_SPACES, "normals ( 0 )"),
         (MAX_TWO_ITEMS_PER_LINE, "normals ( 0 )"),
         (MAX_TEN_ITEMS_PER_LINE, "normals ( 0 )"),
         (MAX_ONE_ITEM_FIRST_LINE, "normals ( 0 )"),
@@ -133,6 +136,7 @@ def test_empty_count_block(block_format, expected_output):
     [
         (DEFAULT_FORMAT, "normals ( 3 vector ( 0.1 0.1 1.1 ) vector ( 0.1 1.1 0.1 ) vector ( 1.1 0.1 0.1 ) )"),
         (MAX_ONE_ITEM_PER_LINE, "normals ( 3 vector ( 0.1\r\n\t\t0.1\r\n\t\t1.1 )\r\n\tvector ( 0.1\r\n\t\t1.1\r\n\t\t0.1 )\r\n\tvector ( 1.1\r\n\t\t0.1\r\n\t\t0.1 ) )"),
+        (MAX_ONE_ITEM_PER_LINE_ALLOW_SPACES, "normals ( 3 vector ( 0.1 \r\n\t\t0.1 \r\n\t\t1.1 ) \r\n\tvector ( 0.1 \r\n\t\t1.1 \r\n\t\t0.1 ) \r\n\tvector ( 1.1 \r\n\t\t0.1 \r\n\t\t0.1 ) )"),
         (MAX_TWO_ITEMS_PER_LINE, "normals ( 3 vector ( 0.1 0.1\r\n\t\t1.1 ) vector ( 0.1 1.1\r\n\t\t0.1 )\r\n\tvector ( 1.1 0.1\r\n\t\t0.1 ) )"),
         (MAX_TEN_ITEMS_PER_LINE, "normals ( 3 vector ( 0.1 0.1 1.1 ) vector ( 0.1 1.1 0.1 ) vector ( 1.1 0.1 0.1 ) )"),
         (MAX_ONE_ITEM_FIRST_LINE, "normals ( 3 vector ( 0.1\r\n\t\t0.1 1.1 )\r\n\tvector ( 0.1\r\n\t\t1.1 0.1 ) vector ( 1.1\r\n\t\t0.1 0.1 ) )"),

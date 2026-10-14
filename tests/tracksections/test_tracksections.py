@@ -45,8 +45,6 @@ def test_global_tsection_load(global_storage):
 def test_globalext_tsection_load(global_storage):
     tsection = tracksections.load(global_storage["tsectionext_path"])
 
-    print(tsection.trackshapes.track_shapes[40013])
-
     assert tsection.tracksections.max_section_index == 50000
     assert len(tsection.tracksections.track_sections) == 7441
     assert len(tsection.trackshapes.track_shapes) == 14952

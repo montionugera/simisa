@@ -36,7 +36,7 @@ def test_shape_loads_compressed_bytes_raises(global_storage):
             shape.loads(shape_bytes)
 
 
-def test_shape_roundtrip_uncompressed_in_memory(global_storage, tmp_path):
+def test_shape_roundtrip_uncompressed(global_storage, tmp_path):
     original = shape.load(global_storage["shapefile_path"])
     output_path = tmp_path / "roundtrip.s"
     
@@ -47,7 +47,7 @@ def test_shape_roundtrip_uncompressed_in_memory(global_storage, tmp_path):
         assert False
 
 
-def test_shape_roundtrip_compressed_in_memory(global_storage, tmp_path):
+def test_shape_roundtrip_compressed(global_storage, tmp_path):
     original = shape.load(global_storage["shapefile_path"])
     output_path = tmp_path / "roundtrip_compressed.s"
     
@@ -56,12 +56,3 @@ def test_shape_roundtrip_compressed_in_memory(global_storage, tmp_path):
     
     if not compare_objects(original, roundtripped):
         assert False
-
-
-# def test_shape_default_format(global_storage, tmp_path):
-#     original = shape.load(global_storage["shapefile_path"])
-#     output_path = "./tests/data/default_format.s"
-    
-#     shape.dump(original, str(output_path), compressed=False)
-    
-#     assert False
