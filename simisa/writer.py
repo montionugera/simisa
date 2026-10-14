@@ -98,10 +98,18 @@ class BlockWriter(ABC):
     """
     Structured streaming writer for SIMISA block files.
 
-    Supports writing streams that are:
-    - Compressed (zlib DEFLATE) or uncompressed
-    - UTF-16 LE or ASCII encoded
-    - Binary or text formatted
+    Provides methods to create and write SIMISA streams with support for:
+    - Compressed (zlib DEFLATE) or uncompressed output
+    - UTF-16 LE or ASCII encoding
+    - Binary or text formatting
+    - Structured block and element writing
+
+    Supports writing to both files and in-memory strings. File output is
+    configured automatically based on the specified file type, version,
+    encoding, and compression settings.
+
+    Use `open()` to create a writer for a file on disk, or `to_string()`
+    to generate SIMISA text data in memory without creating a file.
     """
 
     @staticmethod
@@ -109,12 +117,33 @@ class BlockWriter(ABC):
         filepath: str,
         *,
         filetype: str,
-        fileversion: str,
+        fileversion: int,
         is_binary: bool = False,
         is_unicode: bool = True,
         is_compressed: bool = False
     ) -> "BlockWriter":
+        """
+        Open a file for writing and construct an appropriate BlockWriter.
 
+        This method writes the SIMISA header and subheader, configures the
+        output stream according to the specified format, and returns either
+        a `BinaryFileWriter` or `TextFileWriter`.
+
+        Args:
+            filepath (str): Path to the file to create.
+            filetype (str): SIMISA file type identifier.
+            fileversion (int): SIMISA file version.
+            is_binary (bool, optional): Whether to write binary data. Defaults to False.
+            is_unicode (bool, optional): Whether to use UTF-16 LE encoding. Defaults to True.
+            is_compressed (bool, optional): Whether to compress the output. Defaults to False.
+
+        Returns:
+            BlockWriter: Instance of `BinaryFileWriter` or `TextFileWriter`.
+
+        Raises:
+            TypeError: If any parameter has an unexpected type.
+            OSError: If the file cannot be opened.
+        """
         check_params = (
             ("filepath", filepath, str),
             ("filetype", filetype, str),
@@ -164,7 +193,25 @@ class BlockWriter(ABC):
         filetype: str,
         fileversion: int
     ) -> str:
+        """
+        Generate SIMISA text data in memory using a callback.
 
+        This method creates an uncompressed text stream, writes the SIMISA
+        header and subheader, and invokes the callback with a `TextFileWriter`.
+
+        Args:
+            write_fn (Callable): Function that receives a BlockWriter and writes
+                the desired content.
+            filetype (str): SIMISA file type identifier.
+            fileversion (int): SIMISA file version.
+
+        Returns:
+            str: The generated SIMISA text data.
+
+        Raises:
+            TypeError: If a parameter has an unexpected type or `write_fn`
+                does not accept a positional first parameter.
+        """
         check_params = (
             ("filetype", filetype, str),
             ("fileversion", fileversion, int),
@@ -607,7 +654,7 @@ class TextFileWriter(TextBlockWriter):
 
         self.is_closed = True
 
-        if self.is_compressed:
+        if self.is_compressed: # Patch uncompressed size into header if compressed.
             if self.encoding in ("utf-16-le", "UTF-16-LE"):
                 header_size = 64 + 2
             else:
@@ -789,7 +836,7 @@ class BinaryFileWriter(BinaryBlockWriter):
         self.stream.close()
         self.is_closed = True
 
-        if self.is_compressed:
+        if self.is_compressed: # Patch uncompressed size into header if compressed.
             header_size = 32
             uncompressed_size = header_size + len(buffered_data)
 
