@@ -172,7 +172,9 @@ class BlockWriter(ABC):
             f.write(codecs.BOM_UTF16_LE)
         
         if is_compressed:
-            f.write("SIMISA@F\x00\x00\x00\x00@@@@".encode(encoding))
+            f.write("SIMISA@F".encode(encoding))
+            f.write(b"\x00" * 4)
+            f.write("@@@@".encode(encoding))
             stream = CompressedStreamWriter(f)
         else:
             f.write("SIMISA@@@@@@@@@@".encode(encoding))
@@ -182,7 +184,7 @@ class BlockWriter(ABC):
 
         if is_binary:
             token_offset = 300 if filetype == "w" else 0
-            return BinaryFileWriter(stream, filepath, token_offset, is_compressed)
+            return BinaryFileWriter(stream, filepath, token_offset, is_unicode, is_compressed)
 
         return TextFileWriter(stream, filepath, encoding, is_compressed)
     
@@ -649,13 +651,14 @@ class TextFileWriter(TextBlockWriter):
 
         super().close()
 
-        if self.stream is not None and not self.stream.closed:
-            self.stream.close()
+        self.stream.flush()
+        self.stream.close()
 
         self.is_closed = True
 
         if self.is_compressed: # Patch uncompressed size into header if compressed.
-            if self.encoding in ("utf-16-le", "UTF-16-LE"):
+            is_unicode = self.encoding in ("utf-16-le", "UTF-16-LE")
+            if is_unicode:
                 header_size = 64 + 2
             else:
                 header_size = 32
@@ -663,7 +666,8 @@ class TextFileWriter(TextBlockWriter):
             uncompressed_size = header_size + self._written_bytes
 
             with open(self.filepath, "r+b") as f:
-                f.seek(8) # After SIMISA@F
+                size_position = 18 if is_unicode else 8
+                f.seek(size_position) # After SIMISA@F
                 f.write(uncompressed_size.to_bytes(4, "little"))
 
 
@@ -784,7 +788,8 @@ class BinaryBlockWriter(BlockWriter):
         self._write_bytes(encoded)
 
     def write_comment(self, text: str):
-        pass
+        if not isinstance(text, str):
+            raise TypeError(f"Parameter 'text' must be str, but got {type(text).__name__}")
 
     def flush(self):
         if self.stream:
@@ -802,6 +807,7 @@ class BinaryFileWriter(BinaryBlockWriter):
         stream: BinaryIO,
         filepath: str,
         token_offset: int = 0,
+        is_unicode: bool = False,
         is_compressed: bool = False
     ):
         super().__init__(
@@ -810,6 +816,7 @@ class BinaryFileWriter(BinaryBlockWriter):
             token_offset=token_offset
         )
         self.filepath = filepath
+        self.is_unicode = is_unicode
         self.is_compressed = is_compressed
         self.is_closed = False
 
@@ -832,14 +839,21 @@ class BinaryFileWriter(BinaryBlockWriter):
         if buffered_data:
             self.stream.write(buffered_data)
 
-        self.stream.flush()
-        self.stream.close()
+        if not self.stream.closed:
+            self.stream.flush()
+            self.stream.close()
+
         self.is_closed = True
 
         if self.is_compressed: # Patch uncompressed size into header if compressed.
-            header_size = 32
-            uncompressed_size = header_size + len(buffered_data)
+            if self.is_unicode:
+                header_size = 64 + 2
+            else:
+                header_size = 32
+            
+            uncompressed_size = header_size + self._written_bytes
 
             with open(self.filepath, "r+b") as f:
-                f.seek(8) # After SIMISA@F
+                size_position = 18 if self.is_unicode else 8
+                f.seek(size_position) # After SIMISA@F
                 f.write(uncompressed_size.to_bytes(4, "little"))

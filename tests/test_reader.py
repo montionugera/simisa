@@ -97,13 +97,31 @@ def test_from_string_accepts_leading_whitespace_and_bom():
         reader.close()
 
 
-@pytest.mark.parametrize("value", [None, 1, b"not a str", [], {}])
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        1,
+        b"not a str",
+        [],
+        {}
+    ]
+)
 def test_open_rejects_non_string_filepath(value):
     with pytest.raises(TypeError):
         BlockReader.open(value)
 
 
-@pytest.mark.parametrize("value", [None, 1, b"SIMISA@@", [], {}])
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        1,
+        b"SIMISA@@",
+        [],
+        {}
+    ]
+)
 def test_from_string_rejects_non_string_data(value):
     with pytest.raises(TypeError):
         BlockReader.from_string(value)
@@ -158,7 +176,7 @@ def test_from_string_rejects_unknown_format():
 
 
 def test_from_string_rejects_unresolvable_includes():
-    data = "SIMISA@@@@@@@@@@JINX0s1t\ninclude ( \"missing.s\" )"
+    data = "SIMISA@@@@@@@@@@JINX0s1t\ninclude ( \"somefile.s\" )"
 
     with pytest.raises(UnresolvableIncludeError):
         BlockReader.from_string(data)
