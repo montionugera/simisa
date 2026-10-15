@@ -10,13 +10,13 @@ A Python module to read and write files used with MSTS and Open Rails.
 
 ## Installation
 
-### From PyPI
+### Install from PyPI
 
 ```sh
 pip install --upgrade simisa
 ```
 
-### From wheel
+### Install from wheel
 
 If you have downloaded a `.whl` file from the [Releases](https://github.com/pgroenbaek/simisa/releases) page, install it with:
 
@@ -26,7 +26,7 @@ pip install path/to/simisa-<version>‑py3‑none‑any.whl
 
 Replace `<version>` with the actual version number in the filename.
 
-### From source
+### Install from source
 
 ```sh
 git clone https://github.com/pgroenbaek/simisa.git
@@ -36,7 +36,47 @@ pip install --upgrade ./simisa
 ## Usage
 
 
+
+
 ## Running Tests
+
+You can run tests manually or use `tox` to test across multiple Python versions.
+
+### Run Tests Manually
+First, install the required dependencies:
+
+```sh
+pip install pytest
+```
+
+Then, run tests with:
+
+```sh
+pytest
+```
+
+
+### Run Tests with `tox`
+
+First, install the required dependencies:
+
+```sh
+pip install tox pytest
+```
+
+Then, run tests with:
+
+```sh
+tox
+```
+
+This will execute tests for all Python versions specified in `tox.ini`.
+
+## Contributing
+
+Contributions of all kinds are welcome. These could be suggestions, issues, bug fixes, documentation improvements, or new features.
+
+For more details see the [contribution guidelines](/CONTRIBUTING.md).
 
 
 ## License
