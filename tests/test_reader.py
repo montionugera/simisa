@@ -98,14 +98,7 @@ def test_from_string_accepts_leading_whitespace_and_bom():
 
 
 @pytest.mark.parametrize(
-    "value",
-    [
-        None,
-        1,
-        b"not a str",
-        [],
-        {}
-    ]
+    "value", [None, 1, b"not a str", [], {}]
 )
 def test_open_rejects_non_string_filepath(value):
     with pytest.raises(TypeError):
@@ -113,14 +106,7 @@ def test_open_rejects_non_string_filepath(value):
 
 
 @pytest.mark.parametrize(
-    "value",
-    [
-        None,
-        1,
-        b"SIMISA@@",
-        [],
-        {}
-    ]
+    "value", [None, 1, b"SIMISA@@", [], {}]
 )
 def test_from_string_rejects_non_string_data(value):
     with pytest.raises(TypeError):
@@ -180,6 +166,7 @@ def test_from_string_rejects_unresolvable_includes():
 
     with pytest.raises(UnresolvableIncludeError):
         BlockReader.from_string(data)
+
 
 # TODO test more error handling cases
 # TODO test actually reading opened binary/text

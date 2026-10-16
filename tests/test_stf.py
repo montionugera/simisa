@@ -276,9 +276,7 @@ def test_read_float_rejects_invalid_values(value):
         ("read_float", 1.5, 1.5),
     ],
 )
-def test_typed_readers_return_default_at_eof(
-    method_name, default, expected
-):
+def test_typed_readers_return_default_at_eof(method_name, default, expected):
     reader = StfReader.from_stream(io.StringIO(""))
 
     result = getattr(reader, method_name)(default=default)

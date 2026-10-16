@@ -31,6 +31,7 @@ import struct
 import zlib
 import pytest
 
+from simisa import TokenID
 from simisa.writer import (
     BlockWriter,
     BinaryFileWriter,
@@ -59,6 +60,23 @@ def open_writer(
     )
 
     return path, writer
+
+
+def write_blocks(writer):
+    with writer.sub_block(TokenID.normals) as normals_block:
+        normals_block.write_count(3)
+
+        normals = [
+            Vector(0.1, 0.1, 1.1),
+            Vector(0.1, 1.1, 0.1),
+            Vector(1.1, 0.1, 0.1)
+        ]
+
+        for vector in normals:
+            with normals_block.sub_block(TokenID.vector) as vector_block:
+                vector_block.write_float(vector.x)
+                vector_block.write_float(vector.y)
+                vector_block.write_float(vector.z)
 
 
 def write_values(writer):
@@ -369,8 +387,6 @@ def test_compressed_output_is_created(tmp_path, is_binary, is_unicode):
         writer.close()
 
     data = path.read_bytes()
-
-    print(data)
 
     assert data
     assert (

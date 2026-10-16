@@ -38,7 +38,7 @@ pip install --upgrade ./simisa
 
 ## Usage
 
-Not all file types used with MSTS and Open Rails are currently implemented. You can find the list of supported file types in the table below.
+Not all file types used with MSTS and Open Rails are currently implemented. You can find the list of supported file types and whether reading/writing is supported for each file type in the table below.
 
 | Shorthand  | Full module name | File type               | Read files | Write files |
 | ---------- | ---------------- | ----------------------- | ---------- | ----------- |
@@ -49,9 +49,11 @@ Not all file types used with MSTS and Open Rails are currently implemented. You 
 | `tdb`      | `trackdatabase`  | `.tdb`                  | Yes        | No          |
 | `tsection` | `tracksections`  | `.dat` (`tsection.dat`) | Yes        | No          |
 
-When loading files, the module seamlessly takes care of handling compression and text/binary format based on the information in the file header.
+When loading files, the module seamlessly takes care of handling compression and text/binary format based on the information found in the file header.
 
 ### Reading files
+
+Files on disk can be read using the `.load()` function of each submodule.
 
 ```python
 from simisa import s, t, w, rdb, tdb, tsection
@@ -63,6 +65,10 @@ rdb_obj = rdb.load("path/to/roaddatabasefile.rdb")
 tdb_obj = tdb.load("path/to/trackdatabasefile.tdb")
 tsection_obj = tsection.load("path/to/tsection.dat")
 ```
+
+To read a text string, the `.loads()` function can be used instead. This function takes an in-memory string as input and returns the corresponding object.
+
+Compressed or binary data is not supported using this function.
 
 ```python
 from simisa import s, t, w, rdb, tdb, tsection
@@ -79,6 +85,8 @@ tsection_obj = tsection.loads(tsection_text)
 
 #### Uncompressed
 
+To write uncompressed STF text data to a file on disk:
+
 ```python
 from simisa import s, t, w
 
@@ -86,6 +94,8 @@ s.dump(shape_obj, "path/to/shapefile.s")
 t.dump(terrain_obj, "path/to/terrainfile.t")
 w.dump(world_obj, "path/to/worldfile.w")
 ```
+
+To write uncompressed STF text data to an in-memory string:
 
 ```python
 from simisa import s, t, w
@@ -97,7 +107,7 @@ world_text = w.dumps(world_obj)
 
 #### Compressed
 
-Writing files compressed:
+To write compressed data to disk set the `compressed` parameter to `True`:
 
 ```python
 from simisa import s, t, w
@@ -109,6 +119,8 @@ w.dump(world_file, "path/to/worldfile.w", compressed=True)
 
 ### Accessing the object trees
 
+All data can be accessed on the returned object after using the `.load()` and `.loads()`.
+
 ```python
 from simisa import shape
 
@@ -118,6 +130,8 @@ print(shape_obj)
 print(len(shape_obj.points))
 print(shape_obj.lod_controls[2].lod_dlevel)
 ```
+
+Here's an example of traversing the object tree deeply to access vertex data in a shape:
 
 ```python
 >>> print(shape_obj)
@@ -134,25 +148,35 @@ DistanceLevel(distance_level_header=DistanceLevelHeader(dlevel_selection=800.0, 
 
 ### Editing the object trees
 
+The object tree can also be edited and written back to disk or an in-memory string.
+
 ```python
 from simisa import shape
 from simisa.shape import UVPoint
 
 shape_obj = shape.load("path/to/shapefile.s")
 
-# Empting the points list
+# Emptying the points list
 shape_obj.points = []
 
 # Adding a new UVPoint
 new_uv_point = UVPoint(0.0, 1.0)
 shape_obj.uv_points.append(new_uv_point)
 
+# Write to disk
 shape.dump(shape_obj, "path/to/shapefile_edited.s")
+
+# Write to an in-memory string
+edited_shape_str = shape.dumps(shape_obj)
 ```
 
 ### Checking header data
 
+This Python module also contains helper functions for probing the SIMISA header. Useful if you want to know the compression state, the file type or the version of a SIMISA file before actually reading it.
+
 #### Compression
+
+To check the compression state use `is_compressed`. This function returns `True` if compressed, `False` if not, and otherwise returns `None` if the file has no valid header or if the module is unable to determine the compression state.
 
 ```python
 import simisa
@@ -161,6 +185,8 @@ simisa.is_compressed("path/to/shapefile.s")
 ```
 
 #### Reading file type and version
+
+To read file type and version use `read_filetype` and `read_fileversion`. These functions return the file type and version respectively.
 
 ```python
 import simisa
@@ -172,6 +198,8 @@ simisa.read_fileversion("path/to/shapefile.s")
 
 #### Checking file format
 
+To determine file format use `is_unicode`, `is_text` and `is_binary`. These functions return `True` or `False` depending on the format.
+
 ```python
 import simisa
 
@@ -179,8 +207,6 @@ simisa.is_unicode("path/to/shapefile.s")
 simisa.is_text("path/to/shapefile.s")
 simisa.is_binary("path/to/shapefile.s")
 ```
-
-
 
 ## Running Tests
 

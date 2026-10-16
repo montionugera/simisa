@@ -19,7 +19,7 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-__version__ = '0.1.0'
+__version__ = '0.1.0b0'
 __all__ = [
     'is_unicode', 'peek_header', 'peek_subheader',
     'is_compressed', 'is_binary', 'is_text',
