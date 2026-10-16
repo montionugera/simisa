@@ -7,7 +7,9 @@
 
 A Python module to read and write files used with MSTS and Open Rails.
 
-This module has a similar API to Python's built-in `json` module. When loading files, this module handles compression and text/binary formats of the SIMISA container seamlessly. It's also not sensitive to whitespace and formatting in STF text files at all.
+This module has a similar API to Python's built-in `json` module. When loading files, this module handles compression and text/binary formats of the SIMISA container seamlessly.
+
+It's also not sensitive to whitespace and formatting in STF text files at all.
 
 ## Installation
 
