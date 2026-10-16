@@ -7,7 +7,6 @@
 
 A Python module to read and write files used with MSTS and Open Rails.
 
-
 ## Installation
 
 ### Install from PyPI
@@ -35,6 +34,136 @@ pip install --upgrade ./simisa
 
 ## Usage
 
+Submodules + shorthand
+
+### Reading files
+
+```python
+from simisa import s, t, w, rdb, tdb, tsection
+
+shape_obj = s.load("path/to/shapefile.s")
+terrain_obj = t.load("path/to/terrainfile.t")
+world_obj = w.load("path/to/worldfile.w")
+rdb_obj = rdb.load("path/to/roaddatabasefile.rdb")
+tdb_obj = tdb.load("path/to/trackdatabasefile.tdb")
+tsection_obj = tsection.load("path/to/tsection.dat")
+```
+
+```python
+from simisa import s, t, w, rdb, tdb, tsection
+
+shape_obj = s.loads(shape_text)
+terrain_obj = t.loads(terrain_text)
+world_obj = w.loads(world_text)
+rdb_obj = rdb.loads(rdb_text)
+tdb_obj = tdb.loads(tdb_text)
+tsection_obj = tsection.loads(tsection_text)
+```
+
+### Writing files
+
+#### Uncompressed
+
+```python
+from simisa import s, t, w
+
+s.dump(shape_obj, "path/to/shapefile.s")
+t.dump(terrain_obj, "path/to/terrainfile.t")
+w.dump(world_obj, "path/to/worldfile.w")
+```
+
+```python
+from simisa import s, t, w
+
+shape_text = s.dumps(shape_obj)
+terrain_text = t.dumps(terrain_obj)
+world_text = w.dumps(world_obj)
+```
+
+#### Compressed
+
+Writing files compressed:
+
+```python
+from simisa import s, t, w
+
+s.dump(shape_file, "path/to/shapefile.s", compressed=True)
+t.dump(terrain_file, "path/to/terrainfile.t", compressed=True)
+w.dump(world_file, "path/to/worldfile.w", compressed=True)
+```
+
+### Accessing the object trees
+
+```python
+from simisa import shape
+
+shape_obj = shape.load("path/to/shapefile.s")
+
+print(shape_obj)
+print(len(shape_obj.points))
+print(shape_obj.lod_controls[2].lod_dlevel)
+```
+
+```python
+>>> print(shape_obj)
+Shape(shape_header=ShapeHeader(flags1=0, flags2=0), volumes (len=12), shader_names (len=2), texture_filter_names (len=2), points (len=3962), uv_points (len=1841), normals (len=2725), sort_vectors (len=11), colours (len=0), matrices (len=10), images (len=11), textures (len=15), light_materials (len=0), light_model_cfgs (len=1), vtx_states (len=12), prim_states (len=30), lod_controls (len=1), animations (len=1))
+>>> print(len(shape_obj.points))
+3962
+>>> print(shape_obj.lod_controls[0].distance_levels[2])
+DistanceLevel(distance_level_header=DistanceLevelHeader(dlevel_selection=800.0, hierarchy (len=10)), sub_objects (len=1))
+>>> print(len(shape_obj.lod_controls[0].distance_levels[2].sub_objects[0].vertices))
+133
+>>> print(len(shape_obj.lod_controls[0].distance_levels[2].sub_objects[0].primitives[0].indexed_trilist.vertex_idxs))
+67
+```
+
+### Editing the object trees
+
+```python
+from simisa import shape
+from simisa.shape import UVPoint
+
+shape_obj = shape.load("path/to/shapefile.s")
+
+# Empting the points list
+shape_obj.points = []
+
+# Adding a new UVPoint
+new_uv_point = UVPoint(0.0, 1.0)
+shape_obj.uv_point.append(new_uv_point)
+
+shape.dump(shape_obj, "path/to/shapefile_edited.s")
+```
+
+### Checking header data
+
+#### Compression
+
+```python
+import simisa
+
+simisa.is_compressed("path/to/shapefile.s")
+```
+
+#### Reading file type and version
+
+```python
+import simisa
+
+simisa.read_filetype("path/to/shapefile.s")
+simisa.read_fileversion("path/to/shapefile.s")
+```
+
+
+#### Checking file format
+
+```python
+import simisa
+
+simisa.is_unicode("path/to/shapefile.s")
+simisa.is_text("path/to/shapefile.s")
+simisa.is_binary("path/to/shapefile.s")
+```
 
 
 
