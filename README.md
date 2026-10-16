@@ -9,7 +9,7 @@ A Python module to read and write files used with MSTS and Open Rails.
 
 This module has a similar API to Python's built-in `json` module. When loading files, this module handles compression and text/binary formats of the SIMISA container seamlessly.
 
-It's also not sensitive to whitespace and formatting in STF text files at all.
+The readers in the module are also not sensitive to whitespace formatting in STF text files at all.
 
 ## Installation
 
@@ -198,7 +198,7 @@ simisa.read_fileversion("path/to/shapefile.s")
 
 #### Checking file format
 
-To determine file format use `is_unicode`, `is_text` and `is_binary`. These functions return `True` or `False` depending on the format.
+To determine file format use `is_unicode`, `is_text` and `is_binary`. These functions return `True` or `False` depending on the format. They may also return `None` if the file has no valid header or if the module is unable to determine the format.
 
 ```python
 import simisa
