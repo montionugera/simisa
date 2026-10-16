@@ -38,7 +38,18 @@ pip install --upgrade ./simisa
 
 ## Usage
 
-Submodules + shorthand
+Not all file types used with MSTS and Open Rails are currently implemented. You can find the list of supported file types in the table below.
+
+| Shorthand  | Full module name | File type               | Read files | Write files |
+| ---------- | ---------------- | ----------------------- | ---------- | ----------- |
+| `s`        | `shape`          | `.s`                    | Yes        | Yes         |
+| `t`        | `terrain`        | `.t`                    | Yes        | Yes         |
+| `w`        | `world`          | `.w`                    | Yes        | Yes         |
+| `rdb`      | `roaddatabase`   | `.rdb`                  | Yes        | No          |
+| `tdb`      | `trackdatabase`  | `.tdb`                  | Yes        | No          |
+| `tsection` | `tracksections`  | `.dat` (`tsection.dat`) | Yes        | No          |
+
+When loading files, the module seamlessly takes care of handling compression and text/binary format based on the information in the file header.
 
 ### Reading files
 
