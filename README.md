@@ -7,6 +7,8 @@
 
 A Python module to read and write files used with MSTS and Open Rails.
 
+This module has a similar API to Python's built-in `json` module. When loading files, this module handles compression and text/binary formats of the SIMISA container seamlessly. It's also not sensitive to whitespace and formatting in STF text files at all.
+
 ## Installation
 
 ### Install from PyPI
@@ -130,7 +132,7 @@ shape_obj.points = []
 
 # Adding a new UVPoint
 new_uv_point = UVPoint(0.0, 1.0)
-shape_obj.uv_point.append(new_uv_point)
+shape_obj.uv_points.append(new_uv_point)
 
 shape.dump(shape_obj, "path/to/shapefile_edited.s")
 ```
