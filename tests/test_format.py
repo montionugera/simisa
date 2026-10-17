@@ -164,7 +164,7 @@ def test_list_item_block(block_format, expected_output):
 
 
 # For manual inspection of the output formatting
-SKIP_MANUAL_INSPECTION_TESTS = False
+SKIP_MANUAL_INSPECTION_TESTS = True
 
 def test_shapefile_default_format(global_storage, tmp_path):
     if SKIP_MANUAL_INSPECTION_TESTS:

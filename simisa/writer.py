@@ -25,7 +25,7 @@ import logging
 import inspect
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from typing import Optional, BinaryIO, TextIO, Callable, Any
+from typing import Optional, BinaryIO, TextIO, Callable, Any, Union
 
 from .format import BlockFormat
 from .token_id import TokenID
@@ -321,7 +321,7 @@ class TextBlockWriter(BlockWriter):
 
     def __init__(
         self,
-        stream: Optional[io.TextIOBase | io.StringIO] = None,
+        stream: Optional[Union[io.TextIOBase, io.StringIO]] = None,
         parent: Optional['TextBlockWriter'] = None,
         encoding: str = "utf-8"
     ):
@@ -627,7 +627,7 @@ class TextFileWriter(TextBlockWriter):
 
     def __init__(
         self,
-        stream: io.TextIOBase | io.StringIO,
+        stream: Union[io.TextIOBase, io.StringIO],
         filepath: str,
         encoding="utf-8",
         is_compressed: bool = False
@@ -680,7 +680,7 @@ class BinaryBlockWriter(BlockWriter):
 
     def __init__(
         self,
-        stream: Optional[io.BinaryIO],
+        stream: Optional[BinaryIO],
         parent: Optional["BinaryBlockWriter"] = None,
         token_offset: int = 0
     ):

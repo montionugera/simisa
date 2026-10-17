@@ -214,6 +214,7 @@ simisa.is_binary("path/to/shapefile.s")
 You can run tests manually or use `tox` to test across multiple Python versions.
 
 ### Run Tests Manually
+
 First, install the required dependencies:
 
 ```sh

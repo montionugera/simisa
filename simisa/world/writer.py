@@ -158,7 +158,7 @@ def write_world_objects(writer: BlockWriter, objects: List[WorldObj]) -> None:
 
     for world_obj in sorted_objects:
         if current_watermark != world_obj.static_detail_level:
-            write_watermark(writer, world_obj.static_detail_level)
+            #write_watermark(writer, world_obj.static_detail_level)
             current_watermark = world_obj.static_detail_level
 
         if isinstance(world_obj, StaticObj):
