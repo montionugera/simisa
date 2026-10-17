@@ -13,9 +13,6 @@ List of companion modules:
 - [shapeedit](https://github.com/pgroenbaek/shapeedit) - provides a wrapper for modifying the shape data structure safely.
 - [trackshape-utils](https://github.com/pgroenbaek/trackshape-utils) - offers additional utilities for working with track shapes.
 
-See also:
-- [simisatool](https://github.com/pgroenbaek/simisatool) - A cross-platform CLI to compress/decompress `.s`, `.w` and `.t` files.
-
 ## Installation
 
 ### Install from PyPI
