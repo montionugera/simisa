@@ -26,7 +26,13 @@ from ..tracksections.writer import write_local_tracksections
 from .models import *
 
 
-def dump(world: World, filepath: str, compressed: bool = False) -> None:
+def dump(
+    world: World,
+    filepath: str,
+    binary: bool = False,
+    ascii: bool = False,
+    compressed: bool = False
+) -> None:
     """
     Write a world object to disk.
 
@@ -36,29 +42,37 @@ def dump(world: World, filepath: str, compressed: bool = False) -> None:
     Args:
         world (World): The world object to write.
         filepath (str): Path to the output file.
+        binary (bool): Whether to write binary data. Defaults to False.
+        ascii (bool): Whether to write ascii data. Defaults to False.
         compressed (bool): Whether to write compressed data. Defaults to False.
 
     Raises:
-        TypeError: If `world` is not a World object.
-        TypeError: If `filepath` is not a string.
-        TypeError: If `compressed` is not a bool.
+        TypeError: If any parameter has an unexpected type.
         OSError: If the file cannot be written.
     """
-    if not isinstance(world, World):
-        raise TypeError(f"Parameter 'world' must be World, but got {type(world).__name__}")
+    check_params = (
+        ("world", world, World),
+        ("filepath", filepath, str),
+        ("binary", binary, bool),
+        ("ascii", ascii, bool),
+        ("compressed", compressed, bool),
+    )
 
-    if not isinstance(filepath, str):
-        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    for name, value, typ in check_params:
+        if isinstance(value, typ):
+            continue
 
-    if not isinstance(compressed, bool):
-        raise TypeError(f"Parameter 'compressed' must be bool, but got {type(compressed).__name__}")
-
+        raise TypeError(
+            f"Parameter '{name}' must be {typ.__name__}, "
+            f"but got {type(value).__name__}"
+        )
+    
     with BlockWriter.open(
         filepath,
         filetype="w",
         fileversion=0,
-        is_binary=compressed,
-        is_unicode=not compressed,
+        is_binary=binary,
+        is_unicode=not ascii and not compressed,
         is_compressed=compressed
     ) as writer:
         write_world(writer, world)

@@ -25,7 +25,13 @@ from ..writer import BlockWriter
 from .models import *
 
 
-def dump(shape: Shape, filepath: str, compressed: bool = False) -> None:
+def dump(
+    shape: Shape,
+    filepath: str,
+    binary: bool = False,
+    ascii: bool = False,
+    compressed: bool = False
+) -> None:
     """
     Write a shape object to disk.
 
@@ -38,26 +44,32 @@ def dump(shape: Shape, filepath: str, compressed: bool = False) -> None:
         compressed (bool): Whether to write compressed data. Defaults to False.
 
     Raises:
-        TypeError: If `shape` is not a Shape object.
-        TypeError: If `filepath` is not a string.
-        TypeError: If `compressed` is not a bool.
+        TypeError: If any parameter has an unexpected type.
         OSError: If the file cannot be written.
     """
-    if not isinstance(shape, Shape):
-        raise TypeError(f"Parameter 'shape' must be Shape, but got {type(shape).__name__}")
+    check_params = (
+        ("shape", shape, Shape),
+        ("filepath", filepath, str),
+        ("binary", binary, bool),
+        ("ascii", ascii, bool),
+        ("compressed", compressed, bool),
+    )
 
-    if not isinstance(filepath, str):
-        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    for name, value, typ in check_params:
+        if isinstance(value, typ):
+            continue
 
-    if not isinstance(compressed, bool):
-        raise TypeError(f"Parameter 'compressed' must be bool, but got {type(compressed).__name__}")
-
+        raise TypeError(
+            f"Parameter '{name}' must be {typ.__name__}, "
+            f"but got {type(value).__name__}"
+        )
+    
     with BlockWriter.open(
         filepath,
         filetype="s",
         fileversion=1,
-        is_binary=compressed,
-        is_unicode=not compressed,
+        is_binary=binary,
+        is_unicode=not ascii and not compressed,
         is_compressed=compressed
     ) as writer:
         write_shape(writer, shape)

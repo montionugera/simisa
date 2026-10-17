@@ -25,7 +25,13 @@ from ..writer import BlockWriter
 from .models import *
 
 
-def dump(terrain: Terrain, filepath: str, compressed: bool = False) -> None:
+def dump(
+    terrain: Terrain,
+    filepath: str,
+    binary: bool = False,
+    ascii: bool = False,
+    compressed: bool = False
+) -> None:
     """
     Write a terrain object to disk.
 
@@ -35,29 +41,37 @@ def dump(terrain: Terrain, filepath: str, compressed: bool = False) -> None:
     Args:
         terrain (Terrain): The terrain object to write.
         filepath (str): Path to the output file.
+        binary (bool): Whether to write binary data. Defaults to False.
+        ascii (bool): Whether to write ascii data. Defaults to False.
         compressed (bool): Whether to write compressed data. Defaults to False.
 
     Raises:
-        TypeError: If `terrain` is not a Terrain object.
-        TypeError: If `filepath` is not a string.
-        TypeError: If `compressed` is not a bool.
+        TypeError: If any parameter has an unexpected type.
         OSError: If the file cannot be written.
     """
-    if not isinstance(terrain, Terrain):
-        raise TypeError(f"Parameter 'terrain' must be Terrain, but got {type(terrain).__name__}")
+    check_params = (
+        ("terrain", terrain, Terrain),
+        ("filepath", filepath, str),
+        ("binary", binary, bool),
+        ("ascii", ascii, bool),
+        ("compressed", compressed, bool),
+    )
 
-    if not isinstance(filepath, str):
-        raise TypeError(f"Parameter 'filepath' must be str, but got {type(filepath).__name__}")
+    for name, value, typ in check_params:
+        if isinstance(value, typ):
+            continue
 
-    if not isinstance(compressed, bool):
-        raise TypeError(f"Parameter 'compressed' must be bool, but got {type(compressed).__name__}")
-
+        raise TypeError(
+            f"Parameter '{name}' must be {typ.__name__}, "
+            f"but got {type(value).__name__}"
+        )
+    
     with BlockWriter.open(
         filepath,
         filetype="t",
         fileversion=6,
-        is_binary=compressed,
-        is_unicode=not compressed,
+        is_binary=binary,
+        is_unicode=not ascii and not compressed,
         is_compressed=compressed
     ) as writer:
         write_terrain(writer, terrain)
