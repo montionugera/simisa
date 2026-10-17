@@ -30,7 +30,8 @@ __all__ = [
     'UnresolvableIncludeError',
     'TokenID', 'Units', 'StfReader',
     'BlockReader', 'BlockWriter', 'BlockFormat',
-    'BlockReaderError', 'StfReaderError',
+    'BlockReaderError', 'BlockWriterError',
+    'StfReaderError',
     'roaddatabase', 'rdb',
     'shape', 's', 'terrain', 't',
     'tracksections', 'tsection',
@@ -51,7 +52,7 @@ from .token_id import TokenID
 from .units import Units
 from .stf import StfReader, StfReaderError
 from .reader import BlockReader, BlockReaderError
-from .writer import BlockWriter
+from .writer import BlockWriter, BlockWriterError
 from .format import BlockFormat
 
 from . import roaddatabase

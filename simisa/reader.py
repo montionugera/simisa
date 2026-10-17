@@ -217,8 +217,7 @@ class BlockReader(ABC):
 
         compressed = is_compressed(filepath)
 
-        # Header unknown, it is either missing, invalid or inside an include.
-        if compressed is None:
+        if compressed is None: # Header unknown, it is either missing, invalid or inside an include.
             first_include_path = peek_first_include(filepath)
 
             if first_include_path is None: # No include was present, therefore the header is missing or invalid.
@@ -238,6 +237,7 @@ class BlockReader(ABC):
                     raise SimisaHeaderError(f"Unrecognized header in {filepath}")
 
             text = resolve_includes(text, filepath)
+            
             return BlockReader.from_string(text)
 
         # Found the beginning of a valid header in the file, proceed to read normally.
