@@ -42,7 +42,7 @@ def dump(
         terrain (Terrain): The terrain object to write.
         filepath (str): Path to the output file.
         binary (bool): Whether to write binary data. Defaults to False.
-        ascii (bool): Whether to write ascii data. Defaults to False.
+        ascii (bool): Whether to write ASCII data. Defaults to False. Ignored when writing compressed data.
         compressed (bool): Whether to write compressed data. Defaults to False.
 
     Raises:
