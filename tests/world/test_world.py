@@ -34,8 +34,8 @@ def test_world_loads_compressed_bytes_raises(global_storage):
 
 
 def test_world_roundtrip_uncompressed(global_storage, tmp_path):
-    original = world.load(global_storage["worldfile_path"])
-    output_path = tmp_path / "w-005655+015119.w"
+    original = world.load(global_storage["worldfile2_path"])
+    output_path = tmp_path / "w-005579+015131.w"
     
     world.dump(original, str(output_path), compressed=False)
     roundtripped = world.load(str(output_path))
@@ -45,11 +45,12 @@ def test_world_roundtrip_uncompressed(global_storage, tmp_path):
 
 
 def test_world_roundtrip_compressed(global_storage, tmp_path):
-    original = world.load(global_storage["worldfile_path"])
-    output_path = tmp_path / "w-005655+015119.w"
+    original = world.load(global_storage["worldfile2_path"])
+    output_path = tmp_path / "w-005579+015131.w"
     
     world.dump(original, str(output_path), compressed=True)
     roundtripped = world.load(str(output_path))
     
     if not compare_objects(original, roundtripped):
         assert False
+

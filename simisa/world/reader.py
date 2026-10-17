@@ -475,6 +475,9 @@ def read_siding_object(reader: BlockReader, detail_level: int) -> SidingObj:
 
         elif sub_block.id == TokenID.StaticFlags:
             siding_obj.static_flags = sub_block.read_flags()
+        
+        elif sub_block.id == TokenID.SidingData:
+            siding_obj.siding_data = sub_block.read_flags()
 
         elif sub_block.id == TokenID.TrItemId:
             if siding_obj.tr_item_ids is None:
@@ -767,7 +770,7 @@ def read_dyntrack_object(reader: BlockReader, detail_level: int) -> DynTrackObj:
             dyntrack_obj.collide_flags = sub_block.read_uint()
         
         elif sub_block.id == TokenID.TrackSections:
-            dyntrack_obj.track_sections = read_local_tracksections(sub_block)
+            dyntrack_obj.track_sections = read_local_tracksections(sub_block, read_max_sections=False)
         
         else:
             logger.warning(f"Unhandled sub block: {sub_block.id.name} (id: {sub_block.id})")

@@ -114,6 +114,12 @@ WORLD_OBJ_BLOCK = BlockFormat(
     newline_before_closing=True
 )
 
+TRACKSECTIONS_BLOCK = BlockFormat(
+    max_items_per_line=1,
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
 SIGNAL_UNIT_BLOCK = BlockFormat(
     newline_before_closing=True
 )
@@ -151,14 +157,16 @@ def write_world_objects(writer: BlockWriter, objects: List[WorldObj]) -> None:
         if not isinstance(world_obj, WorldObj):
             raise TypeError(f"World property 'objects' must contain WorldObj objects, but got {type(world_obj).__name__}")
 
-    # Sort by static_detail_level, needed to be able to insert watermarks properly.
+    # User might have inserted an object without thinking about the ordering of objects by static_detail_level.
+    # The order really matters here due to how static_detail_level gets stored in the world file.
+    # So, sort the objects just in case, so that the watermark insertion always works properly.
     sorted_objects = sorted(objects, key=lambda obj: obj.static_detail_level)
 
     current_watermark = 0
 
     for world_obj in sorted_objects:
         if current_watermark != world_obj.static_detail_level:
-            #write_watermark(writer, world_obj.static_detail_level)
+            write_watermark(writer, world_obj.static_detail_level)
             current_watermark = world_obj.static_detail_level
 
         if isinstance(world_obj, StaticObj):
@@ -243,6 +251,9 @@ def write_static_object(writer: BlockWriter, static_obj: StaticObj) -> None:
             with static_block.sub_block(TokenID.FileName) as filename_block:
                 filename_block.write_string(static_obj.file_name)
     
+        with static_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(static_obj.static_flags)
+    
         write_position(static_block, static_obj.position)
         write_qdirection(static_block, static_obj.direction)
 
@@ -252,9 +263,6 @@ def write_static_object(writer: BlockWriter, static_obj: StaticObj) -> None:
         if static_obj.vdb_id is not None:
             with static_block.sub_block(TokenID.VDbId) as vdb_id_block:
                 vdb_id_block.write_uint(static_obj.vdb_id)
-    
-        with static_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(static_obj.static_flags)
 
 
 def write_track_object(writer: BlockWriter, track_obj: TrackObj) -> None:
@@ -322,10 +330,27 @@ def write_carspawner_object(writer: BlockWriter, car_spawner_obj: CarSpawnerObj)
     with writer.sub_block(TokenID.CarSpawner, block_format=WORLD_OBJ_BLOCK) as car_spawner_block:
         with car_spawner_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(car_spawner_obj.uid)
+
+        with car_spawner_block.sub_block(TokenID.CarFrequency) as car_frequency_block:
+            car_frequency_block.write_float(car_spawner_obj.car_frequency)
+        
+        with car_spawner_block.sub_block(TokenID.CarAvSpeed) as car_av_speed_block:
+            car_av_speed_block.write_float(car_spawner_obj.car_avg_speed)
+        
+        if car_spawner_obj.tr_item_ids:
+            for tr_item_id in car_spawner_obj.tr_item_ids:
+                write_tr_item_id(car_spawner_block, tr_item_id)
     
         if car_spawner_obj.file_name is not None:
             with car_spawner_block.sub_block(TokenID.FileName) as filename_block:
                 filename_block.write_string(car_spawner_obj.file_name)
+    
+        with car_spawner_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(car_spawner_obj.static_flags)
+        
+        if car_spawner_obj.list_name is not None:
+            with car_spawner_block.sub_block(TokenID.ORTSListName) as listname_block:
+                listname_block.write_string(car_spawner_obj.list_name)
     
         write_position(car_spawner_block, car_spawner_obj.position)
         write_qdirection(car_spawner_block, car_spawner_obj.direction)
@@ -336,23 +361,6 @@ def write_carspawner_object(writer: BlockWriter, car_spawner_obj: CarSpawnerObj)
         if car_spawner_obj.vdb_id is not None:
             with car_spawner_block.sub_block(TokenID.VDbId) as vdb_id_block:
                 vdb_id_block.write_uint(car_spawner_obj.vdb_id)
-    
-        with car_spawner_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(car_spawner_obj.static_flags)
-
-        with car_spawner_block.sub_block(TokenID.CarFrequency) as car_frequency_block:
-            car_frequency_block.write_float(car_spawner_obj.car_frequency)
-        
-        with car_spawner_block.sub_block(TokenID.CarAvSpeed) as car_av_speed_block:
-            car_av_speed_block.write_float(car_spawner_obj.car_avg_speed)
-        
-        if car_spawner_obj.list_name is not None:
-            with car_spawner_block.sub_block(TokenID.ORTSListName) as listname_block:
-                listname_block.write_string(car_spawner_obj.list_name)
-        
-        if car_spawner_obj.tr_item_ids:
-            for tr_item_id in car_spawner_obj.tr_item_ids:
-                write_tr_item_id(car_spawner_block, tr_item_id)
 
 
 def write_siding_object(writer: BlockWriter, siding_obj: SidingObj) -> None:
@@ -373,9 +381,19 @@ def write_siding_object(writer: BlockWriter, siding_obj: SidingObj) -> None:
         with siding_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(siding_obj.uid)
     
+        with siding_block.sub_block(TokenID.SidingData) as siding_data_block:
+            siding_data_block.write_flags(siding_obj.siding_data)
+
+        if siding_obj.tr_item_ids:
+            for tr_item_id in siding_obj.tr_item_ids:
+                write_tr_item_id(siding_block, tr_item_id)
+        
         if siding_obj.file_name is not None:
             with siding_block.sub_block(TokenID.FileName) as filename_block:
                 filename_block.write_string(siding_obj.file_name)
+    
+        with siding_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(siding_obj.static_flags)
     
         write_position(siding_block, siding_obj.position)
         write_qdirection(siding_block, siding_obj.direction)
@@ -386,13 +404,6 @@ def write_siding_object(writer: BlockWriter, siding_obj: SidingObj) -> None:
         if siding_obj.vdb_id is not None:
             with siding_block.sub_block(TokenID.VDbId) as vdb_id_block:
                 vdb_id_block.write_uint(siding_obj.vdb_id)
-    
-        with siding_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(siding_obj.static_flags)
-
-        if siding_obj.tr_item_ids:
-            for tr_item_id in siding_obj.tr_item_ids:
-                write_tr_item_id(siding_block, tr_item_id)
 
 
 def write_platform_object(writer: BlockWriter, platform_obj: PlatformObj) -> None:
@@ -412,10 +423,20 @@ def write_platform_object(writer: BlockWriter, platform_obj: PlatformObj) -> Non
     with writer.sub_block(TokenID.Platform, block_format=WORLD_OBJ_BLOCK) as platform_block:
         with platform_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(platform_obj.uid)
+
+        with platform_block.sub_block(TokenID.PlatformData) as platform_data_block:
+            platform_data_block.write_flags(platform_obj.platform_data)
+        
+        if platform_obj.tr_item_ids:
+            for tr_item_id in platform_obj.tr_item_ids:
+                write_tr_item_id(platform_block, tr_item_id)
     
         if platform_obj.file_name is not None:
             with platform_block.sub_block(TokenID.FileName) as filename_block:
                 filename_block.write_string(platform_obj.file_name)
+    
+        with platform_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(platform_obj.static_flags)
     
         write_position(platform_block, platform_obj.position)
         write_qdirection(platform_block, platform_obj.direction)
@@ -426,16 +447,6 @@ def write_platform_object(writer: BlockWriter, platform_obj: PlatformObj) -> Non
         if platform_obj.vdb_id is not None:
             with platform_block.sub_block(TokenID.VDbId) as vdb_id_block:
                 vdb_id_block.write_uint(platform_obj.vdb_id)
-    
-        with platform_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(platform_obj.static_flags)
-
-        with platform_block.sub_block(TokenID.PlatformData) as platform_data_block:
-            platform_data_block.write_flags(platform_obj.platform_data)
-        
-        if platform_obj.tr_item_ids:
-            for tr_item_id in platform_obj.tr_item_ids:
-                write_tr_item_id(platform_block, tr_item_id)
 
 
 def write_forest_object(writer: BlockWriter, forest_obj: ForestObj) -> None:
@@ -455,23 +466,6 @@ def write_forest_object(writer: BlockWriter, forest_obj: ForestObj) -> None:
     with writer.sub_block(TokenID.Forest, block_format=WORLD_OBJ_BLOCK) as forest_block:
         with forest_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(forest_obj.uid)
-    
-        if forest_obj.file_name is not None:
-            with forest_block.sub_block(TokenID.FileName) as filename_block:
-                filename_block.write_string(forest_obj.file_name)
-    
-        write_position(forest_block, forest_obj.position)
-        write_qdirection(forest_block, forest_obj.direction)
-
-        if forest_obj.matrix3x3 is not None:
-            write_matrix3x3(forest_block, forest_obj.matrix3x3)
-    
-        if forest_obj.vdb_id is not None:
-            with forest_block.sub_block(TokenID.VDbId) as vdb_id_block:
-                vdb_id_block.write_uint(forest_obj.vdb_id)
-    
-        with forest_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(forest_obj.static_flags)
 
         if forest_obj.tree_texture is not None:
             with forest_block.sub_block(TokenID.TreeTexture) as tree_texture_block:
@@ -495,6 +489,23 @@ def write_forest_object(writer: BlockWriter, forest_obj: ForestObj) -> None:
             with forest_block.sub_block(TokenID.TreeSize) as tree_size_block:
                 tree_size_block.write_float(forest_obj.tree_size.width)
                 tree_size_block.write_float(forest_obj.tree_size.height)
+    
+        if forest_obj.file_name is not None:
+            with forest_block.sub_block(TokenID.FileName) as filename_block:
+                filename_block.write_string(forest_obj.file_name)
+    
+        with forest_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(forest_obj.static_flags)
+    
+        write_position(forest_block, forest_obj.position)
+        write_qdirection(forest_block, forest_obj.direction)
+
+        if forest_obj.matrix3x3 is not None:
+            write_matrix3x3(forest_block, forest_obj.matrix3x3)
+    
+        if forest_obj.vdb_id is not None:
+            with forest_block.sub_block(TokenID.VDbId) as vdb_id_block:
+                vdb_id_block.write_uint(forest_obj.vdb_id)
 
 
 def write_levelcr_object(writer: BlockWriter, levelcr_obj: LevelCrObj) -> None:
@@ -514,24 +525,7 @@ def write_levelcr_object(writer: BlockWriter, levelcr_obj: LevelCrObj) -> None:
     with writer.sub_block(TokenID.LevelCr, block_format=WORLD_OBJ_BLOCK) as levelcr_block:
         with levelcr_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(levelcr_obj.uid)
-    
-        if levelcr_obj.file_name is not None:
-            with levelcr_block.sub_block(TokenID.FileName) as filename_block:
-                filename_block.write_string(levelcr_obj.file_name)
-    
-        write_position(levelcr_block, levelcr_obj.position)
-        write_qdirection(levelcr_block, levelcr_obj.direction)
-
-        if levelcr_obj.matrix3x3 is not None:
-            write_matrix3x3(levelcr_block, levelcr_obj.matrix3x3)
-    
-        if levelcr_obj.vdb_id is not None:
-            with levelcr_block.sub_block(TokenID.VDbId) as vdb_id_block:
-                vdb_id_block.write_uint(levelcr_obj.vdb_id)
-    
-        with levelcr_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(levelcr_obj.static_flags)
-
+        
         if levelcr_obj.levelcr_params is not None:
             with levelcr_block.sub_block(TokenID.LevelCrParameters) as levelcr_params_block:
                 levelcr_params_block.write_float(levelcr_obj.levelcr_params.warning_time)
@@ -559,6 +553,24 @@ def write_levelcr_object(writer: BlockWriter, levelcr_obj: LevelCrObj) -> None:
         if levelcr_obj.tr_item_ids:
             for tr_item_id in levelcr_obj.tr_item_ids:
                 write_tr_item_id(levelcr_block, tr_item_id)
+    
+        if levelcr_obj.file_name is not None:
+            with levelcr_block.sub_block(TokenID.FileName) as filename_block:
+                filename_block.write_string(levelcr_obj.file_name)
+    
+        with levelcr_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(levelcr_obj.static_flags)
+    
+        write_position(levelcr_block, levelcr_obj.position)
+        write_qdirection(levelcr_block, levelcr_obj.direction)
+
+        if levelcr_obj.matrix3x3 is not None:
+            write_matrix3x3(levelcr_block, levelcr_obj.matrix3x3)
+    
+        if levelcr_obj.vdb_id is not None:
+            with levelcr_block.sub_block(TokenID.VDbId) as vdb_id_block:
+                vdb_id_block.write_uint(levelcr_obj.vdb_id)
+
 
 
 def write_dyntrack_object(writer: BlockWriter, dyntrack_obj: DynTrackObj) -> None:
@@ -579,14 +591,9 @@ def write_dyntrack_object(writer: BlockWriter, dyntrack_obj: DynTrackObj) -> Non
         with dyntrack_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(dyntrack_obj.uid)
 
-        write_position(dyntrack_block, dyntrack_obj.position)
-        write_qdirection(dyntrack_block, dyntrack_obj.direction)
-
-        with dyntrack_block.sub_block(TokenID.VDbId) as vdb_id_block:
-            vdb_id_block.write_uint(dyntrack_obj.vdb_id)
-        
-        with dyntrack_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(dyntrack_obj.static_flags)
+        if dyntrack_obj.track_sections is not None:
+            with dyntrack_block.sub_block(TokenID.TrackSections, block_format=TRACKSECTIONS_BLOCK) as tracksections_block:
+                write_local_tracksections(tracksections_block, dyntrack_obj.track_sections, write_max_sections=False)
         
         with dyntrack_block.sub_block(TokenID.SectionIdx) as sectionidx_block:
             sectionidx_block.write_uint(dyntrack_obj.section_index)
@@ -597,9 +604,15 @@ def write_dyntrack_object(writer: BlockWriter, dyntrack_obj: DynTrackObj) -> Non
         with dyntrack_block.sub_block(TokenID.CollideFlags) as collide_flags_block:
             collide_flags_block.write_uint(dyntrack_obj.collide_flags)
         
-        if dyntrack_obj.track_sections is not None:
-            with dyntrack_block.sub_block(TokenID.TrackSections) as tracksections_block:
-                write_local_tracksections(tracksections_block, dyntrack_obj.track_sections)
+        with dyntrack_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(dyntrack_obj.static_flags)
+
+        write_position(dyntrack_block, dyntrack_obj.position)
+        write_qdirection(dyntrack_block, dyntrack_obj.direction)
+
+        if dyntrack_obj.vdb_id is not None:
+            with dyntrack_block.sub_block(TokenID.VDbId) as vdb_id_block:
+                vdb_id_block.write_uint(dyntrack_obj.vdb_id)
 
 
 def write_transfer_object(writer: BlockWriter, transfer_obj: TransferObj) -> None:
@@ -619,10 +632,19 @@ def write_transfer_object(writer: BlockWriter, transfer_obj: TransferObj) -> Non
     with writer.sub_block(TokenID.Transfer, block_format=WORLD_OBJ_BLOCK) as transfer_block:
         with transfer_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(transfer_obj.uid)
+
+        with transfer_block.sub_block(TokenID.Width) as width_block:
+            width_block.write_float(transfer_obj.width)
+        
+        with transfer_block.sub_block(TokenID.Height) as height_block:
+            height_block.write_float(transfer_obj.height)
     
         if transfer_obj.file_name is not None:
             with transfer_block.sub_block(TokenID.FileName) as filename_block:
                 filename_block.write_string(transfer_obj.file_name)
+    
+        with transfer_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(transfer_obj.static_flags)
     
         write_position(transfer_block, transfer_obj.position)
         write_qdirection(transfer_block, transfer_obj.direction)
@@ -633,15 +655,6 @@ def write_transfer_object(writer: BlockWriter, transfer_obj: TransferObj) -> Non
         if transfer_obj.vdb_id is not None:
             with transfer_block.sub_block(TokenID.VDbId) as vdb_id_block:
                 vdb_id_block.write_uint(transfer_obj.vdb_id)
-    
-        with transfer_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(transfer_obj.static_flags)
-
-        with transfer_block.sub_block(TokenID.Width) as width_block:
-            width_block.write_float(transfer_obj.width)
-        
-        with transfer_block.sub_block(TokenID.Height) as height_block:
-            height_block.write_float(transfer_obj.height)
 
 
 def write_gantry_object(writer: BlockWriter, gantry_obj: GantryObj) -> None:
@@ -666,6 +679,9 @@ def write_gantry_object(writer: BlockWriter, gantry_obj: GantryObj) -> None:
             with gantry_block.sub_block(TokenID.FileName) as filename_block:
                 filename_block.write_string(gantry_obj.file_name)
     
+        with gantry_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(gantry_obj.static_flags)
+    
         write_position(gantry_block, gantry_obj.position)
         write_qdirection(gantry_block, gantry_obj.direction)
 
@@ -676,8 +692,8 @@ def write_gantry_object(writer: BlockWriter, gantry_obj: GantryObj) -> None:
             with gantry_block.sub_block(TokenID.VDbId) as vdb_id_block:
                 vdb_id_block.write_uint(gantry_obj.vdb_id)
     
-        with gantry_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(gantry_obj.static_flags)
+        with gantry_block.sub_block(TokenID.StaticDetailLevel) as static_detail_level_block:
+            static_detail_level_block.write_uint(gantry_obj.static_detail_level)
 
 
 def write_pickup_object(writer: BlockWriter, pickup_obj: PickupObj) -> None:
@@ -697,23 +713,6 @@ def write_pickup_object(writer: BlockWriter, pickup_obj: PickupObj) -> None:
     with writer.sub_block(TokenID.Pickup, block_format=WORLD_OBJ_BLOCK) as pickup_block:
         with pickup_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(pickup_obj.uid)
-    
-        if pickup_obj.file_name is not None:
-            with pickup_block.sub_block(TokenID.FileName) as filename_block:
-                filename_block.write_string(pickup_obj.file_name)
-    
-        write_position(pickup_block, pickup_obj.position)
-        write_qdirection(pickup_block, pickup_obj.direction)
-
-        if pickup_obj.matrix3x3 is not None:
-            write_matrix3x3(pickup_block, pickup_obj.matrix3x3)
-    
-        if pickup_obj.vdb_id is not None:
-            with pickup_block.sub_block(TokenID.VDbId) as vdb_id_block:
-                vdb_id_block.write_uint(pickup_obj.vdb_id)
-    
-        with pickup_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(pickup_obj.static_flags)
 
         if pickup_obj.speed_range is not None:
             with pickup_block.sub_block(TokenID.SpeedRange) as speed_range_block:
@@ -764,6 +763,23 @@ def write_pickup_object(writer: BlockWriter, pickup_obj: PickupObj) -> None:
         if pickup_obj.tr_item_ids:
             for tr_item_id in pickup_obj.tr_item_ids:
                 write_tr_item_id(pickup_block, tr_item_id)
+    
+        if pickup_obj.file_name is not None:
+            with pickup_block.sub_block(TokenID.FileName) as filename_block:
+                filename_block.write_string(pickup_obj.file_name)
+    
+        with pickup_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(pickup_obj.static_flags)
+    
+        write_position(pickup_block, pickup_obj.position)
+        write_qdirection(pickup_block, pickup_obj.direction)
+
+        if pickup_obj.matrix3x3 is not None:
+            write_matrix3x3(pickup_block, pickup_obj.matrix3x3)
+    
+        if pickup_obj.vdb_id is not None:
+            with pickup_block.sub_block(TokenID.VDbId) as vdb_id_block:
+                vdb_id_block.write_uint(pickup_obj.vdb_id)
 
 
 def write_stack_locations(writer: BlockWriter, stack_locations: List[StackLocation]) -> None:
@@ -816,10 +832,16 @@ def write_hazard_object(writer: BlockWriter, hazard_obj: HazardObj) -> None:
     with writer.sub_block(TokenID.Hazard, block_format=WORLD_OBJ_BLOCK) as hazard_block:
         with hazard_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(hazard_obj.uid)
+
+        if hazard_obj.tr_item_id is not None:
+            write_tr_item_id(hazard_block, hazard_obj.tr_item_id)
     
         if hazard_obj.file_name is not None:
             with hazard_block.sub_block(TokenID.FileName) as filename_block:
                 filename_block.write_string(hazard_obj.file_name)
+    
+        with hazard_block.sub_block(TokenID.StaticFlags) as static_flags_block:
+            static_flags_block.write_flags(hazard_obj.static_flags)
     
         write_position(hazard_block, hazard_obj.position)
         write_qdirection(hazard_block, hazard_obj.direction)
@@ -830,12 +852,6 @@ def write_hazard_object(writer: BlockWriter, hazard_obj: HazardObj) -> None:
         if hazard_obj.vdb_id is not None:
             with hazard_block.sub_block(TokenID.VDbId) as vdb_id_block:
                 vdb_id_block.write_uint(hazard_obj.vdb_id)
-    
-        with hazard_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(hazard_obj.static_flags)
-
-        if hazard_obj.tr_item_id is not None:
-            write_tr_item_id(hazard_block, hazard_obj.tr_item_id)
 
 
 def write_signal_object(writer: BlockWriter, signal_obj: SignalObj) -> None:
@@ -917,23 +933,6 @@ def write_speedpost_object(writer: BlockWriter, speedpost_obj: SpeedPostObj) -> 
     with writer.sub_block(TokenID.Speedpost, block_format=WORLD_OBJ_BLOCK) as speedpost_block:
         with speedpost_block.sub_block(TokenID.UiD) as uid_block:
             uid_block.write_uint(speedpost_obj.uid)
-    
-        if speedpost_obj.file_name is not None:
-            with speedpost_block.sub_block(TokenID.FileName) as filename_block:
-                filename_block.write_string(speedpost_obj.file_name)
-    
-        write_position(speedpost_block, speedpost_obj.position)
-        write_qdirection(speedpost_block, speedpost_obj.direction)
-
-        if speedpost_obj.matrix3x3 is not None:
-            write_matrix3x3(speedpost_block, speedpost_obj.matrix3x3)
-    
-        if speedpost_obj.vdb_id is not None:
-            with speedpost_block.sub_block(TokenID.VDbId) as vdb_id_block:
-                vdb_id_block.write_uint(speedpost_obj.vdb_id)
-    
-        with speedpost_block.sub_block(TokenID.StaticFlags) as static_flags_block:
-            static_flags_block.write_flags(speedpost_obj.static_flags)
 
         if speedpost_obj.speed_digit_tex is not None:
             with speedpost_block.sub_block(TokenID.Speed_Digit_Tex) as speed_digit_tex_block:
@@ -955,6 +954,20 @@ def write_speedpost_object(writer: BlockWriter, speedpost_obj: SpeedPostObj) -> 
         if speedpost_obj.tr_item_ids:
             for tr_item_id in speedpost_obj.tr_item_ids:
                 write_tr_item_id(speedpost_block, tr_item_id)
+    
+        if speedpost_obj.file_name is not None:
+            with speedpost_block.sub_block(TokenID.FileName) as filename_block:
+                filename_block.write_string(speedpost_obj.file_name)
+    
+        write_position(speedpost_block, speedpost_obj.position)
+        write_qdirection(speedpost_block, speedpost_obj.direction)
+
+        if speedpost_obj.matrix3x3 is not None:
+            write_matrix3x3(speedpost_block, speedpost_obj.matrix3x3)
+    
+        if speedpost_obj.vdb_id is not None:
+            with speedpost_block.sub_block(TokenID.VDbId) as vdb_id_block:
+                vdb_id_block.write_uint(speedpost_obj.vdb_id)
 
 
 def write_position(writer: BlockWriter, position: Position) -> None:

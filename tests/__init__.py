@@ -55,7 +55,7 @@ def compare_objects(left, right, path="root"):
             for key in left:
                 stack.append((left[key], right[key], f"{path}.{key}"))
             continue
-
+        
         if hasattr(left, "__dict__"):
             stack.append((left.__dict__, right.__dict__, path))
             continue

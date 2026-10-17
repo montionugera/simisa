@@ -194,12 +194,14 @@ class CarSpawnerObj(WorldObj):
 
 @dataclass
 class SidingObj(WorldObj):
+    siding_data: int = 0
     tr_item_ids: List[TrItemId] = field(default_factory=list)
 
     def __repr__(self):
         return (
             "SidingObj("
             f"{self._base_repr()}, "
+            f"siding_data={self.siding_data}, "
             f"tr_item_ids (len={len(self.tr_item_ids)}))"
         )
 

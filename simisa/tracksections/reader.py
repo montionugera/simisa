@@ -211,7 +211,7 @@ def read_global_tracksections(reader: BlockReader) -> TrackSections:
     return tracksections
 
 
-def read_local_tracksections(reader: BlockReader) -> TrackSections:
+def read_local_tracksections(reader: BlockReader, read_max_sections: bool = True) -> TrackSections:
     """
     Read and parse track sections from a BlockReader.
 
@@ -219,6 +219,7 @@ def read_local_tracksections(reader: BlockReader) -> TrackSections:
 
     Args:
         reader (BlockReader): Reader positioned at a track sections block.
+        read_max_sections (bool): Whether to read the maximum section index. Defaults to True.
 
     Returns:
         TrackSections: The parsed track sections.
@@ -226,7 +227,9 @@ def read_local_tracksections(reader: BlockReader) -> TrackSections:
     reader.verify_id(TokenID.TrackSections)
 
     tracksections = TrackSections()
-    tracksections.max_section_index = reader.read_uint()
+
+    if read_max_sections:
+        tracksections.max_section_index = reader.read_uint()
 
     for tracksection_block in reader:
         tracksection_block.verify_id(TokenID.TrackSection)

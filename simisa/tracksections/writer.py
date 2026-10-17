@@ -20,11 +20,18 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 import math
 
 from .. import TokenID
+from ..format import BlockFormat
 from ..writer import BlockWriter
 from .models import *
 
 
-def write_local_tracksections(writer: BlockWriter, tracksections: TrackSections) -> None:
+TRACKSECTION_BLOCK = BlockFormat(
+    newline_after_start=True,
+    newline_before_closing=True
+)
+
+
+def write_local_tracksections(writer: BlockWriter, tracksections: TrackSections, write_max_sections: bool = True) -> None:
     """
     Write local track sections to a BlockWriter.
 
@@ -33,7 +40,8 @@ def write_local_tracksections(writer: BlockWriter, tracksections: TrackSections)
     Args:
         writer (BlockWriter): Writer to write the local track sections to.
         tracksections (TrackSections): Track sections object containing the
-            maximum section index and track section objects.
+            maximum section index and track section objects. 
+        write_max_sections (bool): Whether to write the maximum section index. Defaults to True.
     """
     if not isinstance(tracksections, TrackSections):
         raise TypeError(f"DynTrackObj property 'track_sections' must be TrackSections, but got {type(tracksections).__name__}")
@@ -42,10 +50,11 @@ def write_local_tracksections(writer: BlockWriter, tracksections: TrackSections)
         if not isinstance(tracksection, TrackSection):
             raise TypeError(f"TrackSections property 'track_sections' must contain TrackSection objects, but got {type(tracksection).__name__}")
 
-    writer.write_uint(tracksections.max_section_index)
+    if write_max_sections:
+        writer.write_uint(tracksections.max_section_index)
 
     for section_index, tracksection in sorted(tracksections.track_sections.items()):
-        with writer.sub_block(TokenID.TrackSection) as tracksection_block:
+        with writer.sub_block(TokenID.TrackSection, block_format=TRACKSECTION_BLOCK) as tracksection_block:
             with tracksection_block.sub_block(TokenID.SectionCurve) as sectioncurve_block:
                 sectioncurve_block.write_int(0)
 
