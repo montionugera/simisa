@@ -9,7 +9,7 @@ A Python module to read and write files used with MSTS and Open Rails.
 
 This module has a similar API to Python's built-in `json` module. When loading files, this module handles compression and text/binary formats of the SIMISA container seamlessly. It's also not at all sensitive to whitespace formatting in STF text files.
 
-> [!NOTE]>
+> [!NOTE]
 > **This project is in a beta testing phase.** The library is functional and stable enough to use, but further testing and real-world usage are needed to validate its reliability and ensure stability across different use cases and that file output works with all the different tools that exist like TSRE5, TSFV, ffeditc_unicode.exe, etc.
 
 List of companion modules:
