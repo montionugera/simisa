@@ -151,53 +151,77 @@ def write_world_objects(writer: BlockWriter, objects: List[WorldObj]) -> None:
         if not isinstance(world_obj, WorldObj):
             raise TypeError(f"World property 'objects' must contain WorldObj objects, but got {type(world_obj).__name__}")
 
+    # Sort by static_detail_level, needed to be able to insert watermarks properly.
+    sorted_objects = sorted(objects, key=lambda obj: obj.static_detail_level)
+
     current_watermark = 0
 
-    for world_obj in objects:
+    for world_obj in sorted_objects:
+        if current_watermark != world_obj.static_detail_level:
+            write_watermark(writer, world_obj.static_detail_level)
+            current_watermark = world_obj.static_detail_level
+
         if isinstance(world_obj, StaticObj):
-            write_static_object(writer, world_obj, current_watermark)
+            write_static_object(writer, world_obj)
         
         elif isinstance(world_obj, TrackObj):
-            write_track_object(writer, world_obj, current_watermark)
+            write_track_object(writer, world_obj)
         
         elif isinstance(world_obj, CarSpawnerObj):
-            write_carspawner_object(writer, world_obj, current_watermark)
+            write_carspawner_object(writer, world_obj)
         
         elif isinstance(world_obj, SidingObj):
-            write_siding_object(writer, world_obj, current_watermark)
+            write_siding_object(writer, world_obj)
         
         elif isinstance(world_obj, PlatformObj):
-            write_platform_object(writer, world_obj, current_watermark)
+            write_platform_object(writer, world_obj)
         
         elif isinstance(world_obj, ForestObj):
-            write_forest_object(writer, world_obj, current_watermark)
+            write_forest_object(writer, world_obj)
         
         elif isinstance(world_obj, LevelCrObj):
-            write_levelcr_object(writer, world_obj, current_watermark)
+            write_levelcr_object(writer, world_obj)
         
         elif isinstance(world_obj, DynTrackObj):
-            write_dyntrack_object(writer, world_obj, current_watermark)
+            write_dyntrack_object(writer, world_obj)
         
         elif isinstance(world_obj, TransferObj):
-            write_transfer_object(writer, world_obj, current_watermark)
+            write_transfer_object(writer, world_obj)
         
         elif isinstance(world_obj, GantryObj):
-            write_gantry_object(writer, world_obj, current_watermark)
+            write_gantry_object(writer, world_obj)
         
         elif isinstance(world_obj, PickupObj):
-            write_pickup_object(writer, world_obj, current_watermark)
+            write_pickup_object(writer, world_obj)
         
         elif isinstance(world_obj, HazardObj):
-            write_hazard_object(writer, world_obj, current_watermark)
+            write_hazard_object(writer, world_obj)
         
         elif isinstance(world_obj, SignalObj):
-            write_signal_object(writer, world_obj, current_watermark)
+            write_signal_object(writer, world_obj)
         
         elif isinstance(world_obj, SpeedPostObj):
-            write_speedpost_object(writer, world_obj, current_watermark)
+            write_speedpost_object(writer, world_obj)
 
 
-def write_static_object(writer: BlockWriter, static_obj: StaticObj, detail_level: int) -> None:
+def write_watermark(writer: BlockWriter, detail_level: int) -> None:
+    """
+    Write a watermark to a BlockWriter.
+
+    Writes the `Tr_Watermark` sub-block with its detail level value.
+
+    Args:
+        writer (BlockWriter): Writer to write the static object to.
+        detail_level (int): Detail level associated with the object.
+    """
+    if not isinstance(detail_level, int):
+        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
+
+    with writer.sub_block(TokenID.Tr_Watermark) as watermark_block:
+        watermark_block.write_int(detail_level)
+    
+
+def write_static_object(writer: BlockWriter, static_obj: StaticObj) -> None:
     """
     Write a static object to a BlockWriter.
 
@@ -210,9 +234,6 @@ def write_static_object(writer: BlockWriter, static_obj: StaticObj, detail_level
     """
     if not isinstance(static_obj, StaticObj):
         raise TypeError(f"World property 'objects' must contain StaticObj objects, but got {type(static_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Static, block_format=WORLD_OBJ_BLOCK) as static_block:
         with static_block.sub_block(TokenID.UiD) as uid_block:
@@ -236,7 +257,7 @@ def write_static_object(writer: BlockWriter, static_obj: StaticObj, detail_level
             static_flags_block.write_flags(static_obj.static_flags)
 
 
-def write_track_object(writer: BlockWriter, track_obj: TrackObj, detail_level: int) -> None:
+def write_track_object(writer: BlockWriter, track_obj: TrackObj) -> None:
     """
     Write a track object to a BlockWriter.
 
@@ -249,9 +270,6 @@ def write_track_object(writer: BlockWriter, track_obj: TrackObj, detail_level: i
     """
     if not isinstance(track_obj, TrackObj):
         raise TypeError(f"World property 'objects' must contain TrackObj objects, but got {type(track_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.TrackObj, block_format=WORLD_OBJ_BLOCK) as trackobj_block:
         with trackobj_block.sub_block(TokenID.UiD) as uid_block:
@@ -287,7 +305,7 @@ def write_track_object(writer: BlockWriter, track_obj: TrackObj, detail_level: i
                 vdb_id_block.write_uint(track_obj.vdb_id)
 
 
-def write_carspawner_object(writer: BlockWriter, car_spawner_obj: CarSpawnerObj, detail_level: int) -> None:
+def write_carspawner_object(writer: BlockWriter, car_spawner_obj: CarSpawnerObj) -> None:
     """
     Write a car spawner object to a BlockWriter.
 
@@ -300,9 +318,6 @@ def write_carspawner_object(writer: BlockWriter, car_spawner_obj: CarSpawnerObj,
     """
     if not isinstance(car_spawner_obj, CarSpawnerObj):
         raise TypeError(f"World property 'objects' must contain CarSpawnerObj objects, but got {type(car_spawner_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.CarSpawner, block_format=WORLD_OBJ_BLOCK) as car_spawner_block:
         with car_spawner_block.sub_block(TokenID.UiD) as uid_block:
@@ -340,7 +355,7 @@ def write_carspawner_object(writer: BlockWriter, car_spawner_obj: CarSpawnerObj,
                 write_tr_item_id(car_spawner_block, tr_item_id)
 
 
-def write_siding_object(writer: BlockWriter, siding_obj: SidingObj, detail_level: int) -> None:
+def write_siding_object(writer: BlockWriter, siding_obj: SidingObj) -> None:
     """
     Write a siding object to a BlockWriter.
 
@@ -353,9 +368,6 @@ def write_siding_object(writer: BlockWriter, siding_obj: SidingObj, detail_level
     """
     if not isinstance(siding_obj, SidingObj):
         raise TypeError(f"World property 'objects' must contain SidingObj objects, but got {type(siding_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Siding, block_format=WORLD_OBJ_BLOCK) as siding_block:
         with siding_block.sub_block(TokenID.UiD) as uid_block:
@@ -383,7 +395,7 @@ def write_siding_object(writer: BlockWriter, siding_obj: SidingObj, detail_level
                 write_tr_item_id(siding_block, tr_item_id)
 
 
-def write_platform_object(writer: BlockWriter, platform_obj: PlatformObj, detail_level: int) -> None:
+def write_platform_object(writer: BlockWriter, platform_obj: PlatformObj) -> None:
     """
     Write a platform object to a BlockWriter.
 
@@ -396,9 +408,6 @@ def write_platform_object(writer: BlockWriter, platform_obj: PlatformObj, detail
     """
     if not isinstance(platform_obj, PlatformObj):
         raise TypeError(f"World property 'objects' must contain PlatformObj objects, but got {type(platform_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Platform, block_format=WORLD_OBJ_BLOCK) as platform_block:
         with platform_block.sub_block(TokenID.UiD) as uid_block:
@@ -429,7 +438,7 @@ def write_platform_object(writer: BlockWriter, platform_obj: PlatformObj, detail
                 write_tr_item_id(platform_block, tr_item_id)
 
 
-def write_forest_object(writer: BlockWriter, forest_obj: ForestObj, detail_level: int) -> None:
+def write_forest_object(writer: BlockWriter, forest_obj: ForestObj) -> None:
     """
     Write a forest object to a BlockWriter.
 
@@ -442,9 +451,6 @@ def write_forest_object(writer: BlockWriter, forest_obj: ForestObj, detail_level
     """
     if not isinstance(forest_obj, ForestObj):
         raise TypeError(f"World property 'objects' must contain ForestObj objects, but got {type(forest_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Forest, block_format=WORLD_OBJ_BLOCK) as forest_block:
         with forest_block.sub_block(TokenID.UiD) as uid_block:
@@ -491,7 +497,7 @@ def write_forest_object(writer: BlockWriter, forest_obj: ForestObj, detail_level
                 tree_size_block.write_float(forest_obj.tree_size.height)
 
 
-def write_levelcr_object(writer: BlockWriter, levelcr_obj: LevelCrObj, detail_level: int) -> None:
+def write_levelcr_object(writer: BlockWriter, levelcr_obj: LevelCrObj) -> None:
     """
     Write a level crossing object to a BlockWriter.
 
@@ -504,9 +510,6 @@ def write_levelcr_object(writer: BlockWriter, levelcr_obj: LevelCrObj, detail_le
     """
     if not isinstance(levelcr_obj, LevelCrObj):
         raise TypeError(f"World property 'objects' must contain LevelCrObj objects, but got {type(levelcr_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.LevelCr, block_format=WORLD_OBJ_BLOCK) as levelcr_block:
         with levelcr_block.sub_block(TokenID.UiD) as uid_block:
@@ -558,7 +561,7 @@ def write_levelcr_object(writer: BlockWriter, levelcr_obj: LevelCrObj, detail_le
                 write_tr_item_id(levelcr_block, tr_item_id)
 
 
-def write_dyntrack_object(writer: BlockWriter, dyntrack_obj: DynTrackObj, detail_level: int) -> None:
+def write_dyntrack_object(writer: BlockWriter, dyntrack_obj: DynTrackObj) -> None:
     """
     Write a dynamic track object to a BlockWriter.
 
@@ -571,9 +574,6 @@ def write_dyntrack_object(writer: BlockWriter, dyntrack_obj: DynTrackObj, detail
     """
     if not isinstance(dyntrack_obj, DynTrackObj):
         raise TypeError(f"World property 'objects' must contain DynTrackObj objects, but got {type(dyntrack_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Dyntrack, block_format=WORLD_OBJ_BLOCK) as dyntrack_block:
         with dyntrack_block.sub_block(TokenID.UiD) as uid_block:
@@ -602,7 +602,7 @@ def write_dyntrack_object(writer: BlockWriter, dyntrack_obj: DynTrackObj, detail
                 write_local_tracksections(tracksections_block, dyntrack_obj.track_sections)
 
 
-def write_transfer_object(writer: BlockWriter, transfer_obj: TransferObj, detail_level: int) -> None:
+def write_transfer_object(writer: BlockWriter, transfer_obj: TransferObj) -> None:
     """
     Write a transfer object to a BlockWriter.
 
@@ -615,9 +615,6 @@ def write_transfer_object(writer: BlockWriter, transfer_obj: TransferObj, detail
     """
     if not isinstance(transfer_obj, TransferObj):
         raise TypeError(f"World property 'objects' must contain TransferObj objects, but got {type(transfer_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Transfer, block_format=WORLD_OBJ_BLOCK) as transfer_block:
         with transfer_block.sub_block(TokenID.UiD) as uid_block:
@@ -647,7 +644,7 @@ def write_transfer_object(writer: BlockWriter, transfer_obj: TransferObj, detail
             height_block.write_float(transfer_obj.height)
 
 
-def write_gantry_object(writer: BlockWriter, gantry_obj: GantryObj, detail_level: int) -> None:
+def write_gantry_object(writer: BlockWriter, gantry_obj: GantryObj) -> None:
     """
     Write a gantry object to a BlockWriter.
 
@@ -660,9 +657,6 @@ def write_gantry_object(writer: BlockWriter, gantry_obj: GantryObj, detail_level
     """
     if not isinstance(gantry_obj, GantryObj):
         raise TypeError(f"World property 'objects' must contain GantryObj objects, but got {type(gantry_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Gantry, block_format=WORLD_OBJ_BLOCK) as gantry_block:
         with gantry_block.sub_block(TokenID.UiD) as uid_block:
@@ -686,7 +680,7 @@ def write_gantry_object(writer: BlockWriter, gantry_obj: GantryObj, detail_level
             static_flags_block.write_flags(gantry_obj.static_flags)
 
 
-def write_pickup_object(writer: BlockWriter, pickup_obj: PickupObj, detail_level: int) -> None:
+def write_pickup_object(writer: BlockWriter, pickup_obj: PickupObj) -> None:
     """
     Write a pickup object to a BlockWriter.
 
@@ -699,9 +693,6 @@ def write_pickup_object(writer: BlockWriter, pickup_obj: PickupObj, detail_level
     """
     if not isinstance(pickup_obj, PickupObj):
         raise TypeError(f"World property 'objects' must contain PickupObj objects, but got {type(pickup_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Pickup, block_format=WORLD_OBJ_BLOCK) as pickup_block:
         with pickup_block.sub_block(TokenID.UiD) as uid_block:
@@ -808,7 +799,7 @@ def write_stack_locations(writer: BlockWriter, stack_locations: List[StackLocati
                         flipped_block.write_int(1)
 
 
-def write_hazard_object(writer: BlockWriter, hazard_obj: HazardObj, detail_level: int) -> None:
+def write_hazard_object(writer: BlockWriter, hazard_obj: HazardObj) -> None:
     """
     Write a hazard object to a BlockWriter.
 
@@ -821,9 +812,6 @@ def write_hazard_object(writer: BlockWriter, hazard_obj: HazardObj, detail_level
     """
     if not isinstance(hazard_obj, HazardObj):
         raise TypeError(f"World property 'objects' must contain HazardObj objects, but got {type(hazard_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Hazard, block_format=WORLD_OBJ_BLOCK) as hazard_block:
         with hazard_block.sub_block(TokenID.UiD) as uid_block:
@@ -850,7 +838,7 @@ def write_hazard_object(writer: BlockWriter, hazard_obj: HazardObj, detail_level
             write_tr_item_id(hazard_block, hazard_obj.tr_item_id)
 
 
-def write_signal_object(writer: BlockWriter, signal_obj: SignalObj, detail_level: int) -> None:
+def write_signal_object(writer: BlockWriter, signal_obj: SignalObj) -> None:
     """
     Write a signal object to a BlockWriter.
 
@@ -863,9 +851,6 @@ def write_signal_object(writer: BlockWriter, signal_obj: SignalObj, detail_level
     """
     if not isinstance(signal_obj, SignalObj):
         raise TypeError(f"World property 'objects' must contain SignalObj objects, but got {type(signal_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Signal, block_format=WORLD_OBJ_BLOCK) as signal_block:
         with signal_block.sub_block(TokenID.UiD) as uid_block:
@@ -915,7 +900,7 @@ def write_signal_units(writer: BlockWriter, signal_units: List[SignalUnit]) -> N
                 write_tr_item_id(signal_unit_block, signal_unit.tr_item_id)
 
 
-def write_speedpost_object(writer: BlockWriter, speedpost_obj: SpeedPostObj, detail_level: int) -> None:
+def write_speedpost_object(writer: BlockWriter, speedpost_obj: SpeedPostObj) -> None:
     """
     Write a speed post object to a BlockWriter.
 
@@ -928,9 +913,6 @@ def write_speedpost_object(writer: BlockWriter, speedpost_obj: SpeedPostObj, det
     """
     if not isinstance(speedpost_obj, SpeedPostObj):
         raise TypeError(f"World property 'objects' must contain SpeedPostObj objects, but got {type(speedpost_obj).__name__}")
-
-    if not isinstance(detail_level, int):
-        raise TypeError(f"Parameter 'detail_level' must be int, but got {type(detail_level).__name__}")
 
     with writer.sub_block(TokenID.Speedpost, block_format=WORLD_OBJ_BLOCK) as speedpost_block:
         with speedpost_block.sub_block(TokenID.UiD) as uid_block:

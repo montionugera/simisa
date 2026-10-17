@@ -7,7 +7,7 @@
 
 A Python module to read and write files used with MSTS and Open Rails.
 
-This module has a similar API to Python's built-in `json` module. When loading files, this module handles compression and text/binary formats of the SIMISA container seamlessly. It's also not sensitive to whitespace formatting in STF text files at all.
+This module has a similar API to Python's built-in `json` module. When loading files, this module handles compression and text/binary formats of the SIMISA container seamlessly. It's also not at all sensitive to whitespace formatting in STF text files.
 
 See also:
 - [simisatool](https://github.com/pgroenbaek/simisatool) - A cross-platform CLI to compress/decompress `.s`, `.w` and `.t` files.
@@ -132,7 +132,7 @@ print(len(shape_obj.points))
 print(shape_obj.lod_controls[2].lod_dlevel)
 ```
 
-Here's an example of traversing the object tree deeply to access vertex data in a shape:
+Here's an example of traversing the object tree deeply to access vertex and triangle data in a shape:
 
 ```python
 >>> print(shape_obj)
@@ -252,4 +252,6 @@ For more details see the [contribution guidelines](/CONTRIBUTING.md).
 
 ## License
 
-The source code of this project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html). You are free to use, modify, and distribute the code under the terms of this license. See the [LICENSE](/LICENSE) file for the full license text.
+The source code of this project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html). You are free to use, modify, and distribute the code under the terms of this license.
+
+See the [LICENSE](/LICENSE) file for the full license text.

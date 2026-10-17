@@ -160,3 +160,37 @@ def test_list_item_block(block_format, expected_output):
     )
 
     assert formatted_text[32:] == expected_output
+
+
+
+# For manual inspection of the output formatting
+SKIP_MANUAL_INSPECTION_TESTS = False
+
+def test_shapefile_default_format(global_storage, tmp_path):
+    if SKIP_MANUAL_INSPECTION_TESTS:
+        pytest.skip("Skipping tests for manual inspection of formats")
+    
+    original = shape.load(global_storage["shapefile_path"])
+    output_path = "./tests/data/default_format.s"
+    
+    shape.dump(original, str(output_path), compressed=False)
+
+
+def test_terrainfile_default_format(global_storage, tmp_path):
+    if SKIP_MANUAL_INSPECTION_TESTS:
+        pytest.skip("Skipping tests for manual inspection of formats")
+    
+    original = terrain.load(global_storage["terrainfile_binary_path"])
+    output_path = "./tests/data/default_format.t"
+    
+    terrain.dump(original, str(output_path), compressed=False)
+
+
+def test_worldfile_default_format(global_storage, tmp_path):
+    if SKIP_MANUAL_INSPECTION_TESTS:
+        pytest.skip("Skipping tests for manual inspection of formats")
+    
+    original = world.load(global_storage["worldfile2_path"])
+    output_path = "./tests/data/default_format.w"
+    
+    world.dump(original, str(output_path), compressed=False)

@@ -27,15 +27,6 @@ def load_file(filepath: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def reader_from_body(body: str) -> BlockReader:
-    return BlockReader.from_string(
-        "SIMISA@@@@@@@@@@"
-        "JINX0s0t______\n"
-        + body
-    )
-
-
-@pytest.fixture(scope="session")
 def global_storage():
     data = {
         "emptyfile_path": "./tests/data/empty.txt",
