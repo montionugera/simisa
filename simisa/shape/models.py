@@ -17,10 +17,14 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <https://www.gnu.org/licenses/>.
 """
 
-import numpy as np
 from abc import ABC
 from dataclasses import dataclass
 from typing import List, Optional
+
+try:
+    import numpy as np
+except ImportError:
+    np = None
 
 
 @dataclass
@@ -32,13 +36,20 @@ class Vector:
     def __repr__(self):
         return f"Vector(x={self.x}, y={self.y}, z={self.z})"
 
-    def to_numpy(self) -> np.ndarray:
+    def to_numpy(self):
+        if np is None:
+            raise ImportError("NumPy is required for Vector.to_numpy().")
+        
         return np.array([self.x, self.y, self.z])
 
     @classmethod
-    def from_numpy(cls, array: np.ndarray):
+    def from_numpy(cls, array):
+        if np is None:
+            raise ImportError("NumPy is required for Vector.from_numpy().")
+
         if array.shape != (3,):
             raise ValueError("Input array must have shape (3,).")
+        
         return cls(array[0], array[1], array[2])
 
 @dataclass
@@ -50,13 +61,20 @@ class Point:
     def __repr__(self):
         return f"Point(x={self.x}, y={self.y}, z={self.z})"
 
-    def to_numpy(self) -> np.ndarray:
+    def to_numpy(self):
+        if np is None:
+            raise ImportError("NumPy is required for Point.to_numpy().")
+
         return np.array([self.x, self.y, self.z])
 
     @classmethod
-    def from_numpy(cls, array: np.ndarray):
+    def from_numpy(cls, array):
+        if np is None:
+            raise ImportError("NumPy is required for Point.from_numpy().")
+
         if array.shape != (3,):
             raise ValueError("Input array must have shape (3,).")
+        
         return cls(array[0], array[1], array[2])
 
 @dataclass
@@ -67,13 +85,20 @@ class UVPoint:
     def __repr__(self):
         return f"UVPoint(u={self.u}, v={self.v})"
 
-    def to_numpy(self) -> np.ndarray:
+    def to_numpy(self):
+        if np is None:
+            raise ImportError("NumPy is required for UVPoint.to_numpy().")
+
         return np.array([self.u, self.v])
 
     @classmethod
-    def from_numpy(cls, array: np.ndarray):
+    def from_numpy(cls, array):
+        if np is None:
+            raise ImportError("NumPy is required for UVPoint.from_numpy().")
+
         if array.shape != (2,):
             raise ValueError("Input array must have shape (2,).")
+        
         return cls(array[0], array[1])
 
 @dataclass
@@ -112,8 +137,11 @@ class Matrix:
             ")"
         )
 
-    def to_numpy(self) -> np.ndarray:
+    def to_numpy(self):
         """Convert to a 4x3 numpy matrix."""
+        if np is None:
+            raise ImportError("NumPy is required for Matrix.to_numpy().")
+
         return np.array([
             [self.ax, self.ay, self.az],
             [self.bx, self.by, self.bz],
@@ -122,10 +150,14 @@ class Matrix:
         ], dtype=np.float32)
 
     @classmethod
-    def from_numpy(cls, name: str, array: np.ndarray):
+    def from_numpy(cls, name: str, array):
         """Create a Matrix from a 4x3 numpy array."""
+        if np is None:
+            raise ImportError("NumPy is required for Matrix.from_numpy().")
+
         if array.shape != (4, 3):
             raise ValueError("Input array must have shape (4, 3).")
+        
         return cls(
             name,
             *array[0],

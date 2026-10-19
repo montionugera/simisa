@@ -1,12 +1,22 @@
+import os
 from setuptools import setup, find_packages
 
+blender_build = os.environ.get("BLENDER_BUILD") == "1"
+
+if blender_build:
+    package_name = "simisa-blender"
+    install_requires = []
+else:
+    package_name = "simisa"
+    install_requires = [
+        "numpy"
+    ]
+
 setup(
-    name="simisa",
+    name=package_name,
     version="0.1.0b0",
     packages=find_packages(),
-    install_requires=[
-        "numpy",
-    ],
+    install_requires=install_requires,
     author="Peter Grønbæk Andersen",
     author_email="peter@grnbk.io",
     description="A Python module to read and write files used with MSTS and Open Rails.",
